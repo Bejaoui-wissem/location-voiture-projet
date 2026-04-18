@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - AutoDrive</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="index.html">AutoDrive</a>
+    <div class="navbar-nav">
+      <a class="nav-link" href="index.html">Accueil</a>
+      <a class="nav-link" href="login.html">Connexion</a>
+      <a class="nav-link" href="admin.html">Admin</a>
+    </div>
+  </div>
+</nav> 
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">AutoDrive - Tableau de bord Administrateur</span>
+            <a href="#" class="btn btn-outline-light btn-sm">Déconnexion</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">Ajouter un véhicule</div>
+                    <div class="card-body">
+                        <form>
+                            <div class="mb-3">
+                                <label class="form-label">Marque</label>
+                                <input type="text" class="form-control" placeholder="Ex: Audi">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Modèle</label>
+                                <input type="text" class="form-control" placeholder="Ex: A3">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Prix / jour (€)</label>
+                                <input type="number" class="form-control" placeholder="Ex: 50">
+                            </div>
+                            <button type="button" class="btn btn-primary w-100" onclick="ajouterVoiture()">Ajouter</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">Gestion du Catalogue</div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Marque</th>
+                                    <th>Modèle</th>
+                                    <th>Prix</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>Peugeot</td>
+                                    <td>208</td>
+                                    <td>35 €</td>
+                                    <td><span class="badge bg-success">Disponible</span></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>Mercedes</td>
+                                    <td>Classe A</td>
+                                    <td>80 €</td>
+                                    <td><span class="badge bg-danger">Louée</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function ajouterVoiture() {
+            alert("Véhicule ajouté à la base de données avec succès ! (Simulation)");
+        }
+    </script>
+</body>
+</html>
