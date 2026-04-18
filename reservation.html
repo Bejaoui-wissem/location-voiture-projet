@@ -48,9 +48,13 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Numéro de téléphone (+216)</label>
-                            <input type="text" class="form-control" placeholder="Ex: 98 123 456" required>
-                        </div>
+    <label class="form-label fw-bold">Nom complet</label>
+    <input type="text" class="form-control" id="nom" placeholder="Ex: Mohamed Ali" required>
+</div>
+<div class="mb-3">
+    <label class="form-label fw-bold">Numéro de téléphone (+216)</label>
+    <input type="text" class="form-control" id="telephone" placeholder="Ex: 98 123 456" required>
+</div>
                         
                         <div class="alert alert-danger text-center shadow-sm">
                             <h4 class="mb-0">Total : <span id="prix-total">0</span> DT</h4>
@@ -90,12 +94,40 @@
         voitureSelect.addEventListener('change', calculerPrix);
 
         function confirmer() {
-            if(prixTotalAffichage.innerText === "0") {
-                alert("Veuillez choisir des dates valides !");
-            } else {
-                alert("🇹🇳 Réservation enregistrée ! Un agent d'AutoDrive vous contactera au numéro indiqué.");
-            }
+    const total = prixTotalAffichage.innerText;
+    if(total === "0") {
+        alert("Veuillez choisir des dates valides !");
+        return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const data = {
+        voiture_id: params.get('id') || 1,
+        nom_client: document.getElementById('nom').value,
+        telephone: document.getElementById('telephone').value,
+        date_debut: dateDebut.value,
+        date_fin: dateFin.value,
+        prix_total: total
+    };
+
+    if(!data.nom_client || !data.telephone) {
+        alert("Veuillez remplir tous les champs !");
+        return;
+    }
+
+    fetch('api/reservation.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+        if(result.success) {
+            alert('Reservation confirmee ! Un agent vous contactera.');
+            window.location.href = 'index.html';
         }
+    });
+}
     </script>
 </body>
 </html>
