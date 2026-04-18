@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html class="light" lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Assistant IA - AutoDrive Tunisie</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#b90027", "primary-container": "#e31837",
+        "secondary": "#5f5e5e", "surface": "#f9f9f9",
+        "surface-container-lowest": "#ffffff", "surface-container-low": "#f3f3f3",
+        "surface-container": "#eeeeee", "surface-container-high": "#e8e8e8",
+        "on-surface": "#1a1c1c", "on-background": "#1a1c1c",
+        "error": "#ba1a1a", "error-container": "#ffdad6",
+      },
+      borderRadius: { "DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px" },
+      fontFamily: { "body": ["Inter"] }
+    }
+  }
+}
+</script>
+<style>
+  body { font-family:'Inter',sans-serif; }
+  .material-symbols-outlined { font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24; }
+  #chat-messages { scroll-behavior:smooth; }
+  .msg-bot  { animation:slideL .25s ease-out; }
+  .msg-user { animation:slideR .25s ease-out; }
+  @keyframes slideL { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes slideR { from{opacity:0;transform:translateX(10px)}  to{opacity:1;transform:translateX(0)} }
+  .dot { animation:blink 1.2s infinite; }
+  .dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+  .pill{transition:all .15s;cursor:pointer}
+  .pill:hover{background:#b90027;color:white;border-color:#b90027;transform:translateY(-1px)}
+  .car-chip{transition:all .15s}
+  .car-chip:hover{background:#ffdad6;border-color:#b90027;transform:translateY(-1px)}
+  #chat-messages::-webkit-scrollbar{width:4px}
+  #chat-messages::-webkit-scrollbar-thumb{background:#e2e2e2;border-radius:99px}
+  .bot-text strong{font-weight:600}
+  .bot-text ul{list-style:disc;padding-left:1.2rem;margin:.4rem 0}
+  .bot-text li{margin:.15rem 0}
+  .bot-text p{margin:.3rem 0}
+</style>
+</head>
+<body class="bg-surface text-on-background min-h-screen flex flex-col">
+
+<!-- Navbar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm shadow-zinc-900/5">
+  <div class="flex justify-between items-center h-20 px-8 max-w-screen-2xl mx-auto">
+    <a href="index.html" class="text-2xl font-black tracking-tighter text-zinc-900">AutoDrive Tunisie</a>
+    <div class="hidden md:flex items-center gap-8">
+      <a href="index.html" class="text-zinc-600 hover:text-zinc-900 font-bold transition-colors">Catalogue</a>
+      <a href="chatbot.html" class="text-red-600 border-b-2 border-red-600 pb-1 font-bold">Assistant IA</a>
+    </div>
+    <a href="login.html" class="bg-primary-container text-white px-6 py-2 rounded-xl font-bold hover:scale-[1.02] transition-transform active:scale-95">Connexion</a>
+  </div>
+</nav>
+
+<!-- ====== ÉCRAN CONFIG CLÉ ====== -->
+<div id="screen-config" class="flex-grow pt-20 flex items-center justify-center px-4" style="min-height:100vh;">
+  <div class="w-full max-w-md">
+    <div class="bg-surface-container-lowest rounded-3xl p-10 shadow-[0_20px_40px_rgba(26,28,28,0.08)] border border-surface-container-high">
+
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20">
+        <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1;">smart_toy</span>
+      </div>
+      <h1 class="text-2xl font-bold text-center text-on-surface mb-2">Assistant AutoDrive</h1>
+      <p class="text-secondary text-sm text-center mb-8">Entrez votre clé API Gemini pour activer l'assistant IA.</p>
+
+      <div class="space-y-2 mb-4">
+        <label class="text-xs font-semibold text-on-surface uppercase tracking-wider">Clé API Google Gemini</label>
+        <div class="relative group">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors">key</span>
+          <input id="input-apikey" type="password" placeholder="AIzaSy..."
+            class="w-full bg-surface-container-low border-0 rounded-xl py-4 pl-12 pr-12 text-on-surface placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 transition-all outline-none font-mono text-sm"/>
+          <button onclick="toggleVoir()" class="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors">
+            <span id="icon-voir" class="material-symbols-outlined text-lg">visibility</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="config-error" class="hidden mb-4 bg-error-container text-error rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-medium">
+        <span class="material-symbols-outlined text-lg">error</span>
+        <span id="config-error-msg"></span>
+      </div>
+
+      <button onclick="activerAssistant()" id="btn-activer"
+        class="w-full bg-gradient-to-r from-primary to-primary-container text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 mb-6">
+        <span id="btn-activer-text">Activer l'assistant</span>
+        <span id="btn-activer-spin" class="material-symbols-outlined animate-spin hidden">autorenew</span>
+      </button>
+
+      <div class="bg-surface-container-low rounded-xl p-4 text-xs text-secondary space-y-2">
+        <p class="font-semibold text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-sm text-primary">info</span>
+          Obtenir une clé gratuite (2 min)
+        </p>
+        <ol class="list-decimal pl-4 space-y-1 leading-relaxed">
+          <li>Allez sur <a href="https://aistudio.google.com/apikey" target="_blank" class="text-primary underline font-medium">aistudio.google.com/apikey</a></li>
+          <li>Connectez-vous avec Google</li>
+          <li>Cliquez <strong>"Create API Key"</strong></li>
+          <li>Copiez et collez la clé ici</li>
+        </ol>
+        <p class="text-zinc-400 pt-1">Gratuit · 1500 requêtes/jour · Sans carte bancaire</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== ÉCRAN CHAT ====== -->
+<div id="screen-chat" class="hidden flex-grow pt-20 flex flex-col" style="height:100vh;">
+  <div class="flex flex-col flex-1 max-w-3xl mx-auto w-full px-4 pb-6 pt-4" style="min-height:0;">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-4 px-1">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center flex-shrink-0 shadow-md shadow-primary/20">
+        <span class="material-symbols-outlined text-white text-lg" style="font-variation-settings:'FILL' 1;">smart_toy</span>
+      </div>
+      <div class="flex-1">
+        <h1 class="text-sm font-bold text-on-surface">Assistant AutoDrive</h1>
+        <div class="flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>
+          <p class="text-[11px] text-secondary">Gemini AI · Flotte en temps réel</p>
+        </div>
+      </div>
+      <button onclick="reinitialiserChat()" class="flex items-center gap-1 text-xs font-medium text-secondary hover:text-primary transition-colors px-3 py-2 rounded-lg hover:bg-surface-container">
+        <span class="material-symbols-outlined text-sm">refresh</span>Nouveau
+      </button>
+      <button onclick="changerCle()" class="flex items-center gap-1 text-xs font-medium text-secondary hover:text-primary transition-colors px-3 py-2 rounded-lg hover:bg-surface-container">
+        <span class="material-symbols-outlined text-sm">key</span>Clé API
+      </button>
+    </div>
+
+    <!-- Messages -->
+    <div id="chat-messages" class="flex-1 overflow-y-auto bg-surface-container-lowest rounded-2xl p-5 space-y-4 border border-surface-container-high" style="min-height:0;"></div>
+
+    <!-- Suggestions -->
+    <div id="suggestions" class="flex flex-wrap gap-2 py-3 px-1">
+      <button class="pill text-xs font-semibold border border-surface-container-high bg-surface-container-lowest text-secondary px-4 py-2 rounded-full" onclick="envoyerSuggestion(this)">Voiture économique pour 3 jours</button>
+      <button class="pill text-xs font-semibold border border-surface-container-high bg-surface-container-lowest text-secondary px-4 py-2 rounded-full" onclick="envoyerSuggestion(this)">Quelles voitures sont disponibles ?</button>
+      <button class="pill text-xs font-semibold border border-surface-container-high bg-surface-container-lowest text-secondary px-4 py-2 rounded-full" onclick="envoyerSuggestion(this)">Voiture familiale confortable</button>
+      <button class="pill text-xs font-semibold border border-surface-container-high bg-surface-container-lowest text-secondary px-4 py-2 rounded-full" onclick="envoyerSuggestion(this)">Calculer le prix pour 5 jours</button>
+    </div>
+
+    <!-- Input -->
+    <div class="flex gap-3 items-end px-1">
+      <textarea id="user-input" rows="1" placeholder="Posez votre question sur notre flotte..."
+        class="flex-1 bg-surface-container-lowest border border-surface-container-high rounded-2xl py-3.5 px-5 text-on-surface placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 transition-all resize-none outline-none text-sm leading-relaxed"
+        style="max-height:120px;overflow-y:auto;" onkeydown="gererTouche(event)"></textarea>
+      <button id="btn-envoyer" onclick="envoyerMessage()"
+        class="w-11 h-11 rounded-2xl bg-primary text-white flex items-center justify-center hover:scale-[1.05] active:scale-95 transition-transform flex-shrink-0 shadow-lg shadow-primary/25">
+        <span class="material-symbols-outlined text-xl" id="icon-envoyer">send</span>
+      </button>
+    </div>
+    <p class="text-center text-[10px] text-zinc-400 mt-2">L'assistant peut faire des erreurs · Vérifiez les informations importantes.</p>
+  </div>
+</div>
+
+<script>
+let API_KEY    = localStorage.getItem('autodrive_gemini_key') || '';
+let historique = [];
+let flotte     = [];
+let loading    = false;
+
+// ── Init ──────────────────────────────────────────────────────────────────
+(async () => {
+  await chargerFlotte();
+  document.getElementById('input-apikey').addEventListener('keydown', e => { if(e.key==='Enter') activerAssistant(); });
+  if (API_KEY) ouvrirChat();
+})();
+
+// ── Flotte ────────────────────────────────────────────────────────────────
+async function chargerFlotte() {
+  try {
+    const r = await fetch('api/voitures.php');
+    if (!r.ok) throw 0;
+    flotte = await r.json();
+  } catch {
+    flotte = [
+      {id:1,marque:'Peugeot', modele:'208',      prix_jour:'35.00',statut:'disponible'},
+      {id:2,marque:'Renault', modele:'Clio 5',   prix_jour:'40.00',statut:'disponible'},
+      {id:3,marque:'Mercedes',modele:'Classe A', prix_jour:'80.00',statut:'louee'},
+    ];
+  }
+}
+
+// ── Navigation écrans ─────────────────────────────────────────────────────
+function ouvrirChat() {
+  document.getElementById('screen-config').classList.add('hidden');
+  const chat = document.getElementById('screen-chat');
+  chat.classList.remove('hidden');
+  chat.classList.add('flex');
+  reinitialiserChat();
+}
+
+function changerCle() {
+  const chat = document.getElementById('screen-chat');
+  chat.classList.add('hidden');
+  chat.classList.remove('flex');
+  document.getElementById('screen-config').classList.remove('hidden');
+  document.getElementById('input-apikey').value = API_KEY;
+}
+
+// ── Activation + test clé ─────────────────────────────────────────────────
+async function activerAssistant() {
+  const cle = document.getElementById('input-apikey').value.trim();
+  document.getElementById('config-error').classList.add('hidden');
+  if (!cle) return errConfig('Veuillez entrer votre clé API.');
+  if (!cle.startsWith('AIza')) return errConfig('Format invalide — la clé doit commencer par "AIza".');
+
+  setBtnActiver(true);
+  try {
+    const r = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+      { method:'POST',
+        headers:{'Content-Type':'application/json','x-goog-api-key':cle},
+        body: JSON.stringify({ contents:[{role:'user',parts:[{text:'ok'}]}], generationConfig:{maxOutputTokens:5} })
+      }
+    );
+    if (r.status===401||r.status===403) throw new Error('Clé invalide ou non autorisée.');
+    if (r.status===429) throw new Error('Quota dépassé — réessayez dans quelques instants.');
+    if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error?.message||`Erreur ${r.status}`); }
+    API_KEY = cle;
+    localStorage.setItem('autodrive_gemini_key', cle);
+    ouvrirChat();
+  } catch(e) {
+    errConfig(e.message);
+  } finally {
+    setBtnActiver(false);
+  }
+}
+
+function errConfig(msg) {
+  const el = document.getElementById('config-error');
+  document.getElementById('config-error-msg').textContent = msg;
+  el.classList.remove('hidden');
+  el.classList.add('flex');
+}
+
+function setBtnActiver(on) {
+  document.getElementById('btn-activer').disabled = on;
+  document.getElementById('btn-activer-text').textContent = on ? 'Vérification...' : "Activer l'assistant";
+  document.getElementById('btn-activer-spin').classList.toggle('hidden',!on);
+}
+
+function toggleVoir() {
+  const inp = document.getElementById('input-apikey');
+  const ic  = document.getElementById('icon-voir');
+  inp.type = inp.type==='password' ? 'text' : 'password';
+  ic.textContent = inp.type==='password' ? 'visibility' : 'visibility_off';
+}
+
+// ── System prompt ─────────────────────────────────────────────────────────
+function buildSystem() {
+  const liste = flotte.map(v =>
+    `- ${v.marque} ${v.modele} : ${parseFloat(v.prix_jour).toFixed(0)} DT/jour — ${v.statut==='disponible'?'DISPONIBLE':'NON DISPONIBLE (louée)'}`
+  ).join('\n');
+  return `Tu es l'assistant virtuel d'AutoDrive Tunisie, agence de location de voitures.
+RÔLE : aider les clients à choisir un véhicule, calculer les tarifs, orienter vers la réservation.
+FLOTTE EN TEMPS RÉEL :\n${liste}
+RÈGLES : réponds en français, propose uniquement les voitures DISPONIBLES, calcul = prix_jour × jours, réponses courtes (2-4 phrases), émojis avec modération, agences : Tunis, Sousse, Sfax.`;
+}
+
+// ── Appel Gemini ──────────────────────────────────────────────────────────
+async function appelGemini(msg) {
+  historique.push({role:'user', parts:[{text:msg}]});
+  const r = await fetch(
+    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+    { method:'POST',
+      headers:{'Content-Type':'application/json','x-goog-api-key':API_KEY},
+      body: JSON.stringify({
+        systemInstruction:{parts:[{text:buildSystem()}]},
+        contents: historique,
+        generationConfig:{maxOutputTokens:400,temperature:0.7}
+      })
+    }
+  );
+  if (!r.ok) {
+    const e = await r.json().catch(()=>({}));
+    if (r.status===401||r.status===403) { localStorage.removeItem('autodrive_gemini_key'); API_KEY=''; setTimeout(changerCle,1500); }
+    throw new Error(e.error?.message||`Erreur API (${r.status})`);
+  }
+  const data = await r.json();
+  const rep  = data.candidates?.[0]?.content?.parts?.[0]?.text || "Désolé, je n'ai pas pu répondre.";
+  historique.push({role:'model', parts:[{text:rep}]});
+  return rep;
+}
+
+// ── Rendu markdown minimal ────────────────────────────────────────────────
+function md(t) {
+  return t
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^[\*\-] (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>[\s\S]*<\/li>)/,'<ul>$1</ul>')
+    .replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br/>');
+}
+
+// ── Afficher message ──────────────────────────────────────────────────────
+function addMsg(texte, type, typing=false) {
+  const box = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+
+  if (typing) {
+    div.id='typing'; div.className='msg-bot flex items-end gap-3';
+    div.innerHTML=`
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center flex-shrink-0">
+        <span class="material-symbols-outlined text-white text-sm" style="font-variation-settings:'FILL' 1;">smart_toy</span>
+      </div>
+      <div class="bg-surface-container-low rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
+        <span class="dot w-2 h-2 rounded-full bg-secondary inline-block"></span>
+        <span class="dot w-2 h-2 rounded-full bg-secondary inline-block"></span>
+        <span class="dot w-2 h-2 rounded-full bg-secondary inline-block"></span>
+      </div>`;
+  } else if (type==='bot') {
+    div.className='msg-bot flex items-end gap-3';
+    div.innerHTML=`
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center flex-shrink-0">
+        <span class="material-symbols-outlined text-white text-sm" style="font-variation-settings:'FILL' 1;">smart_toy</span>
+      </div>
+      <div class="bot-text max-w-[80%] bg-surface-container-low rounded-2xl rounded-bl-sm px-4 py-3 text-sm text-on-surface leading-relaxed"><p>${md(texte)}</p></div>`;
+  } else {
+    div.className='msg-user flex justify-end';
+    div.innerHTML=`<div class="max-w-[80%] bg-primary text-white rounded-2xl rounded-br-sm px-4 py-3 text-sm leading-relaxed">${texte.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+  }
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  return div;
+}
+
+// ── Envoi ─────────────────────────────────────────────────────────────────
+async function envoyerMessage() {
+  if (loading) return;
+  const inp = document.getElementById('user-input');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value=''; inp.style.height='auto';
+  document.getElementById('suggestions').style.display='none';
+  addMsg(msg,'user');
+  setLoad(true);
+  const t = addMsg('','bot',true);
+  try {
+    const rep = await appelGemini(msg);
+    t.remove(); addMsg(rep,'bot');
+  } catch(e) {
+    t.remove(); addMsg(`❌ ${e.message}`,'bot');
+  } finally { setLoad(false); }
+}
+
+function envoyerSuggestion(btn) {
+  document.getElementById('user-input').value = btn.textContent.trim();
+  envoyerMessage();
+}
+
+function setLoad(on) {
+  loading=on;
+  document.getElementById('btn-envoyer').disabled=on;
+  document.getElementById('icon-envoyer').textContent=on?'hourglass_top':'send';
+}
+
+function gererTouche(e) {
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();envoyerMessage();}
+  setTimeout(()=>{const ta=document.getElementById('user-input');ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,120)+'px';},0);
+}
+
+// ── Reset conversation ────────────────────────────────────────────────────
+function reinitialiserChat() {
+  historique=[];
+  document.getElementById('chat-messages').innerHTML='';
+  document.getElementById('suggestions').style.display='flex';
+  afficherBienvenue();
+}
+
+function afficherBienvenue() {
+  const dispos = flotte.filter(v=>v.statut==='disponible');
+  const chips  = dispos.map(v=>`
+    <a href="reservation.html?id=${v.id}&marque=${encodeURIComponent(v.marque)}&modele=${encodeURIComponent(v.modele)}&prix=${v.prix_jour}"
+       class="car-chip inline-flex items-center gap-1.5 border border-surface-container-high bg-white rounded-xl px-3 py-2 text-xs font-semibold text-on-surface no-underline">
+      <span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings:'FILL' 1;">directions_car</span>
+      ${v.marque} ${v.modele} — ${parseFloat(v.prix_jour).toFixed(0)} DT/jour
+    </a>`).join('');
+
+  const box=document.getElementById('chat-messages');
+  const div=document.createElement('div');
+  div.className='msg-bot flex items-end gap-3';
+  div.innerHTML=`
+    <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center flex-shrink-0">
+      <span class="material-symbols-outlined text-white text-sm" style="font-variation-settings:'FILL' 1;">smart_toy</span>
+    </div>
+    <div class="bot-text max-w-[85%] bg-surface-container-low rounded-2xl rounded-bl-sm px-4 py-3 text-sm text-on-surface leading-relaxed">
+      <p>Bonjour ! Je suis votre assistant AutoDrive, propulsé par Gemini AI. 🚗</p>
+      <p class="mt-2">Je connais notre flotte en temps réel et peux vous aider à choisir le véhicule idéal selon votre budget et vos besoins.</p>
+      ${dispos.length>0?`<div class="mt-3 flex flex-wrap gap-2">${chips}</div>`:''}
+    </div>`;
+  box.appendChild(div);
+  box.scrollTop=box.scrollHeight;
+}
+</script>
+</body>
+</html>
