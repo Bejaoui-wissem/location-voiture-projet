@@ -2,93 +2,139 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin - AutoDrive</title>
+    <title>Panel Admin - AutoDrive Tunisie</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-   <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container">
-    <a class="navbar-brand" href="index.html">AutoDrive</a>
-    <div class="navbar-nav">
-      <a class="nav-link" href="index.html">Accueil</a>
-      <a class="nav-link" href="login.html">Connexion</a>
-      <a class="nav-link" href="admin.html">Admin</a>
-    </div>
-  </div>
-</nav> 
     <nav class="navbar navbar-dark bg-dark mb-4">
         <div class="container-fluid">
-            <span class="navbar-brand mb-0 h1">AutoDrive - Tableau de bord Administrateur</span>
-            <a href="#" class="btn btn-outline-light btn-sm">Déconnexion</a>
+            <span class="navbar-brand">AutoDrive Admin</span>
+            <a href="index.html" class="btn btn-outline-light btn-sm">Voir le site</a>
+            <a href="login.html" class="btn btn-outline-danger btn-sm">Déconnexion</a>
         </div>
     </nav>
-
     <div class="container">
-        <div class="row">
+
+        <!-- Statistiques -->
+        <div class="row mb-4">
             <div class="col-md-4">
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white">Ajouter un véhicule</div>
-                    <div class="card-body">
-                        <form>
-                            <div class="mb-3">
-                                <label class="form-label">Marque</label>
-                                <input type="text" class="form-control" placeholder="Ex: Audi">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Modèle</label>
-                                <input type="text" class="form-control" placeholder="Ex: A3">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Prix / jour (€)</label>
-                                <input type="number" class="form-control" placeholder="Ex: 50">
-                            </div>
-                            <button type="button" class="btn btn-primary w-100" onclick="ajouterVoiture()">Ajouter</button>
-                        </form>
-                    </div>
+                <div class="card text-center p-3 shadow-sm">
+                    <h6 class="text-muted">Total Réservations</h6>
+                    <h2 id="total-resa">0</h2>
                 </div>
             </div>
-            
-            <div class="col-md-8">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-success text-white">Gestion du Catalogue</div>
-                    <div class="card-body">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Marque</th>
-                                    <th>Modèle</th>
-                                    <th>Prix</th>
-                                    <th>Statut</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>1</td>
-                                    <td>Peugeot</td>
-                                    <td>208</td>
-                                    <td>35 €</td>
-                                    <td><span class="badge bg-success">Disponible</span></td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Mercedes</td>
-                                    <td>Classe A</td>
-                                    <td>80 €</td>
-                                    <td><span class="badge bg-danger">Louée</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+            <div class="col-md-4">
+                <div class="card text-center p-3 shadow-sm">
+                    <h6 class="text-muted">Voitures Disponibles</h6>
+                    <h2 id="total-dispo">0</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-center p-3 shadow-sm">
+                    <h6 class="text-muted">Revenus Total</h6>
+                    <h2 id="total-revenus">0 DT</h2>
                 </div>
             </div>
         </div>
+
+        <!-- Réservations -->
+        <div class="card p-4 shadow-sm mb-4">
+            <h3>Réservations</h3>
+            <table class="table mt-3">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Client</th>
+                        <th>Téléphone</th>
+                        <th>Voiture</th>
+                        <th>Début</th>
+                        <th>Fin</th>
+                        <th>Total</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody id="tableau-reservations"></tbody>
+            </table>
+        </div>
+
+        <!-- Voitures -->
+        <div class="card p-4 shadow-sm">
+            <h3>Gestion de la flotte</h3>
+            <table class="table mt-3">
+                <thead>
+                    <tr>
+                        <th>Marque</th>
+                        <th>Modèle</th>
+                        <th>Prix/Jour</th>
+                        <th>Statut</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableau-voitures"></tbody>
+            </table>
+        </div>
+
     </div>
 
     <script>
-        function ajouterVoiture() {
-            alert("Véhicule ajouté à la base de données avec succès ! (Simulation)");
+        // Charger les réservations
+        fetch('api/reservations.php')
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('tableau-reservations');
+                let revenus = 0;
+                data.forEach(r => {
+                    revenus += parseFloat(r.prix_total);
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${r.id}</td>
+                            <td>${r.nom_client}</td>
+                            <td>${r.telephone}</td>
+                            <td>${r.marque} ${r.modele}</td>
+                            <td>${r.date_debut}</td>
+                            <td>${r.date_fin}</td>
+                            <td>${r.prix_total} DT</td>
+                            <td><span class="badge bg-warning">${r.statut}</span></td>
+                        </tr>`;
+                });
+                document.getElementById('total-resa').textContent = data.length;
+                document.getElementById('total-revenus').textContent = revenus + ' DT';
+            });
+
+        // Charger les voitures
+        fetch('api/voitures.php')
+            .then(res => res.json())
+            .then(voitures => {
+                const tbody = document.getElementById('tableau-voitures');
+                let dispo = 0;
+                voitures.forEach(v => {
+                    if(v.statut === 'disponible') dispo++;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${v.marque}</td>
+                            <td>${v.modele}</td>
+                            <td>${v.prix_jour} DT</td>
+                            <td><span class="badge ${v.statut === 'disponible' ? 'bg-success' : 'bg-danger'}">${v.statut}</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" 
+                                    onclick="changerStatut(${v.id}, '${v.statut}')">
+                                    ${v.statut === 'disponible' ? 'Marquer Louée' : 'Marquer Disponible'}
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+                document.getElementById('total-dispo').textContent = dispo;
+            });
+
+        function changerStatut(id, statut) {
+            const nouveau = statut === 'disponible' ? 'louee' : 'disponible';
+            fetch('api/voitures.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, statut: nouveau })
+            })
+            .then(res => res.json())
+            .then(() => location.reload());
         }
     </script>
 </body>
