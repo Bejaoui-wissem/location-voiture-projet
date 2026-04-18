@@ -37,15 +37,33 @@
     </div>
 
     <script>
-        function seConnecter() {
-            // Simulation d'une connexion basique
-            const email = document.getElementById('email').value;
-            if(email !== '') {
-                alert("Connexion réussie pour " + email);
+function seConnecter() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    if(!email || !password) {
+        alert('Veuillez remplir tous les champs.');
+        return;
+    }
+
+    fetch('api/login.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    })
+    .then(res => res.json())
+    .then(result => {
+        if(result.success) {
+            if(result.role === 'admin') {
+                window.location.href = 'admin.html';
             } else {
-                alert("Veuillez entrer un email.");
+                window.location.href = 'index.html';
             }
+        } else {
+            alert(result.message);
         }
+    });
+}
     </script>
 </body>
 </html>
