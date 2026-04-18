@@ -1,67 +1,305 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html class="light" lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoDrive - Location de Voitures</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; }
-        .hero { background: #0d6efd; color: white; padding: 50px 0; text-align: center; margin-bottom: 40px; }
-        .card-img-top { height: 200px; object-fit: cover; }
-    </style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Catalogue - AutoDrive Tunisie</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#b90027",
+        "primary-container": "#e31837",
+        "on-primary": "#ffffff",
+        "secondary": "#5f5e5e",
+        "tertiary": "#00656f",
+        "tertiary-container": "#00808c",
+        "surface": "#f9f9f9",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#f3f3f3",
+        "surface-container": "#eeeeee",
+        "surface-container-high": "#e8e8e8",
+        "surface-container-highest": "#e2e2e2",
+        "on-surface": "#1a1c1c",
+        "on-background": "#1a1c1c",
+        "outline-variant": "#e6bdbb",
+        "error": "#ba1a1a",
+        "error-container": "#ffdad6",
+      },
+      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+      fontFamily: { "headline": ["Inter"], "body": ["Inter"] }
+    }
+  }
+}
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .car-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .car-card:hover { transform: translateY(-4px); box-shadow: 0 24px 48px rgba(26,28,28,0.12); }
+  .car-card:hover .car-img { transform: scale(1.08); }
+  .car-img { transition: transform 0.5s ease; }
+  .skeleton { background: linear-gradient(90deg, #eeeeee 25%, #e2e2e2 50%, #eeeeee 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  #error-banner { display: none; }
+</style>
 </head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container">
-    <a class="navbar-brand" href="index.html">🚗 AutoDrive</a>
-    <div class="navbar-nav">
-      <a class="nav-link active" href="index.html">Catalogue</a>
-      <a class="nav-link" href="login.html">Connexion</a>
-      <a class="nav-link" href="admin.html">Admin</a>
+<body class="bg-surface text-on-background">
+
+<!-- Navbar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm shadow-zinc-900/5">
+  <div class="flex justify-between items-center h-20 px-8 max-w-screen-2xl mx-auto">
+    <a href="index.html" class="text-2xl font-black tracking-tighter text-zinc-900">AutoDrive Tunisie</a>
+    <div class="hidden md:flex items-center gap-8">
+      <a href="index.html" class="text-red-600 border-b-2 border-red-600 pb-1 font-bold">Catalogue</a>
+      <a href="chatbot.html" class="text-zinc-600 hover:text-zinc-900 font-bold hover:scale-[1.02] transition-transform duration-200">Assistant IA</a>
     </div>
+    <a href="login.html" class="bg-primary-container text-white px-6 py-2 rounded-xl font-bold hover:scale-[1.02] transition-transform duration-200 active:scale-95">
+      Connexion
+    </a>
   </div>
 </nav>
-    <div class="hero">
-        <h1>Bienvenue chez AutoDrive</h1>
-        <p>Louez la voiture de vos rêves en un seul clic !</p>
+
+<main class="pt-20">
+  <!-- Hero -->
+  <section class="relative h-[580px] flex items-center overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1600&q=80" alt="AutoDrive hero"/>
+      <div class="absolute inset-0 bg-gradient-to-r from-zinc-900/80 to-transparent"></div>
+    </div>
+    <div class="relative z-10 max-w-screen-2xl mx-auto px-8 w-full">
+      <h1 class="text-[3.5rem] leading-none font-bold text-white tracking-tighter max-w-2xl mb-6">
+        Louez votre liberté en Tunisie
+      </h1>
+      <p class="text-xl text-zinc-300 font-medium max-w-xl mb-8">
+        Une flotte sélectionnée pour vos exigences de confort et de performance.
+      </p>
+      <a href="#catalogue" class="inline-flex items-center gap-2 bg-primary text-white font-bold px-8 py-4 rounded-xl hover:scale-[1.02] transition-transform shadow-lg shadow-primary/30">
+        Voir le catalogue
+        <span class="material-symbols-outlined">arrow_downward</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- Filter Bar -->
+  <section class="max-w-screen-2xl mx-auto px-8 -mt-10 relative z-20">
+    <div class="bg-surface-container-lowest p-6 rounded-2xl shadow-[0_20px_40px_rgba(26,28,28,0.08)] grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+      <div class="space-y-2">
+        <label class="text-xs font-semibold text-secondary uppercase tracking-widest px-1">Rechercher</label>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary">search</span>
+          <input id="search-input" type="text" placeholder="Peugeot, Renault..." class="w-full bg-surface-container-low border-none rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary/20 text-on-surface font-medium outline-none"/>
+        </div>
+      </div>
+      <div class="space-y-2">
+        <label class="text-xs font-semibold text-secondary uppercase tracking-widest px-1">Statut</label>
+        <div class="relative">
+          <select id="filter-statut" class="w-full bg-surface-container-low border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 appearance-none text-on-background font-medium outline-none">
+            <option value="">Tous les véhicules</option>
+            <option value="disponible">Disponibles uniquement</option>
+            <option value="louee">Actuellement loués</option>
+          </select>
+          <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
+        </div>
+      </div>
+      <button onclick="appliquerFiltres()" class="bg-primary h-12 rounded-xl text-white font-bold flex items-center justify-center gap-2 hover:scale-[1.02] transition-all active:scale-95">
+        <span class="material-symbols-outlined">filter_list</span>
+        Filtrer
+      </button>
+    </div>
+  </section>
+
+  <!-- Error banner -->
+  <div id="error-banner" class="max-w-screen-2xl mx-auto px-8 mt-6">
+    <div class="bg-error-container text-error rounded-xl px-6 py-4 flex items-center gap-3">
+      <span class="material-symbols-outlined">error</span>
+      <span class="font-medium" id="error-msg">Impossible de charger les véhicules. Vérifiez que le serveur PHP est actif.</span>
+    </div>
+  </div>
+
+  <!-- Catalogue -->
+  <section id="catalogue" class="max-w-screen-2xl mx-auto px-8 py-16">
+    <div class="flex items-end justify-between mb-10">
+      <div>
+        <h2 class="text-3xl font-bold tracking-tight text-on-background">Notre Flotte</h2>
+        <p class="text-secondary font-medium mt-1">
+          <span id="count-label">Chargement...</span>
+        </p>
+      </div>
     </div>
 
-    <div class="container">
-        <div class="row" id="catalogue-voitures">
-            </div>
+    <!-- Skeletons pendant chargement -->
+    <div id="skeletons" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="bg-surface-container-lowest rounded-3xl overflow-hidden">
+        <div class="skeleton h-56"></div>
+        <div class="p-8 space-y-4">
+          <div class="skeleton h-6 rounded-lg w-3/4"></div>
+          <div class="skeleton h-4 rounded-lg w-1/2"></div>
+          <div class="skeleton h-10 rounded-xl w-full"></div>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest rounded-3xl overflow-hidden">
+        <div class="skeleton h-56"></div>
+        <div class="p-8 space-y-4">
+          <div class="skeleton h-6 rounded-lg w-3/4"></div>
+          <div class="skeleton h-4 rounded-lg w-1/2"></div>
+          <div class="skeleton h-10 rounded-xl w-full"></div>
+        </div>
+      </div>
+      <div class="bg-surface-container-lowest rounded-3xl overflow-hidden">
+        <div class="skeleton h-56"></div>
+        <div class="p-8 space-y-4">
+          <div class="skeleton h-6 rounded-lg w-3/4"></div>
+          <div class="skeleton h-4 rounded-lg w-1/2"></div>
+          <div class="skeleton h-10 rounded-xl w-full"></div>
+        </div>
+      </div>
     </div>
 
-    <script>
-        // Simulation de notre base de données pour le moment
-        const voitures = [
-            { id: 1, marque: 'Peugeot', modele: '208', prix: 35, image: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=500&q=60' },
-            { id: 2, marque: 'Renault', modele: 'Clio 5', prix: 40, image: 'https://images.unsplash.com/photo-1621007947382-34c769ce59d6?auto=format&fit=crop&w=500&q=60' },
-            { id: 3, marque: 'Mercedes', modele: 'Classe A', prix: 80, image: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=500&q=60' }
-        ];
+    <!-- Vraie grille de voitures -->
+    <div id="catalogue-voitures" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 hidden"></div>
 
-        const catalogue = document.getElementById('catalogue-voitures');
+    <!-- Aucun résultat -->
+    <div id="no-results" class="hidden text-center py-20">
+      <span class="material-symbols-outlined text-6xl text-zinc-300 mb-4 block">directions_car</span>
+      <p class="text-xl font-bold text-secondary">Aucun véhicule trouvé</p>
+      <p class="text-secondary mt-2">Essayez de modifier vos filtres</p>
+    </div>
+  </section>
+</main>
 
-        // Fonction pour afficher les voitures sur la page
-        voitures.forEach(voiture => {
-            catalogue.innerHTML += `
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow-sm">
-                        <img src="${voiture.image}" class="card-img-top" alt="${voiture.marque}">
-                        <div class="card-body text-center">
-                            <h5 class="card-title">${voiture.marque} ${voiture.modele}</h5>
-                            <p class="card-text fs-4 text-primary fw-bold">${voiture.prix} € / jour</p>
-                            <button class="btn btn-success w-100" onclick="reserver(${voiture.id})">Réserver maintenant</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
+<!-- Footer -->
+<footer class="bg-zinc-900 w-full pt-12 pb-8">
+  <div class="max-w-screen-2xl mx-auto px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="text-xl font-black text-white">AutoDrive Tunisie</div>
+    <p class="text-xs text-zinc-400">© 2024 AutoDrive Tunisie. Premium Mobility Solutions.</p>
+    <div class="flex gap-6">
+      <a href="#" class="text-xs font-medium text-zinc-500 hover:text-primary transition-colors">Conditions Générales</a>
+      <a href="#" class="text-xs font-medium text-zinc-500 hover:text-primary transition-colors">Confidentialité</a>
+    </div>
+  </div>
+</footer>
 
-        // Fonction quand on clique sur Réserver
-        function reserver(id) {
-            alert("Succès ! La voiture a bien été réservée. (Simulation pour le Sprint actuel)");
+<script>
+// Images de fallback par marque
+const imagesFallback = {
+  'peugeot': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=60',
+  'renault': 'https://images.unsplash.com/photo-1621007947382-34c769ce59d6?auto=format&fit=crop&w=600&q=60',
+  'mercedes': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=600&q=60',
+  'default': 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=600&q=60'
+};
+
+let toutesVoitures = [];
+
+function getImage(voiture) {
+  if (voiture.image_url && voiture.image_url.startsWith('http')) return voiture.image_url;
+  const marque = (voiture.marque || '').toLowerCase();
+  for (const key of Object.keys(imagesFallback)) {
+    if (marque.includes(key)) return imagesFallback[key];
+  }
+  return imagesFallback.default;
+}
+
+function renderVoitures(voitures) {
+  const grid = document.getElementById('catalogue-voitures');
+  const noResults = document.getElementById('no-results');
+  const countLabel = document.getElementById('count-label');
+
+  if (voitures.length === 0) {
+    grid.classList.add('hidden');
+    noResults.classList.remove('hidden');
+    countLabel.textContent = 'Aucun véhicule trouvé';
+    return;
+  }
+
+  noResults.classList.add('hidden');
+  grid.classList.remove('hidden');
+  countLabel.textContent = `${voitures.length} véhicule${voitures.length > 1 ? 's' : ''} disponible${voitures.length > 1 ? 's' : ''}`;
+
+  grid.innerHTML = voitures.map(v => {
+    const dispo = v.statut === 'disponible';
+    const img = getImage(v);
+    return `
+    <div class="car-card group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm">
+      <div class="relative h-56 overflow-hidden bg-surface-container-low">
+        <img class="car-img w-full h-full object-cover" src="${img}" alt="${v.marque} ${v.modele}" onerror="this.src='${imagesFallback.default}'"/>
+        <div class="absolute top-4 right-4">
+          <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${dispo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+            ${dispo ? 'Disponible' : 'Louée'}
+          </span>
+        </div>
+      </div>
+      <div class="p-8">
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-2xl font-bold text-on-background tracking-tight">${v.marque} ${v.modele}</h3>
+            <p class="text-xs font-semibold text-secondary tracking-widest uppercase mt-1">Véhicule de location</p>
+          </div>
+          <div class="text-right">
+            <p class="text-[10px] font-bold text-secondary uppercase">Depuis</p>
+            <p class="text-xl font-black text-primary">${parseFloat(v.prix_jour).toFixed(0)} DT <span class="text-xs font-bold text-secondary">/ JOUR</span></p>
+          </div>
+        </div>
+        ${dispo
+          ? `<a href="reservation.html?id=${v.id}&marque=${encodeURIComponent(v.marque)}&modele=${encodeURIComponent(v.modele)}&prix=${v.prix_jour}"
+               class="w-full bg-primary text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-all active:scale-95 mt-4">
+               Réserver maintenant
+               <span class="material-symbols-outlined text-sm">arrow_forward</span>
+             </a>`
+          : `<button disabled class="w-full bg-surface-container-high text-secondary font-bold py-3 rounded-xl flex items-center justify-center gap-2 mt-4 cursor-not-allowed">
+               <span class="material-symbols-outlined text-sm">block</span>
+               Non disponible
+             </button>`
         }
-    </script>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function appliquerFiltres() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const statut = document.getElementById('filter-statut').value;
+  const filtrees = toutesVoitures.filter(v => {
+    const matchSearch = !search || `${v.marque} ${v.modele}`.toLowerCase().includes(search);
+    const matchStatut = !statut || v.statut === statut;
+    return matchSearch && matchStatut;
+  });
+  renderVoitures(filtrees);
+}
+
+// Chargement depuis l'API
+async function chargerVoitures() {
+  try {
+    const res = await fetch('api/voitures.php');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    toutesVoitures = await res.json();
+    document.getElementById('skeletons').classList.add('hidden');
+    renderVoitures(toutesVoitures);
+  } catch (err) {
+    document.getElementById('skeletons').classList.add('hidden');
+    document.getElementById('error-banner').style.display = 'block';
+    document.getElementById('error-msg').textContent =
+      'Impossible de charger les véhicules depuis l\'API. Vérifiez que le serveur PHP est démarré.';
+    // Afficher données de démo si API indisponible
+    toutesVoitures = [
+      { id:1, marque:'Peugeot', modele:'208', prix_jour:'35.00', statut:'disponible', image_url:'' },
+      { id:2, marque:'Renault', modele:'Clio 5', prix_jour:'40.00', statut:'disponible', image_url:'' },
+      { id:3, marque:'Mercedes', modele:'Classe A', prix_jour:'80.00', statut:'louee', image_url:'' }
+    ];
+    renderVoitures(toutesVoitures);
+  }
+}
+
+// Filtrage en temps réel
+document.getElementById('search-input').addEventListener('input', appliquerFiltres);
+document.getElementById('filter-statut').addEventListener('change', appliquerFiltres);
+
+chargerVoitures();
+</script>
 </body>
 </html>

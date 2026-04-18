@@ -1,141 +1,368 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html class="light" lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Panel Admin - AutoDrive Tunisie</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Panel Admin - AutoDrive Tunisie</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#b90027",
+        "primary-container": "#e31837",
+        "secondary": "#5f5e5e",
+        "tertiary": "#00656f",
+        "tertiary-container": "#00808c",
+        "surface": "#f9f9f9",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#f3f3f3",
+        "surface-container": "#eeeeee",
+        "surface-container-high": "#e8e8e8",
+        "on-surface": "#1a1c1c",
+        "error": "#ba1a1a",
+        "error-container": "#ffdad6",
+        "on-secondary-container": "#636262",
+      },
+      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+      fontFamily: { "headline": ["Inter"], "body": ["Inter"] }
+    }
+  }
+}
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+  .kinetic-shadow { box-shadow: 0 20px 40px rgba(26,28,28,0.05); }
+  .nav-link { transition: all 0.2s; }
+  .nav-link:hover { transform: translateX(4px); }
+  .nav-link.active { background: white; color: #b90027; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+  #toast { display: none; }
+  .badge-dispo { background: rgba(0,128,140,0.1); color: #00656f; }
+  .badge-louee { background: rgba(186,26,26,0.1); color: #ba1a1a; }
+</style>
 </head>
-<body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container-fluid">
-            <span class="navbar-brand">AutoDrive Admin</span>
-            <a href="index.html" class="btn btn-outline-light btn-sm">Voir le site</a>
-            <a href="login.html" class="btn btn-outline-danger btn-sm">Déconnexion</a>
-        </div>
-    </nav>
-    <div class="container">
+<body class="bg-surface text-on-surface antialiased flex min-h-screen">
 
-        <!-- Statistiques -->
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card text-center p-3 shadow-sm">
-                    <h6 class="text-muted">Total Réservations</h6>
-                    <h2 id="total-resa">0</h2>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-center p-3 shadow-sm">
-                    <h6 class="text-muted">Voitures Disponibles</h6>
-                    <h2 id="total-dispo">0</h2>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-center p-3 shadow-sm">
-                    <h6 class="text-muted">Revenus Total</h6>
-                    <h2 id="total-revenus">0 DT</h2>
-                </div>
-            </div>
-        </div>
-
-        <!-- Réservations -->
-        <div class="card p-4 shadow-sm mb-4">
-            <h3>Réservations</h3>
-            <table class="table mt-3">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Client</th>
-                        <th>Téléphone</th>
-                        <th>Voiture</th>
-                        <th>Début</th>
-                        <th>Fin</th>
-                        <th>Total</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
-                <tbody id="tableau-reservations"></tbody>
-            </table>
-        </div>
-
-        <!-- Voitures -->
-        <div class="card p-4 shadow-sm">
-            <h3>Gestion de la flotte</h3>
-            <table class="table mt-3">
-                <thead>
-                    <tr>
-                        <th>Marque</th>
-                        <th>Modèle</th>
-                        <th>Prix/Jour</th>
-                        <th>Statut</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="tableau-voitures"></tbody>
-            </table>
-        </div>
-
+<!-- Sidebar -->
+<aside class="fixed inset-y-0 left-0 h-screen w-64 bg-zinc-50 flex flex-col p-4 gap-2 z-40 border-r border-zinc-100">
+  <div class="mb-6 px-2 flex items-center gap-3">
+    <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center">
+      <span class="material-symbols-outlined text-white" style="font-variation-settings:'FILL' 1;">directions_car</span>
     </div>
+    <div>
+      <h1 class="text-lg font-bold text-red-600 leading-tight">Admin Panel</h1>
+      <p class="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">Gestion AutoDrive</p>
+    </div>
+  </div>
 
-    <script>
-        // Charger les réservations
-        fetch('api/reservations.php')
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.getElementById('tableau-reservations');
-                let revenus = 0;
-                data.forEach(r => {
-                    revenus += parseFloat(r.prix_total);
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${r.id}</td>
-                            <td>${r.nom_client}</td>
-                            <td>${r.telephone}</td>
-                            <td>${r.marque} ${r.modele}</td>
-                            <td>${r.date_debut}</td>
-                            <td>${r.date_fin}</td>
-                            <td>${r.prix_total} DT</td>
-                            <td><span class="badge bg-warning">${r.statut}</span></td>
-                        </tr>`;
-                });
-                document.getElementById('total-resa').textContent = data.length;
-                document.getElementById('total-revenus').textContent = revenus + ' DT';
-            });
+  <nav class="flex-1 space-y-1">
+    <a href="#section-stats" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium">
+      <span class="material-symbols-outlined">dashboard</span><span>Tableau de bord</span>
+    </a>
+    <a onclick="afficherSection('voitures')" class="nav-link active flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer text-sm font-medium" id="nav-voitures">
+      <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">directions_car</span><span>Véhicules</span>
+    </a>
+    <a onclick="afficherSection('reservations')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-reservations">
+      <span class="material-symbols-outlined">calendar_today</span><span>Réservations</span>
+    </a>
+  </nav>
 
-        // Charger les voitures
-        fetch('api/voitures.php')
-            .then(res => res.json())
-            .then(voitures => {
-                const tbody = document.getElementById('tableau-voitures');
-                let dispo = 0;
-                voitures.forEach(v => {
-                    if(v.statut === 'disponible') dispo++;
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${v.marque}</td>
-                            <td>${v.modele}</td>
-                            <td>${v.prix_jour} DT</td>
-                            <td><span class="badge ${v.statut === 'disponible' ? 'bg-success' : 'bg-danger'}">${v.statut}</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-warning" 
-                                    onclick="changerStatut(${v.id}, '${v.statut}')">
-                                    ${v.statut === 'disponible' ? 'Marquer Louée' : 'Marquer Disponible'}
-                                </button>
-                            </td>
-                        </tr>`;
-                });
-                document.getElementById('total-dispo').textContent = dispo;
-            });
+  <div class="mt-auto pt-4 border-t border-zinc-200">
+    <a href="index.html" class="w-full bg-surface-container-lowest text-on-surface rounded-xl py-3 px-4 font-semibold text-sm flex items-center justify-center gap-2 mb-3 hover:bg-surface-container transition-colors border border-zinc-100">
+      <span class="material-symbols-outlined text-sm">open_in_new</span>
+      Voir le site
+    </a>
+    <button onclick="seDeconnecter()" class="w-full bg-error-container text-error rounded-xl py-3 px-4 font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+      <span class="material-symbols-outlined text-sm">logout</span>
+      Déconnexion
+    </button>
+  </div>
+</aside>
 
-        function changerStatut(id, statut) {
-            const nouveau = statut === 'disponible' ? 'louee' : 'disponible';
-            fetch('api/voitures.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, statut: nouveau })
-            })
-            .then(res => res.json())
-            .then(() => location.reload());
-        }
-    </script>
+<!-- Main -->
+<main class="ml-64 flex-1 p-8 bg-surface min-h-screen">
+
+  <!-- Toast notification -->
+  <div id="toast" class="fixed top-6 right-6 z-50 bg-on-surface text-surface rounded-xl px-6 py-4 font-medium text-sm flex items-center gap-3 shadow-xl">
+    <span class="material-symbols-outlined text-sm" id="toast-icon">check_circle</span>
+    <span id="toast-msg"></span>
+  </div>
+
+  <!-- Header -->
+  <header class="flex justify-between items-end mb-10" id="section-stats">
+    <div>
+      <p class="text-primary font-bold text-xs uppercase tracking-widest mb-2">Administration</p>
+      <h2 class="text-4xl font-bold tracking-tight text-on-surface" id="page-title">Gestion de la flotte</h2>
+    </div>
+    <div class="flex gap-4">
+      <button onclick="afficherSection('voitures')" id="btn-ajouter"
+        class="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl kinetic-shadow font-semibold text-sm hover:scale-[1.02] transition-all">
+        <span class="material-symbols-outlined text-sm">add</span>
+        Ajouter un véhicule
+      </button>
+    </div>
+  </header>
+
+  <!-- Stats cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+    <div class="bg-surface-container-lowest p-8 rounded-3xl kinetic-shadow relative overflow-hidden group">
+      <div class="absolute top-0 right-0 p-5 opacity-10 group-hover:scale-110 transition-transform">
+        <span class="material-symbols-outlined text-6xl">directions_car</span>
+      </div>
+      <p class="text-secondary font-medium text-sm mb-1">Total Voitures</p>
+      <h3 class="text-3xl font-black text-on-surface mb-3" id="stat-total">—</h3>
+      <div class="flex items-center gap-1 text-tertiary-container text-xs font-bold">
+        <span class="material-symbols-outlined text-xs">info</span>
+        <span id="stat-dispo-label">Chargement...</span>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-8 rounded-3xl kinetic-shadow relative overflow-hidden group border-b-4 border-primary">
+      <div class="absolute top-0 right-0 p-5 opacity-10 group-hover:scale-110 transition-transform">
+        <span class="material-symbols-outlined text-6xl">calendar_today</span>
+      </div>
+      <p class="text-secondary font-medium text-sm mb-1">Réservations</p>
+      <h3 class="text-3xl font-black text-on-surface mb-3" id="stat-resa">—</h3>
+      <div class="flex items-center gap-1 text-on-secondary-container text-xs font-bold">
+        <span class="material-symbols-outlined text-xs">schedule</span>
+        <span>En attente de confirmation</span>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest p-8 rounded-3xl kinetic-shadow relative overflow-hidden group">
+      <div class="absolute top-0 right-0 p-5 opacity-10 group-hover:scale-110 transition-transform">
+        <span class="material-symbols-outlined text-6xl">payments</span>
+      </div>
+      <p class="text-secondary font-medium text-sm mb-1">Revenus Totaux</p>
+      <h3 class="text-3xl font-black text-on-surface mb-3" id="stat-revenus">— <span class="text-lg font-bold text-secondary">DT</span></h3>
+      <div class="flex items-center gap-1 text-tertiary-container text-xs font-bold">
+        <span class="material-symbols-outlined text-xs">check_circle</span>
+        <span>Réservations confirmées</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Voitures -->
+  <div id="section-voitures" class="bg-surface-container-lowest rounded-3xl kinetic-shadow overflow-hidden">
+    <div class="p-6 border-b border-surface-container flex justify-between items-center bg-white">
+      <h4 class="font-bold text-lg text-on-surface">Inventaire de la Flotte</h4>
+      <div class="relative w-64">
+        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">search</span>
+        <input id="search-voiture" type="text" placeholder="Rechercher un modèle..."
+          class="w-full bg-surface-container-low border-none rounded-full py-2 pl-12 pr-6 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-zinc-400 outline-none"/>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low">
+            <th class="px-8 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Véhicule</th>
+            <th class="px-8 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Marque</th>
+            <th class="px-8 py-4 text-xs font-bold uppercase tracking-widest text-secondary text-center">Statut</th>
+            <th class="px-8 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Prix/Jour</th>
+            <th class="px-8 py-4 text-xs font-bold uppercase tracking-widest text-secondary text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-voitures" class="divide-y divide-surface-container">
+          <tr><td colspan="5" class="text-center py-12 text-secondary">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section Réservations (masquée par défaut) -->
+  <div id="section-reservations" class="hidden bg-surface-container-lowest rounded-3xl kinetic-shadow overflow-hidden">
+    <div class="p-6 border-b border-surface-container bg-white">
+      <h4 class="font-bold text-lg text-on-surface">Toutes les Réservations</h4>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low">
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">ID</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Client</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Téléphone</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Voiture</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Dates</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Total</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Statut</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-reservations" class="divide-y divide-surface-container">
+          <tr><td colspan="7" class="text-center py-12 text-secondary">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+let toutesVoitures = [];
+
+// Navigation sections
+function afficherSection(section) {
+  const isVoitures = section === 'voitures';
+  document.getElementById('section-voitures').classList.toggle('hidden', !isVoitures);
+  document.getElementById('section-reservations').classList.toggle('hidden', isVoitures);
+  document.getElementById('page-title').textContent = isVoitures ? 'Gestion de la flotte' : 'Réservations';
+  document.getElementById('nav-voitures').classList.toggle('active', isVoitures);
+  document.getElementById('nav-voitures').classList.toggle('text-zinc-500', !isVoitures);
+  document.getElementById('nav-reservations').classList.toggle('active', !isVoitures);
+  document.getElementById('nav-reservations').classList.toggle('text-zinc-500', isVoitures);
+}
+
+// Toast notifications
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  const icon = document.getElementById('toast-icon');
+  const msgEl = document.getElementById('toast-msg');
+  icon.textContent = type === 'success' ? 'check_circle' : 'error';
+  msgEl.textContent = msg;
+  toast.style.display = 'flex';
+  setTimeout(() => { toast.style.display = 'none'; }, 3000);
+}
+
+// Déconnexion — détruit la session côté serveur
+async function seDeconnecter() {
+  try {
+    await fetch('api/logout.php', { method: 'POST' });
+  } catch (e) {}
+  window.location.href = 'login.html';
+}
+
+// Changer le statut d'une voiture
+async function changerStatut(id, statutActuel) {
+  const nouveau = statutActuel === 'disponible' ? 'louee' : 'disponible';
+  try {
+    const res = await fetch('api/voitures.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, statut: nouveau })
+    });
+    if (!res.ok) throw new Error();
+    showToast(`Statut mis à jour : ${nouveau === 'disponible' ? 'Disponible' : 'Louée'}`);
+    chargerVoitures();
+  } catch {
+    showToast('Erreur lors de la mise à jour', 'error');
+  }
+}
+
+// Rendu tableau voitures
+function renderVoitures(voitures) {
+  const tbody = document.getElementById('tbody-voitures');
+  let dispo = 0;
+
+  if (voitures.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-secondary">Aucun véhicule trouvé</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = voitures.map(v => {
+    if (v.statut === 'disponible') dispo++;
+    const isDispo = v.statut === 'disponible';
+    return `
+    <tr class="hover:bg-zinc-50 transition-colors group">
+      <td class="px-8 py-5">
+        <div>
+          <p class="font-bold text-on-surface leading-tight">${v.modele}</p>
+          <p class="text-xs text-zinc-500">ID #${v.id}</p>
+        </div>
+      </td>
+      <td class="px-8 py-5"><span class="font-medium text-zinc-600">${v.marque}</span></td>
+      <td class="px-8 py-5 text-center">
+        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${isDispo ? 'badge-dispo' : 'badge-louee'}">
+          ${isDispo ? 'Disponible' : 'Louée'}
+        </span>
+      </td>
+      <td class="px-8 py-5">
+        <p class="font-bold text-on-surface">${parseFloat(v.prix_jour).toFixed(0)} <span class="text-xs font-medium text-secondary">DT</span></p>
+      </td>
+      <td class="px-8 py-5 text-right">
+        <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button onclick="changerStatut(${v.id}, '${v.statut}')"
+            class="flex items-center gap-1 px-3 py-2 text-xs font-bold rounded-lg ${isDispo ? 'text-error hover:bg-error-container/30' : 'text-tertiary-container hover:bg-tertiary-container/10'} transition-colors">
+            <span class="material-symbols-outlined text-sm">${isDispo ? 'key_off' : 'key'}</span>
+            ${isDispo ? 'Marquer Louée' : 'Marquer Disponible'}
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Mise à jour stat disponibles
+  document.getElementById('stat-dispo-label').textContent = `${dispo} disponible${dispo > 1 ? 's' : ''}, ${voitures.length - dispo} louée${voitures.length - dispo > 1 ? 's' : ''}`;
+}
+
+// Charger voitures
+async function chargerVoitures() {
+  try {
+    const res = await fetch('api/voitures.php');
+    if (!res.ok) throw new Error();
+    toutesVoitures = await res.json();
+    document.getElementById('stat-total').textContent = toutesVoitures.length;
+    renderVoitures(toutesVoitures);
+  } catch {
+    document.getElementById('tbody-voitures').innerHTML =
+      '<tr><td colspan="5" class="text-center py-12 text-error">Erreur API — vérifiez le serveur PHP</td></tr>';
+  }
+}
+
+// Charger réservations
+async function chargerReservations() {
+  try {
+    const res = await fetch('api/reservations.php');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const tbody = document.getElementById('tbody-reservations');
+    let revenus = 0;
+
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-12 text-secondary">Aucune réservation pour le moment</td></tr>';
+    } else {
+      tbody.innerHTML = data.map(r => {
+        revenus += parseFloat(r.prix_total || 0);
+        const statutClass = r.statut === 'confirmee' ? 'badge-dispo' : r.statut === 'annulee' ? 'badge-louee' : 'bg-amber-100 text-amber-700';
+        return `
+        <tr class="hover:bg-zinc-50 transition-colors">
+          <td class="px-6 py-4 font-mono text-sm text-secondary">#${r.id}</td>
+          <td class="px-6 py-4 font-bold text-on-surface">${r.nom_client}</td>
+          <td class="px-6 py-4 text-zinc-600">${r.telephone}</td>
+          <td class="px-6 py-4 text-zinc-600">${r.marque || '—'} ${r.modele || ''}</td>
+          <td class="px-6 py-4 text-xs text-zinc-500">
+            ${r.date_debut} → ${r.date_fin}
+          </td>
+          <td class="px-6 py-4 font-bold">${parseFloat(r.prix_total).toFixed(0)} DT</td>
+          <td class="px-6 py-4">
+            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statutClass}">${r.statut}</span>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    document.getElementById('stat-resa').textContent = data.length;
+    document.getElementById('stat-revenus').innerHTML = `${Math.round(revenus)} <span class="text-lg font-bold text-secondary">DT</span>`;
+  } catch {
+    document.getElementById('tbody-reservations').innerHTML =
+      '<tr><td colspan="7" class="text-center py-12 text-error">Erreur API — vérifiez le serveur PHP</td></tr>';
+  }
+}
+
+// Recherche en temps réel
+document.getElementById('search-voiture').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  const filtrees = toutesVoitures.filter(v =>
+    `${v.marque} ${v.modele}`.toLowerCase().includes(q)
+  );
+  renderVoitures(filtrees);
+});
+
+// Initialisation
+chargerVoitures();
+chargerReservations();
+</script>
 </body>
 </html>
