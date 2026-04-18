@@ -34,26 +34,29 @@
     </div>
 
     <script>
-        const voitures = [
-            { id: 1, marque: 'Renault', modele: 'Symbol', prix: 110, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR6A7-m9jR_O1m1nE68T3FzK8T1KxW-0_6N0w&s' },
-            { id: 2, marque: 'Kia', modele: 'Picanto', prix: 120, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRe_Y0E_7p7G19E8qjYv6p6nE68T3FzK8T1KxW-0_6N0w&s' },
-            { id: 3, marque: 'Volkswagen', modele: 'Polo 8', prix: 140, image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_Y0E_7p7G19E8qjYv6p6nE68T3FzK8T1KxW-0_6N0w&s' }
-        ];
-
+fetch('api/voitures.php')
+    .then(res => res.json())
+    .then(voitures => {
         const catalogue = document.getElementById('catalogue-voitures');
         voitures.forEach(voiture => {
             catalogue.innerHTML += `
                 <div class="col-md-4 mb-4">
                     <div class="card shadow-sm border-0">
-                        <img src="${voiture.image}" class="card-img-top" alt="${voiture.marque}">
+                        <img src="${voiture.image_url || 'https://via.placeholder.com/400x200'}" 
+                             class="card-img-top" style="height:200px;object-fit:cover">
                         <div class="card-body text-center">
-                            <h5 class="card-title text-uppercase fw-bold">${voiture.marque} ${voiture.modele}</h5>
-                            <p class="card-text fs-4 text-danger fw-bold">${voiture.prix} DT / Jour</p>
-                            <a href="reservation.html" class="btn btn-dark w-100">Réserver maintenant</a>
+                            <h5 class="fw-bold text-uppercase">${voiture.marque} ${voiture.modele}</h5>
+                            <p class="fs-4 text-danger fw-bold">${voiture.prix_jour} DT / Jour</p>
+                            <span class="badge ${voiture.statut === 'disponible' ? 'bg-success' : 'bg-danger'} mb-2">
+                                ${voiture.statut === 'disponible' ? 'Disponible' : 'Louée'}
+                            </span><br>
+                            <a href="reservation.html?id=${voiture.id}&prix=${voiture.prix_jour}" 
+                               class="btn btn-dark w-100 mt-2">Réserver maintenant</a>
                         </div>
                     </div>
                 </div>`;
         });
+    });
     </script>
 </body>
 </html>
