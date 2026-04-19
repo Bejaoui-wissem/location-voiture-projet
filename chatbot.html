@@ -49,6 +49,7 @@ tailwind.config = {
   .bot-text p{margin:.3rem 0}
 </style>
 <script src="assets/js/darkmode.js"></script>
+<script src="assets/js/animations.js"></script>
 </head>
 <body class="bg-surface text-on-background min-h-screen flex flex-col">
 
@@ -261,13 +262,34 @@ function toggleVoir() {
 
 // ── System prompt ─────────────────────────────────────────────────────────
 function buildSystem() {
-  const liste = flotte.map(v =>
-    `- ${v.marque} ${v.modele} : ${parseFloat(v.prix_jour).toFixed(0)} DT/jour — ${v.statut==='disponible'?'DISPONIBLE':'NON DISPONIBLE (louée)'}`
+  const dispos   = flotte.filter(v => v.statut === 'disponible');
+  const indispos = flotte.filter(v => v.statut !== 'disponible');
+  const listeD = dispos.map(v =>
+    `  • ${v.marque} ${v.modele} — ${parseFloat(v.prix_jour).toFixed(0)} DT/jour [DISPONIBLE] (id:${v.id})`
   ).join('\n');
-  return `Tu es l'assistant virtuel d'AutoDrive Tunisie, agence de location de voitures.
-RÔLE : aider les clients à choisir un véhicule, calculer les tarifs, orienter vers la réservation.
-FLOTTE EN TEMPS RÉEL :\n${liste}
-RÈGLES : réponds en français, propose uniquement les voitures DISPONIBLES, calcul = prix_jour × jours, réponses courtes (2-4 phrases), émojis avec modération, agences : Tunis, Sousse, Sfax.`;
+  const listeI = indispos.map(v =>
+    `  • ${v.marque} ${v.modele} — ${parseFloat(v.prix_jour).toFixed(0)} DT/jour [LOUÉE]`
+  ).join('\n');
+
+  return `Tu es un conseiller expert d'AutoDrive Tunisie, spécialisé dans la recommandation personnalisée de véhicules.
+
+FLOTTE EN TEMPS RÉEL :
+Disponibles :
+${listeD || '  (aucune disponible)'}
+Non disponibles :
+${listeI || '  (aucune)'}
+
+MÉTHODE DE RECOMMANDATION — suis ces étapes dans l'ordre :
+1. Si budget non précisé → demande : "Quel est votre budget par jour ?"
+2. Si durée non précisée → demande : "Combien de jours souhaitez-vous louer ?"
+3. Si usage non précisé  → demande : "C'est pour quel usage ? (ville, famille, voyage, affaires...)"
+4. Avec ces 3 infos → propose LA meilleure voiture avec :
+   - Nom et prix/jour
+   - Coût total calculé (prix × jours)
+   - 2-3 raisons personnalisées selon l'usage
+   - Invitation à réserver : "Cliquez sur Réserver maintenant sur [NOM] dans notre catalogue !"
+
+RÈGLES : réponds en français, voitures DISPONIBLES uniquement, max 4 phrases par réponse, chaleureux et professionnel, émojis avec modération 🚗, agences : Tunis, Sousse, Sfax.`;
 }
 
 // ── Appel Gemini ──────────────────────────────────────────────────────────

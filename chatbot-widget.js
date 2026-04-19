@@ -216,10 +216,10 @@ wrap.innerHTML = `
     <div id="ad-messages"></div>
 
     <div id="ad-suggestions">
-      <button class="ad-sugg" onclick="adSugg(this)">Voiture pas chère</button>
-      <button class="ad-sugg" onclick="adSugg(this)">Voitures disponibles</button>
-      <button class="ad-sugg" onclick="adSugg(this)">Tarifs location</button>
-      <button class="ad-sugg" onclick="adSugg(this)">Voiture familiale</button>
+      <button class="ad-sugg" onclick="adSugg(this)">Budget 50 DT/jour</button>
+      <button class="ad-sugg" onclick="adSugg(this)">Voiture pour 5 jours</button>
+      <button class="ad-sugg" onclick="adSugg(this)">Voyage en famille</button>
+      <button class="ad-sugg" onclick="adSugg(this)">La moins chère disponible</button>
     </div>
 
     <div id="ad-input-row">
@@ -323,12 +323,42 @@ window.adActiverCle = async function() {
 
 // ── System prompt ─────────────────────────────────────────
 function adSystem() {
-  const liste = adFlotte.map(v =>
-    `- ${v.marque} ${v.modele} : ${parseFloat(v.prix_jour).toFixed(0)} DT/jour — ${v.statut==='disponible'?'DISPONIBLE':'NON DISPONIBLE'}`
+  const dispos  = adFlotte.filter(v => v.statut === 'disponible');
+  const indispos = adFlotte.filter(v => v.statut !== 'disponible');
+
+  const listeDispos  = dispos.map(v =>
+    `  • ${v.marque} ${v.modele} — ${parseFloat(v.prix_jour).toFixed(0)} DT/jour [DISPONIBLE] (id:${v.id})`
   ).join('\n');
-  return `Tu es l'assistant virtuel d'AutoDrive Tunisie, agence de location de voitures.
-FLOTTE :\n${liste}
-RÈGLES : réponds en français, propose uniquement les voitures DISPONIBLES, calcul = prix_jour × jours, réponses courtes (2-3 phrases), pour réserver : cliquer "Réserver maintenant" dans le catalogue.`;
+  const listeIndispos = indispos.map(v =>
+    `  • ${v.marque} ${v.modele} — ${parseFloat(v.prix_jour).toFixed(0)} DT/jour [LOUÉE]`
+  ).join('\n');
+
+  return `Tu es un conseiller expert d'AutoDrive Tunisie, spécialisé dans la recommandation personnalisée de véhicules.
+
+FLOTTE EN TEMPS RÉEL :
+Disponibles :
+${listeDispos || '  (aucune disponible)'}
+Non disponibles :
+${listeIndispos || '  (aucune)'}
+
+MÉTHODE DE RECOMMANDATION — suis ces étapes dans l'ordre :
+1. Si le client n'a pas précisé son budget, demande-lui : "Quel est votre budget par jour ?"
+2. Si le client n'a pas précisé la durée, demande : "Combien de jours souhaitez-vous louer ?"
+3. Si le client n'a pas précisé l'usage, demande : "C'est pour quel usage ? (ville, famille, voyage, affaires...)"
+4. Avec ces 3 infos, propose LA meilleure voiture avec :
+   - Nom et prix/jour
+   - Calcul du coût total (prix × jours)
+   - 2-3 raisons pourquoi c'est le meilleur choix pour lui
+   - Un lien de réservation en disant "Cliquez sur Réserver maintenant sur la voiture [NOM] dans notre catalogue !"
+
+RÈGLES STRICTES :
+- Réponds TOUJOURS en français
+- Ne propose JAMAIS une voiture marquée [LOUÉE]
+- Si le budget est inférieur au prix de toutes les voitures disponibles, propose la moins chère et explique la différence
+- Calcul prix total = prix_jour × nombre_de_jours (arrondis à l'entier)
+- Sois chaleureux, professionnel, concis (max 4 phrases par réponse)
+- Si le client veut réserver : "Allez sur notre catalogue et cliquez sur 'Réserver maintenant' !"
+- Agences : Tunis (siège), Sousse, Sfax — livraison possible dans toute la Tunisie`;
 }
 
 // ── Appel Gemini ──────────────────────────────────────────
@@ -341,7 +371,7 @@ async function adGemini(msg) {
       body: JSON.stringify({
         systemInstruction:{parts:[{text:adSystem()}]},
         contents:adHisto,
-        generationConfig:{maxOutputTokens:300,temperature:0.7}
+        generationConfig:{maxOutputTokens:450,temperature:0.75}
       })
     }
   );
@@ -425,12 +455,10 @@ window.adSugg = function(btn) {
 function adBienvenue() {
   document.getElementById('ad-messages').innerHTML='';
   const dispos = adFlotte.filter(v=>v.statut==='disponible');
-  adAdd(
-    dispos.length > 0
-      ? `Bonjour ! 👋 Je suis votre assistant AutoDrive.\n\nJe peux vous aider à choisir parmi **${dispos.length} voiture${dispos.length>1?'s':''} disponible${dispos.length>1?'s':''}**. Quel est votre budget ?`
-      : `Bonjour ! 👋 Je suis votre assistant AutoDrive. Comment puis-je vous aider ?`,
-    'bot'
-  );
+  const msg = dispos.length > 0
+    ? `Bonjour ! 👋 Je suis votre conseiller AutoDrive.\n\nJe vais vous aider à trouver **la voiture idéale** parmi nos **${dispos.length} véhicule${dispos.length>1?'s':''} disponible${dispos.length>1?'s':''}**.\n\nPour commencer : **quel est votre budget par jour ?** 💰`
+    : `Bonjour ! 👋 Je suis votre conseiller AutoDrive. Comment puis-je vous aider ?`;
+  adAdd(msg, 'bot');
 }
 
 })();
