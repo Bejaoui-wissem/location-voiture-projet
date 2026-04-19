@@ -236,18 +236,17 @@ const imagesFallback = {
 let toutesVoitures = [];
 
 function getImage(voiture) {
-  // 1. Priorité : image_url définie dans la BD
+  // Priorité 1 : image_url définie dans la BD (chaque voiture a la sienne)
   if (voiture.image_url && voiture.image_url.startsWith('http')) return voiture.image_url;
-  // 2. Chercher par modèle d'abord (plus précis), puis par marque
-  const marque = (voiture.marque || '').toLowerCase();
-  const modele = (voiture.modele || '').toLowerCase();
-  // Chercher le modèle exact
+  // Priorité 2 : fallback par nom de modèle exact
+  const modele = (voiture.modele || '').toLowerCase().trim();
+  const marque = (voiture.marque || '').toLowerCase().trim();
+  if (imagesFallback[modele])          return imagesFallback[modele];
+  if (imagesFallback[marque])          return imagesFallback[marque];
+  // Priorité 3 : recherche partielle
   for (const key of Object.keys(imagesFallback)) {
-    if (key !== 'default' && modele.includes(key)) return imagesFallback[key];
-  }
-  // Puis par marque
-  for (const key of Object.keys(imagesFallback)) {
-    if (key !== 'default' && marque.includes(key)) return imagesFallback[key];
+    if (key !== 'default' && (modele.includes(key) || marque.includes(key)))
+      return imagesFallback[key];
   }
   return imagesFallback.default;
 }
