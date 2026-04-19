@@ -102,6 +102,35 @@ tailwind.config = {
         </button>
       </div>
 
+      <!-- Card Fidélité -->
+      <div class="rounded-2xl p-6 text-white relative overflow-hidden" style="background:linear-gradient(135deg,#1a1c1c,#3a3c3d)">
+        <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,0.05)"></div>
+        <div class="flex justify-between items-center mb-3 relative z-10">
+          <h2 class="font-bold text-base">⭐ Fidélité</h2>
+          <span id="niveau-badge" class="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-amber-400 text-amber-900">Bronze</span>
+        </div>
+        <p class="text-3xl font-black mb-1 relative z-10"><span id="points-fidelite">0</span> <span class="text-sm text-zinc-400 font-medium">points</span></p>
+        <div class="h-2 bg-white/10 rounded-full overflow-hidden mt-3 mb-2 relative z-10">
+          <div id="niveau-progress" class="h-full bg-amber-400 transition-all" style="width:0%"></div>
+        </div>
+        <p class="text-xs text-zinc-400 relative z-10" id="niveau-info">Encore 500 pts pour passer Silver</p>
+        <p class="text-[10px] text-zinc-500 mt-3 relative z-10">Gagnez 10 pts par DT dépensé • 500 pts = -10%</p>
+      </div>
+
+      <!-- Card Parrainage -->
+      <div class="bg-surface-container-lowest rounded-2xl p-6 border border-zinc-100 shadow-sm">
+        <h2 class="font-bold text-base text-on-surface mb-3">👥 Parrainage</h2>
+        <p class="text-xs text-secondary mb-3">Invitez un ami, gagnez <strong class="text-primary">50 DT</strong> à chacune de ses premières réservations.</p>
+        <div class="bg-surface-container-low rounded-xl p-3 mb-3 flex items-center justify-between">
+          <span class="font-mono font-black text-sm text-on-surface" id="parrain-code">—</span>
+          <button onclick="copierCode()" class="text-xs font-bold text-primary hover:underline" id="btn-copier">Copier</button>
+        </div>
+        <a id="btn-partager-wa" href="#" target="_blank"
+          class="w-full bg-green-500 text-white rounded-xl py-2.5 px-4 font-bold text-xs flex items-center justify-center gap-2 hover:bg-green-600 transition-colors">
+          📲 Partager sur WhatsApp
+        </a>
+      </div>
+
       <!-- Card stats rapides -->
       <div class="bg-surface-container-lowest rounded-2xl p-6 border border-zinc-100 shadow-sm">
         <h2 class="font-bold text-base text-on-surface mb-4">Mes stats</h2>
@@ -322,6 +351,55 @@ function seDeconnecter() {
   localStorage.removeItem('autodrive_user');
   window.location.href = 'login.html';
 }
+
+
+// ── FIDÉLITÉ ──────────────────────────────
+function calculerFidelite() {
+  const depense = parseFloat(document.getElementById('stat-depense').textContent) || 0;
+  const points = Math.floor(depense * 10);
+  document.getElementById('points-fidelite').textContent = points;
+
+  let niveau, couleur, seuil, suivant;
+  if (points >= 5000)      { niveau = 'Platinum'; couleur = '#8b5cf6'; seuil = 5000; suivant = null; }
+  else if (points >= 2000) { niveau = 'Gold';     couleur = '#f59e0b'; seuil = 2000; suivant = 5000; }
+  else if (points >= 500)  { niveau = 'Silver';   couleur = '#9ca3af'; seuil = 500;  suivant = 2000; }
+  else                     { niveau = 'Bronze';   couleur = '#cd7f32'; seuil = 0;    suivant = 500; }
+
+  const badge = document.getElementById('niveau-badge');
+  badge.textContent = niveau;
+  badge.style.background = couleur;
+  badge.style.color = 'white';
+
+  if (suivant) {
+    const pct = Math.min(100, ((points - seuil) / (suivant - seuil)) * 100);
+    document.getElementById('niveau-progress').style.width = pct + '%';
+    document.getElementById('niveau-info').textContent = `Encore ${suivant - points} pts pour passer ${niveau === 'Bronze' ? 'Silver' : niveau === 'Silver' ? 'Gold' : 'Platinum'}`;
+  } else {
+    document.getElementById('niveau-progress').style.width = '100%';
+    document.getElementById('niveau-info').textContent = '🏆 Niveau maximum atteint !';
+  }
+}
+
+// ── PARRAINAGE ────────────────────────────
+function initParrainage() {
+  const u = JSON.parse(localStorage.getItem('autodrive_user') || '{}');
+  const code = 'AMI' + (u.nom ? u.nom.substring(0,3).toUpperCase() : 'XXX') + (u.id || '00');
+  document.getElementById('parrain-code').textContent = code;
+  const url = `https://wa.me/?text=${encodeURIComponent(`🚗 Salut ! Je te recommande CharthaGo pour louer une voiture en Tunisie. Utilise mon code ${code} pour recevoir -10% sur ta première réservation ! https://charthago.tn`)}`;
+  document.getElementById('btn-partager-wa').href = url;
+}
+
+function copierCode() {
+  const code = document.getElementById('parrain-code').textContent;
+  navigator.clipboard.writeText(code);
+  const btn = document.getElementById('btn-copier');
+  const t = btn.textContent;
+  btn.textContent = '✓ Copié !';
+  setTimeout(() => btn.textContent = t, 1500);
+}
+
+// Initialiser après chargement des stats
+setTimeout(() => { calculerFidelite(); initParrainage(); }, 1500);
 
 chargerMesReservations();
 </script>
