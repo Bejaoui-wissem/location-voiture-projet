@@ -48,6 +48,8 @@ tailwind.config = {
   @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
   #error-banner { display: none; }
 </style>
+<script src="assets/js/darkmode.js"></script>
+<script src="assets/js/animations.js"></script>
 </head>
 <body class="bg-surface text-on-background">
 
@@ -58,6 +60,7 @@ tailwind.config = {
     <div class="hidden md:flex items-center gap-8">
       <a href="index.html" class="text-red-600 border-b-2 border-red-600 pb-1 font-bold">Catalogue</a>
     </div>
+    <button id="btn-dark" onclick="toggleDark()" title="Mode sombre"></button>
     <a href="login.html" class="bg-primary-container text-white px-6 py-2 rounded-xl font-bold hover:scale-[1.02] transition-transform duration-200 active:scale-95">
       Connexion
     </a>
@@ -279,6 +282,7 @@ async function chargerVoitures() {
     toutesVoitures = await res.json();
     document.getElementById('skeletons').classList.add('hidden');
     renderVoitures(toutesVoitures);
+    if(window.animateNewCards) animateNewCards();
   } catch (err) {
     document.getElementById('skeletons').classList.add('hidden');
     document.getElementById('error-banner').style.display = 'block';
@@ -291,6 +295,7 @@ async function chargerVoitures() {
       { id:3, marque:'Mercedes', modele:'Classe A', prix_jour:'80.00', statut:'louee', image_url:'' }
     ];
     renderVoitures(toutesVoitures);
+    if(window.animateNewCards) animateNewCards();
   }
 }
 

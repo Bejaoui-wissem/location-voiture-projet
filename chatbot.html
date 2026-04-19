@@ -48,6 +48,7 @@ tailwind.config = {
   .bot-text li{margin:.15rem 0}
   .bot-text p{margin:.3rem 0}
 </style>
+<script src="assets/js/darkmode.js"></script>
 </head>
 <body class="bg-surface text-on-background min-h-screen flex flex-col">
 
@@ -59,6 +60,7 @@ tailwind.config = {
       <a href="index.html" class="text-zinc-600 hover:text-zinc-900 font-bold transition-colors">Catalogue</a>
       <a href="chatbot.html" class="text-red-600 border-b-2 border-red-600 pb-1 font-bold">Assistant IA</a>
     </div>
+    <button id="btn-dark" onclick="toggleDark()" title="Mode sombre"></button>
     <a href="login.html" class="bg-primary-container text-white px-6 py-2 rounded-xl font-bold hover:scale-[1.02] transition-transform active:scale-95">Connexion</a>
   </div>
 </nav>
