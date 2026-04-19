@@ -74,7 +74,7 @@ tailwind.config = {
       </div>
 
       <!-- Alerte erreur -->
-      <div id="alert-box" class="mb-6 bg-error-container text-error rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-medium">
+      <div id="alert-box" class="hidden mb-6 bg-error-container text-error rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-medium">
         <span class="material-symbols-outlined text-lg">error</span>
         <span id="alert-msg">Email ou mot de passe incorrect.</span>
       </div>
@@ -95,7 +95,7 @@ tailwind.config = {
           <label class="block text-xs font-semibold text-on-surface tracking-wider uppercase ml-1" for="password">Mot de passe</label>
           <div class="relative group">
             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors">lock</span>
-            <input id="password" type="password" placeholder="••••••••"
+            <input id="password" type="password" placeholder="••••••••" autocomplete="new-password"
               class="w-full bg-surface-container-low border-0 rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 transition-all duration-200 outline-none"/>
           </div>
         </div>
@@ -149,6 +149,7 @@ tailwind.config = {
 function showAlert(msg) {
   const box = document.getElementById('alert-box');
   document.getElementById('alert-msg').textContent = msg;
+  box.classList.remove('hidden');
   box.style.display = 'flex';
 }
 
@@ -168,9 +169,12 @@ function setLoading(loading) {
 }
 
 async function seConnecter() {
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-  document.getElementById('alert-box').style.display = 'none';
+  const emailEl    = document.getElementById('email');
+  const passwordEl = document.getElementById('password');
+  const email      = emailEl.value.trim();
+  const password   = passwordEl.value;
+  document.getElementById('alert-box').classList.add('hidden');
+  document.getElementById('alert-box').style.display = '';
 
   if (!email || !password) {
     showAlert('Veuillez remplir tous les champs.');
@@ -189,6 +193,10 @@ async function seConnecter() {
     const result = await res.json();
 
     if (result.success) {
+      // Sauvegarder session dans localStorage
+      localStorage.setItem('autodrive_user', JSON.stringify({
+        id: result.id, nom: result.nom, email: result.email, role: result.role
+      }));
       if (result.role === 'admin') {
         window.location.href = 'admin.html';
       } else {
@@ -207,7 +215,20 @@ async function seConnecter() {
 // Connexion via touche Entrée
 // Vider les champs au chargement
 document.addEventListener('DOMContentLoaded', () => {
+  // Rediriger si déjà connecté
+  const user = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
+  if (user) {
+    window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
+    return;
+  }
+  // Vider les champs immédiatement et après délai (contre l'autofill navigateur)
   ['email','password'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  setTimeout(() => {
+    ['email','password'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  }, 300);
+  setTimeout(() => {
+    ['email','password'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  }, 800);
 });
 
 ['email', 'password'].forEach(id => {

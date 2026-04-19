@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html class="light" lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mon Compte - AutoDrive Tunisie</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: { extend: {
+    colors: {
+      "primary": "#b90027", "primary-container": "#e31837",
+      "secondary": "#5f5e5e", "surface": "#f9f9f9",
+      "surface-container-lowest": "#ffffff",
+      "surface-container-low": "#f3f3f3",
+      "surface-container": "#eeeeee",
+      "on-surface": "#1a1c1c", "error": "#ba1a1a",
+      "error-container": "#ffdad6",
+    },
+    fontFamily: { "body": ["Inter"] }
+  }}
+}
+</script>
+<script src="assets/js/darkmode.js"></script>
+<script src="assets/js/animations.js"></script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  html.dark body { background: #0f1011; color: #e8e6e3; }
+  html.dark .bg-white, html.dark .bg-surface-container-lowest { background: #1c1e1f !important; }
+  html.dark .bg-surface-container-low { background: #232526 !important; }
+  html.dark .border-zinc-100 { border-color: #2f3132 !important; }
+  html.dark nav { background: rgba(15,16,17,0.85) !important; }
+  html.dark input { background: #232526 !important; color: #e8e6e3 !important; border-color: #3a3c3d !important; }
+  .badge-confirmee  { background:rgba(0,101,111,.1);  color:#00656f; }
+  .badge-en_attente { background:rgba(234,179,8,.12); color:#a16207; }
+  .badge-annulee    { background:rgba(186,26,26,.1);  color:#ba1a1a; }
+</style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+
+<!-- Navbar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm border-b border-zinc-100">
+  <div class="flex justify-between items-center h-20 px-8 max-w-screen-2xl mx-auto">
+    <a href="index.html" class="text-2xl font-black tracking-tighter text-zinc-900">
+      Auto<span style="color:#b90027">Drive</span> Tunisie
+    </a>
+    <div class="flex items-center gap-4">
+      <button id="btn-dark" onclick="toggleDark()" class="w-9 h-9 rounded-xl border border-zinc-200 flex items-center justify-center hover:border-red-600 transition-colors"></button>
+      <a href="index.html" class="text-sm font-medium text-zinc-600 hover:text-primary transition-colors">Catalogue</a>
+      <button onclick="seDeconnecter()" class="text-sm font-bold text-red-600 hover:text-red-700 transition-colors">Déconnexion</button>
+    </div>
+  </div>
+</nav>
+
+<main class="flex-grow pt-28 pb-16 px-6 max-w-screen-lg mx-auto w-full">
+
+  <!-- Header profil -->
+  <div class="flex items-center gap-6 mb-10">
+    <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-black flex-shrink-0" style="background:linear-gradient(135deg,#b90027,#e31837)">
+      <span id="user-initiale">?</span>
+    </div>
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-on-surface" id="user-nom">Mon Compte</h1>
+      <p class="text-secondary text-sm" id="user-email">—</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+    <!-- Colonne gauche — Profil -->
+    <div class="md:col-span-1 space-y-4">
+
+      <!-- Card infos -->
+      <div class="bg-surface-container-lowest rounded-2xl p-6 border border-zinc-100 shadow-sm">
+        <h2 class="font-bold text-base text-on-surface mb-5">Mes informations</h2>
+
+        <!-- Alerte -->
+        <div id="profil-alert" class="hidden mb-4 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2"></div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="text-xs font-semibold uppercase tracking-wider text-secondary block mb-1.5">Nom complet</label>
+            <input id="inp-nom" type="text" class="w-full bg-surface-container-low border border-transparent rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:border-primary transition-all" style="focus-ring-color:#b90027"/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold uppercase tracking-wider text-secondary block mb-1.5">Email</label>
+            <input id="inp-email" type="email" class="w-full bg-surface-container-low border border-transparent rounded-xl py-3 px-4 text-sm outline-none opacity-60 cursor-not-allowed" readonly/>
+          </div>
+          <div>
+            <label class="text-xs font-semibold uppercase tracking-wider text-secondary block mb-1.5">Téléphone</label>
+            <input id="inp-tel" type="tel" placeholder="+216 XX XXX XXX" class="w-full bg-surface-container-low border border-transparent rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:border-primary transition-all"/>
+          </div>
+        </div>
+
+        <button onclick="sauvegarderProfil()"
+          class="w-full mt-5 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
+          style="background:linear-gradient(135deg,#b90027,#e31837)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zm-5 16a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm3-10H5V5h10v4z"/></svg>
+          Enregistrer
+        </button>
+      </div>
+
+      <!-- Card stats rapides -->
+      <div class="bg-surface-container-lowest rounded-2xl p-6 border border-zinc-100 shadow-sm">
+        <h2 class="font-bold text-base text-on-surface mb-4">Mes stats</h2>
+        <div class="space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary">Total réservations</span>
+            <span class="font-bold text-on-surface" id="stat-total-resa">—</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary">Confirmées</span>
+            <span class="font-bold text-green-600" id="stat-confirmees">—</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary">En attente</span>
+            <span class="font-bold text-amber-600" id="stat-attente">—</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary">Total dépensé</span>
+            <span class="font-bold text-primary" id="stat-depense">— DT</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Colonne droite — Réservations -->
+    <div class="md:col-span-2">
+      <div class="bg-surface-container-lowest rounded-2xl border border-zinc-100 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-zinc-100 flex justify-between items-center">
+          <h2 class="font-bold text-base text-on-surface">Mes réservations</h2>
+          <a href="index.html" class="text-xs font-bold text-primary hover:underline flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13H5v-2h14v2z"/><path d="M12 5l7 7-7 7"/></svg>
+            Réserver une voiture
+          </a>
+        </div>
+
+        <div id="reservations-list" class="divide-y divide-zinc-100">
+          <div class="text-center py-16 text-secondary">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" class="mx-auto mb-3 opacity-30"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+            <p class="font-medium text-sm">Chargement...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// Vérifier connexion
+const user = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
+if (!user) { window.location.href = 'login.html'; }
+
+// Afficher les infos utilisateur
+document.getElementById('user-nom').textContent      = user?.nom || 'Mon Compte';
+document.getElementById('user-email').textContent    = user?.email || '—';
+document.getElementById('user-initiale').textContent = (user?.nom || 'U')[0].toUpperCase();
+document.getElementById('inp-nom').value             = user?.nom || '';
+document.getElementById('inp-email').value           = user?.email || '';
+
+// Charger les réservations du client
+async function chargerMesReservations() {
+  try {
+    const res  = await fetch('api/reservations.php');
+    const data = await res.json();
+
+    // Filtrer par email du client connecté
+    const mesResas = data.filter(r =>
+      r.nom_client && user.nom &&
+      r.nom_client.toLowerCase().includes(user.nom.toLowerCase().split(' ')[0])
+    );
+
+    const list = document.getElementById('reservations-list');
+
+    // Stats
+    const confirmees = mesResas.filter(r => r.statut === 'confirmee').length;
+    const attente    = mesResas.filter(r => r.statut === 'en_attente').length;
+    const depense    = mesResas.filter(r => r.statut === 'confirmee').reduce((s,r) => s + parseFloat(r.prix_total||0), 0);
+    document.getElementById('stat-total-resa').textContent = mesResas.length;
+    document.getElementById('stat-confirmees').textContent = confirmees;
+    document.getElementById('stat-attente').textContent    = attente;
+    document.getElementById('stat-depense').textContent    = Math.round(depense) + ' DT';
+
+    if (mesResas.length === 0) {
+      list.innerHTML = `
+        <div class="text-center py-16 text-secondary">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" class="mx-auto mb-3 opacity-20"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          <p class="font-semibold text-sm mb-1">Aucune réservation</p>
+          <p class="text-xs">Commencez par choisir une voiture dans notre catalogue.</p>
+          <a href="index.html" class="inline-block mt-4 px-6 py-2.5 rounded-xl font-bold text-sm text-white" style="background:#b90027">Voir le catalogue</a>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = mesResas.map(r => {
+      const statutClass = r.statut === 'confirmee' ? 'badge-confirmee' : r.statut === 'annulee' ? 'badge-annulee' : 'badge-en_attente';
+      const statutLabel = r.statut === 'confirmee' ? 'Confirmée' : r.statut === 'annulee' ? 'Annulée' : 'En attente';
+      return `
+      <div class="p-5 flex items-center gap-4 hover:bg-surface-container-low transition-colors">
+        <div class="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center" style="background:rgba(185,0,39,0.08)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#b90027"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.08 3.11H5.77L6.85 7zM19 17H5v-5h14v5z"/><circle cx="7.5" cy="14.5" r="1.5"/><circle cx="16.5" cy="14.5" r="1.5"/></svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-sm text-on-surface">${r.marque || '—'} ${r.modele || ''}</p>
+          <p class="text-xs text-secondary mt-0.5">${r.date_debut} → ${r.date_fin}</p>
+        </div>
+        <div class="text-right flex-shrink-0">
+          <p class="font-black text-sm text-primary">${parseFloat(r.prix_total).toFixed(0)} DT</p>
+          <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${statutClass}">${statutLabel}</span>
+        </div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    document.getElementById('reservations-list').innerHTML =
+      '<div class="text-center py-12 text-secondary text-sm">Erreur de chargement — vérifiez le serveur PHP</div>';
+  }
+}
+
+// Sauvegarder le profil
+function sauvegarderProfil() {
+  const nom = document.getElementById('inp-nom').value.trim();
+  const tel = document.getElementById('inp-tel').value.trim();
+  const alert = document.getElementById('profil-alert');
+
+  if (!nom) {
+    alert.className = 'mb-4 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2';
+    alert.style.cssText = 'background:#ffdad6;color:#ba1a1a;';
+    alert.textContent = 'Le nom est requis.';
+    alert.classList.remove('hidden');
+    return;
+  }
+
+  // Mettre à jour localStorage
+  user.nom = nom;
+  if (tel) user.telephone = tel;
+  localStorage.setItem('autodrive_user', JSON.stringify(user));
+
+  document.getElementById('user-nom').textContent      = nom;
+  document.getElementById('user-initiale').textContent = nom[0].toUpperCase();
+
+  alert.className = 'mb-4 rounded-xl px-4 py-3 text-sm font-medium flex items-center gap-2';
+  alert.style.cssText = 'background:#e1f5ee;color:#00656f;';
+  alert.textContent = '✓ Profil mis à jour !';
+  alert.classList.remove('hidden');
+  setTimeout(() => alert.classList.add('hidden'), 3000);
+}
+
+function seDeconnecter() {
+  localStorage.removeItem('autodrive_user');
+  window.location.href = 'login.html';
+}
+
+chargerMesReservations();
+</script>
+</body>
+</html>
