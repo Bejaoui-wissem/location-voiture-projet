@@ -864,8 +864,7 @@ async function genererRapport() {
   // Détail voitures
   const detailV = toutesVoitures.map(v =>
     `- ${v.marque} ${v.modele} (${v.prix_jour} DT/jour) : ${v.statut}`
-  ).join('
-');
+  ).join('\n');
 
   const prompt = `Tu es un analyste business expert pour AutoDrive Tunisie, agence de location de voitures.
 
@@ -922,9 +921,7 @@ Sois précis, professionnel, utilise les chiffres fournis. Réponds en français
       .replace(/^## (.+)$/gm,'<h3>$1</h3>')
       .replace(/^[\*\-] (.+)$/gm,'<li>$1</li>')
       .replace(/(<li>[\s\S]*?(?=<h3>|$))/g, m => m.includes('<li>') ? '<ul>'+m+'</ul>' : m)
-      .replace(/
-{2,}/g,'</p><p>').replace(/
-/g,'<br/>')
+      .replace(/\n{2,}/g,'</p><p>').replace(/\n/g,'<br/>')
       .replace(/^(?!<[hup])/gm, '<p>').replace(/(?<![>])$/gm,'</p>');
 
     // Afficher les KPIs
