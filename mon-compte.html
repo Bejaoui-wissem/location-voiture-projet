@@ -153,6 +153,7 @@ tailwind.config = {
 // Vérifier connexion
 const user = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
 if (!user) { window.location.href = 'login.html'; }
+if (user && user.role === 'admin') { window.location.href = 'admin.html'; }
 
 // Afficher les infos utilisateur
 document.getElementById('user-nom').textContent      = user?.nom || 'Mon Compte';

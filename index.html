@@ -59,6 +59,7 @@ tailwind.config = {
     <a href="index.html" class="text-2xl font-black tracking-tighter text-zinc-900">AutoDrive Tunisie</a>
     <div class="hidden md:flex items-center gap-8">
       <a href="index.html" class="text-red-600 border-b-2 border-red-600 pb-1 font-bold">Catalogue</a>
+      <a href="about.html" class="text-zinc-600 hover:text-primary font-medium transition-colors">À propos</a>
     </div>
     <button id="btn-dark" onclick="toggleDark()" title="Mode sombre"></button>
     <div id="nav-auth">
@@ -116,6 +117,24 @@ tailwind.config = {
         Filtrer
       </button>
     </div>
+
+    <!-- Filtre dates -->
+    <div class="bg-surface-container-lowest p-4 rounded-2xl shadow-[0_8px_20px_rgba(26,28,28,0.06)] grid grid-cols-1 md:grid-cols-3 gap-4 items-end mt-3">
+      <div class="space-y-2">
+        <label class="text-xs font-semibold text-secondary uppercase tracking-widest px-1">Date de début</label>
+        <input id="filter-debut" type="date" class="w-full bg-surface-container-low border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none text-on-background font-medium"/>
+      </div>
+      <div class="space-y-2">
+        <label class="text-xs font-semibold text-secondary uppercase tracking-widest px-1">Date de fin</label>
+        <input id="filter-fin" type="date" class="w-full bg-surface-container-low border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 outline-none text-on-background font-medium"/>
+      </div>
+      <button onclick="filtrerParDates()" class="bg-surface-container-high h-12 rounded-xl text-on-surface font-bold flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-all">
+        <span class="material-symbols-outlined">event_available</span>
+        Vérifier disponibilité
+      </button>
+    </div>
+    <div class="hidden" style="display:none">
+    </div>
   </section>
 
   <!-- Error banner -->
@@ -127,6 +146,22 @@ tailwind.config = {
   </div>
 
   <!-- Catalogue -->
+  <!-- Bandeau admin -->
+  <div id="admin-banner" class="hidden max-w-screen-2xl mx-auto px-8 mt-6">
+    <div class="flex items-center justify-between bg-zinc-900 text-white rounded-2xl px-6 py-4">
+      <div class="flex items-center gap-3">
+        <span class="text-xl">⚙</span>
+        <div>
+          <p class="font-bold text-sm">Mode administrateur</p>
+          <p class="text-zinc-400 text-xs">Vous consultez le catalogue en tant qu'admin. Les réservations sont désactivées.</p>
+        </div>
+      </div>
+      <a href="admin.html" class="bg-primary text-white px-5 py-2 rounded-xl font-bold text-sm hover:scale-[1.02] transition-all">
+        Retour au panel
+      </a>
+    </div>
+  </div>
+
   <section id="catalogue" class="max-w-screen-2xl mx-auto px-8 py-16">
     <div class="flex items-end justify-between mb-10">
       <div>
@@ -305,20 +340,71 @@ function renderVoitures(voitures) {
             <p class="text-lg font-black text-primary">${parseFloat(v.prix_jour).toFixed(0)} <span class="text-xs font-bold text-secondary">DT/j</span></p>
           </div>
         </div>
-        ${dispo
-          ? `<a href="reservation.html?id=${v.id}&marque=${encodeURIComponent(v.marque)}&modele=${encodeURIComponent(v.modele)}&prix=${v.prix_jour}"
-               class="w-full bg-primary text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-all active:scale-95 mt-3 text-sm">
-               Réserver maintenant
-               <span class="material-symbols-outlined text-sm">arrow_forward</span>
-             </a>`
-          : `<button disabled class="w-full bg-surface-container-high text-secondary font-bold py-3 rounded-xl flex items-center justify-center gap-2 mt-3 cursor-not-allowed text-sm">
-               <span class="material-symbols-outlined text-sm">block</span>
-               Non disponible
-             </button>`
+        ${window._isAdmin
+          ? `<div class="w-full bg-zinc-100 text-zinc-400 font-bold py-3 rounded-xl flex items-center justify-center gap-2 mt-3 text-sm cursor-not-allowed">
+               <span class="material-symbols-outlined text-sm">visibility</span>
+               Mode administrateur
+             </div>`
+          : dispo
+            ? `<a href="reservation.html?id=${v.id}&marque=${encodeURIComponent(v.marque)}&modele=${encodeURIComponent(v.modele)}&prix=${v.prix_jour}"
+                 class="w-full bg-primary text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-all active:scale-95 mt-3 text-sm">
+                 Réserver maintenant
+                 <span class="material-symbols-outlined text-sm">arrow_forward</span>
+               </a>`
+            : `<button disabled class="w-full bg-surface-container-high text-secondary font-bold py-3 rounded-xl flex items-center justify-center gap-2 mt-3 cursor-not-allowed text-sm">
+                 <span class="material-symbols-outlined text-sm">block</span>
+                 Non disponible
+               </button>`
         }
       </div>
     </div>`;
   }).join('');
+}
+
+// Initialiser dates min
+(function() {
+  const today = new Date().toISOString().split('T')[0];
+  const d1 = document.getElementById('filter-debut');
+  const d2 = document.getElementById('filter-fin');
+  if (d1) { d1.min = today; d1.addEventListener('change', () => { if (d2) d2.min = d1.value; }); }
+})();
+
+async function filtrerParDates() {
+  const debut = document.getElementById('filter-debut').value;
+  const fin   = document.getElementById('filter-fin').value;
+
+  if (!debut || !fin) {
+    alert('Veuillez sélectionner une date de début et de fin.');
+    return;
+  }
+  if (debut >= fin) {
+    alert('La date de fin doit être après la date de début.');
+    return;
+  }
+
+  // Récupérer les réservations confirmées sur cette période
+  try {
+    const res  = await fetch('api/reservations.php');
+    const resas = await res.json();
+
+    // Voitures occupées sur la période
+    const occupees = new Set(resas
+      .filter(r => r.statut !== 'annulee' &&
+        !(r.date_fin <= debut || r.date_debut >= fin))
+      .map(r => parseInt(r.voiture_id))
+    );
+
+    // Filtrer les voitures disponibles
+    const dispos = toutesVoitures.filter(v => !occupees.has(v.id));
+    renderVoitures(dispos);
+
+    const label = document.getElementById('count-label');
+    if (label) label.textContent = `${dispos.length} véhicule${dispos.length > 1 ? 's' : ''} disponible${dispos.length > 1 ? 's' : ''} du ${debut} au ${fin}`;
+  } catch(e) {
+    // Fallback : afficher seulement les voitures marquées disponibles
+    const dispos = toutesVoitures.filter(v => v.statut === 'disponible');
+    renderVoitures(dispos);
+  }
 }
 
 function appliquerFiltres() {
@@ -361,6 +447,14 @@ async function chargerVoitures() {
 document.getElementById('search-input').addEventListener('input', appliquerFiltres);
 document.getElementById('filter-categorie').addEventListener('change', appliquerFiltres);
 
+// Afficher bandeau admin si connecté comme admin
+if (window._isAdmin) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const banner = document.getElementById('admin-banner');
+    if (banner) banner.classList.remove('hidden');
+  });
+}
+
 // Vider le champ de recherche — protection anti-autofill
 function viderRecherche() {
   const inp = document.getElementById("search-input");
@@ -376,8 +470,19 @@ chargerVoitures();
 <script>
 (function() {
   const u = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
-  if (u && u.nom) {
-    const navAuth = document.getElementById('nav-auth');
+  if (!u || !u.nom) return;
+
+  const navAuth = document.getElementById('nav-auth');
+
+  if (u.role === 'admin') {
+    // Admin — afficher lien panel admin
+    if (navAuth) {
+      navAuth.innerHTML = '<a href="admin.html" class="flex items-center gap-2 text-sm font-bold text-white px-4 py-2 rounded-xl" style="background:#b90027"><span class="text-xs">⚙</span> Panel Admin</a>';
+    }
+    // Masquer les boutons réserver dès que le catalogue charge
+    window._isAdmin = true;
+  } else {
+    // Client — afficher mon compte
     if (navAuth) {
       navAuth.innerHTML = '<a href="mon-compte.html" class="flex items-center gap-2 text-sm font-bold text-zinc-700 hover:text-primary transition-colors"><span class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-black" style="background:#b90027">' + u.nom[0].toUpperCase() + '</span>' + u.nom.split(' ')[0] + '</a>';
     }

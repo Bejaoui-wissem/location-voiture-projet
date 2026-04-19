@@ -80,6 +80,12 @@ tailwind.config = {
   .btn-suppr:hover { background:#ba1a1a; color:white; }
   .btn-edit  { transition:all .15s; font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px; border:none; cursor:pointer; background:rgba(0,101,111,0.1); color:#00656f; }
   .btn-edit:hover  { background:#00656f; color:white; }
+  /* Graphiques */
+  .chart-card { background:var(--color-bg,white); border-radius:20px; padding:24px; border:1px solid #f0f0f0; box-shadow:0 4px 20px rgba(0,0,0,0.05); }
+  html.dark .chart-card { background:#1c1e1f !important; border-color:#2f3132 !important; }
+  .chart-title { font-size:14px; font-weight:700; color:#1a1c1c; margin-bottom:4px; }
+  html.dark .chart-title { color:#e8e6e3 !important; }
+  .chart-sub { font-size:11px; color:#9ca3af; margin-bottom:16px; }
   /* Rapport IA */
   #rapport-content p   { margin:.4rem 0; line-height:1.7; font-size:14px; }
   #rapport-content h3  { font-size:15px; font-weight:700; margin:1.2rem 0 .4rem; color:#1a1c1c; }
@@ -116,6 +122,7 @@ tailwind.config = {
   </style>
 <script src="assets/js/darkmode.js"></script>
 <script src="assets/js/animations.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body class="bg-surface text-on-surface antialiased flex min-h-screen">
 
@@ -140,6 +147,12 @@ tailwind.config = {
     </a>
     <a onclick="afficherSection('reservations')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-reservations">
       <span class="material-symbols-outlined">calendar_today</span><span>Réservations</span>
+    </a>
+    <a onclick="afficherSection('graphiques')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-graphiques">
+      <span class="material-symbols-outlined">bar_chart</span><span>Graphiques</span>
+    </a>
+    <a onclick="afficherSection('clients')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-clients">
+      <span class="material-symbols-outlined">group</span><span>Clients</span>
     </a>
     <a onclick="afficherSection('rapport')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-rapport">
       <span class="material-symbols-outlined">auto_awesome</span>
@@ -371,7 +384,7 @@ let toutesVoitures = [];
 
 // Navigation sections
 function afficherSection(section) {
-  const sections = ['voitures','reservations','rapport'];
+  const sections = ['voitures','reservations','rapport','graphiques','clients'];
   sections.forEach(s => {
     const el = document.getElementById('section-' + s);
     if (el) el.classList.toggle('hidden', s !== section);
@@ -381,11 +394,15 @@ function afficherSection(section) {
       nav.classList.toggle('text-zinc-500', s !== section);
     }
   });
-  const titles = { voitures:'Gestion de la flotte', reservations:'Réservations', rapport:'Rapport IA' };
+  const titles = {
+    voitures:'Gestion de la flotte', reservations:'Réservations',
+    rapport:'Rapport IA', graphiques:'Graphiques & Stats', clients:'Gestion des Clients'
+  };
   document.getElementById('page-title').textContent = titles[section] || 'Dashboard';
-  // Cacher/montrer btn-ajouter
   const btnAjouter = document.getElementById('btn-ajouter');
   if (btnAjouter) btnAjouter.style.display = section === 'voitures' ? 'flex' : 'none';
+  if (section === 'graphiques') genererGraphiques();
+  if (section === 'clients')    chargerClients();
 }
 
 // Toast notifications
@@ -954,6 +971,140 @@ Sois précis, professionnel, utilise les chiffres fournis. Réponds en français
   } finally {
     document.getElementById('btn-rapport').disabled = false;
   }
+}
+
+
+// ── Chart.js ──────────────────────────────────────────────
+let chartsInit = false;
+let chartStatuts, chartCategories, chartRevenus;
+
+function genererGraphiques() {
+  if (typeof Chart === 'undefined') return;
+
+  // Données réservations
+  const confirmees = toutesReservations.filter(r => r.statut === 'confirmee').length;
+  const attente    = toutesReservations.filter(r => r.statut === 'en_attente').length;
+  const annulees   = toutesReservations.filter(r => r.statut === 'annulee').length;
+
+  // Données voitures par catégorie
+  const cats = {};
+  toutesVoitures.forEach(v => { cats[v.categorie || 'Autre'] = (cats[v.categorie || 'Autre'] || 0) + 1; });
+
+  // Revenus par voiture
+  const revenusParVoiture = {};
+  toutesReservations.filter(r => r.statut === 'confirmee').forEach(r => {
+    const nom = `${r.marque || ''} ${r.modele || ''}`.trim();
+    revenusParVoiture[nom] = (revenusParVoiture[nom] || 0) + parseFloat(r.prix_total || 0);
+  });
+  const topVoitures = Object.entries(revenusParVoiture).sort((a,b) => b[1]-a[1]).slice(0,8);
+
+  const colors = ['#b90027','#e31837','#00656f','#f97316','#8b5cf6','#ec4899','#14b8a6','#f59e0b'];
+  const isDark  = document.documentElement.classList.contains('dark');
+  const txtColor = isDark ? '#e8e6e3' : '#1a1c1c';
+  Chart.defaults.color = txtColor;
+
+  // Graphique statuts
+  if (chartStatuts) chartStatuts.destroy();
+  chartStatuts = new Chart(document.getElementById('chart-statuts'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Confirmées','En attente','Annulées'],
+      datasets: [{ data: [confirmees, attente, annulees], backgroundColor: ['#00656f','#f97316','#b90027'], borderWidth: 0 }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+  });
+
+  // Graphique catégories
+  if (chartCategories) chartCategories.destroy();
+  chartCategories = new Chart(document.getElementById('chart-categories'), {
+    type: 'pie',
+    data: {
+      labels: Object.keys(cats),
+      datasets: [{ data: Object.values(cats), backgroundColor: colors, borderWidth: 0 }]
+    },
+    options: { plugins: { legend: { position: 'bottom' } } }
+  });
+
+  // Graphique revenus
+  if (chartRevenus) chartRevenus.destroy();
+  chartRevenus = new Chart(document.getElementById('chart-revenus'), {
+    type: 'bar',
+    data: {
+      labels: topVoitures.map(v => v[0]),
+      datasets: [{ label: 'Revenus (DT)', data: topVoitures.map(v => Math.round(v[1])),
+        backgroundColor: '#b90027', borderRadius: 8 }]
+    },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+
+  // KPIs
+  const prixMoy = toutesVoitures.length > 0
+    ? Math.round(toutesVoitures.reduce((s,v) => s + parseFloat(v.prix_jour||0), 0) / toutesVoitures.length)
+    : 0;
+  const topV = topVoitures[0]?.[0] || '—';
+  const tauxConf = toutesReservations.length > 0
+    ? Math.round((confirmees / toutesReservations.length) * 100)
+    : 0;
+
+  document.getElementById('kpi-prix-moy').textContent    = prixMoy + ' DT';
+  document.getElementById('kpi-top-voiture').textContent  = topV;
+  document.getElementById('kpi-taux-confirm').textContent = tauxConf + '%';
+}
+
+// ── Clients ────────────────────────────────────────────────
+let tousClients = [];
+
+function chargerClients() {
+  // Construire la liste des clients depuis les réservations
+  const clientsMap = {};
+  toutesReservations.forEach(r => {
+    const key = r.nom_client + '_' + r.telephone;
+    if (!clientsMap[key]) {
+      clientsMap[key] = {
+        nom: r.nom_client, telephone: r.telephone,
+        reservations: 0, total: 0, derniere: r.created_at || r.date_debut
+      };
+    }
+    clientsMap[key].reservations++;
+    clientsMap[key].total += parseFloat(r.prix_total || 0);
+    if (r.created_at > clientsMap[key].derniere) clientsMap[key].derniere = r.created_at;
+  });
+
+  tousClients = Object.values(clientsMap).sort((a,b) => b.total - a.total);
+  renderClients(tousClients);
+}
+
+function filtrerClients() {
+  const q = document.getElementById('search-client').value.toLowerCase();
+  const filtres = tousClients.filter(c =>
+    c.nom.toLowerCase().includes(q) || c.telephone.includes(q)
+  );
+  renderClients(filtres);
+}
+
+function renderClients(clients) {
+  const tbody = document.getElementById('tbody-clients');
+  if (clients.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-12 text-secondary">Aucun client trouvé</td></tr>';
+    return;
+  }
+  tbody.innerHTML = clients.map(c => `
+    <tr class="hover:bg-zinc-50 transition-colors">
+      <td class="px-6 py-4">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-black flex-shrink-0" style="background:linear-gradient(135deg,#b90027,#e31837)">
+            ${c.nom[0].toUpperCase()}
+          </div>
+          <span class="font-bold text-on-surface text-sm">${c.nom}</span>
+        </div>
+      </td>
+      <td class="px-6 py-4 text-secondary text-sm">${c.telephone}</td>
+      <td class="px-6 py-4 text-center">
+        <span class="px-3 py-1 rounded-full text-xs font-bold" style="background:rgba(185,0,39,0.08);color:#b90027">${c.reservations}</span>
+      </td>
+      <td class="px-6 py-4 text-right font-black text-primary">${Math.round(c.total)} DT</td>
+      <td class="px-6 py-4 text-secondary text-xs">${c.derniere ? c.derniere.split('T')[0] : '—'}</td>
+    </tr>`).join('');
 }
 
 // Initialisation

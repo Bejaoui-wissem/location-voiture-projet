@@ -256,6 +256,10 @@ const prixUrl = params.get('prix');
 
 // Pré-remplir avec les infos de l'utilisateur connecté
 const userSession = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
+// Bloquer l'accès à la réservation pour l'admin
+if (userSession && userSession.role === 'admin') {
+  window.location.href = 'admin.html';
+}
 if (userSession) {
   const nomInp = document.getElementById('nom-client');
   if (nomInp) nomInp.value = userSession.nom || '';
