@@ -44,6 +44,28 @@ tailwind.config = {
   #toast { display: none; }
   .badge-dispo { background: rgba(0,128,140,0.1); color: #00656f; }
   .badge-louee { background: rgba(186,26,26,0.1); color: #ba1a1a; }
+  /* Compteurs animés */
+  .stat-num {
+    display: inline-block;
+    transition: transform 0.1s ease;
+  }
+  @keyframes statPop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.15); color: #b90027; }
+    100% { transform: scale(1); }
+  }
+  .stat-pop { animation: statPop 0.4s cubic-bezier(.4,0,.2,1) forwards; }
+  /* Barre de progression sous chaque stat */
+  .stat-bar {
+    height: 3px; border-radius: 99px;
+    background: #e8e8e8; margin-top: 12px; overflow: hidden;
+  }
+  .stat-bar-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, #b90027, #e31837);
+    width: 0%; transition: width 1.2s cubic-bezier(.4,0,.2,1);
+  }
+  html.dark .stat-bar { background: #2f3132; }
   </style>
 <script src="assets/js/darkmode.js"></script>
 <script src="assets/js/animations.js"></script>
@@ -122,6 +144,7 @@ tailwind.config = {
         <span class="material-symbols-outlined text-xs">info</span>
         <span id="stat-dispo-label">Chargement...</span>
       </div>
+      <div class="stat-bar"><div class="stat-bar-fill" id="bar-total"></div></div>
     </div>
     <div class="bg-surface-container-lowest p-8 rounded-3xl kinetic-shadow relative overflow-hidden group border-b-4 border-primary">
       <div class="absolute top-0 right-0 p-5 opacity-10 group-hover:scale-110 transition-transform">
@@ -133,6 +156,7 @@ tailwind.config = {
         <span class="material-symbols-outlined text-xs">schedule</span>
         <span>En attente de confirmation</span>
       </div>
+      <div class="stat-bar"><div class="stat-bar-fill" id="bar-resa"></div></div>
     </div>
     <div class="bg-surface-container-lowest p-8 rounded-3xl kinetic-shadow relative overflow-hidden group">
       <div class="absolute top-0 right-0 p-5 opacity-10 group-hover:scale-110 transition-transform">
@@ -144,6 +168,7 @@ tailwind.config = {
         <span class="material-symbols-outlined text-xs">check_circle</span>
         <span>Réservations confirmées</span>
       </div>
+      <div class="stat-bar"><div class="stat-bar-fill" id="bar-revenus"></div></div>
     </div>
   </div>
 
@@ -305,7 +330,8 @@ async function chargerVoitures() {
     const res = await fetch('api/voitures.php');
     if (!res.ok) throw new Error();
     toutesVoitures = await res.json();
-    document.getElementById('stat-total').textContent = toutesVoitures.length;
+    countUp('stat-total', toutesVoitures.length);
+    animBar('bar-total', Math.min((toutesVoitures.length / 20) * 100, 100));
     renderVoitures(toutesVoitures);
   } catch {
     document.getElementById('tbody-voitures').innerHTML =
@@ -345,8 +371,10 @@ async function chargerReservations() {
       }).join('');
     }
 
-    document.getElementById('stat-resa').textContent = data.length;
-    document.getElementById('stat-revenus').innerHTML = `${Math.round(revenus)} <span class="text-lg font-bold text-secondary">DT</span>`;
+    countUp('stat-resa', data.length);
+    animBar('bar-resa', Math.min((data.length / 50) * 100, 100));
+    countUp('stat-revenus', Math.round(revenus), ' <span class="text-lg font-bold text-secondary">DT</span>');
+    animBar('bar-revenus', Math.min((revenus / 5000) * 100, 100));
   } catch {
     document.getElementById('tbody-reservations').innerHTML =
       '<tr><td colspan="7" class="text-center py-12 text-error">Erreur API — vérifiez le serveur PHP</td></tr>';
@@ -361,6 +389,42 @@ document.getElementById('search-voiture').addEventListener('input', function() {
   );
   renderVoitures(filtrees);
 });
+
+
+// ── Compteur animé ─────────────────────────────────────────
+function animBar(id, pct) {
+  setTimeout(() => {
+    const bar = document.getElementById(id);
+    if (bar) bar.style.width = pct + '%';
+  }, 200);
+}
+
+function countUp(id, target, suffix = '') {
+  const el = document.getElementById(id);
+  if (!el || target === 0) {
+    el.innerHTML = '0' + suffix;
+    return;
+  }
+  const duration = 1200;
+  const steps    = 50;
+  const interval = duration / steps;
+  let   current  = 0;
+  const increment = target / steps;
+
+  // Easing ease-out
+  let step = 0;
+  const timer = setInterval(() => {
+    step++;
+    const progress = step / steps;
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    current = Math.round(eased * target);
+    el.innerHTML = current.toLocaleString('fr-TN') + suffix;
+    if (step >= steps) {
+      clearInterval(timer);
+      el.innerHTML = target.toLocaleString('fr-TN') + suffix;
+    }
+  }, interval);
+}
 
 // Initialisation
 chargerVoitures();
