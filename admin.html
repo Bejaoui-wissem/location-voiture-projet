@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html class="light" lang="fr">
 <head>
+<link rel="icon" type="image/svg+xml" href="assets/images/icons/favicon.svg"/>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Panel Admin - CharthaGo</title>
@@ -129,12 +130,18 @@ tailwind.config = {
 <!-- Sidebar -->
 <aside class="fixed inset-y-0 left-0 h-screen w-64 bg-zinc-50 flex flex-col p-4 gap-2 z-40 border-r border-zinc-100">
   <div class="mb-6 px-2 flex items-center gap-3">
-    <div class="w-10 h-10 bg-primary-container rounded-xl flex items-center justify-center">
-      <span class="material-symbols-outlined text-white" style="font-variation-settings:'FILL' 1;">directions_car</span>
-    </div>
+    <svg width="42" height="42" viewBox="0 0 120 120" class="flex-shrink-0">
+      <circle cx="60" cy="60" r="56" fill="#b90027"/>
+      <circle cx="60" cy="60" r="50" fill="none" stroke="white" stroke-width="1.2" opacity="0.3"/>
+      <path d="M20 68 Q24 48 42 44 L72 44 Q88 44 98 54 L104 62 Q100 66 92 66 L28 66 Q22 66 20 68 Z" fill="white"/>
+      <circle cx="38" cy="66" r="6" fill="#0f172a"/>
+      <circle cx="38" cy="66" r="2.2" fill="white"/>
+      <circle cx="84" cy="66" r="6" fill="#0f172a"/>
+      <circle cx="84" cy="66" r="2.2" fill="white"/>
+    </svg>
     <div>
-      <h1 class="text-lg font-bold text-red-600 leading-tight">Admin Panel</h1>
-      <p class="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">Gestion CharthaGo</p>
+      <h1 class="text-lg font-bold text-zinc-900 leading-tight">Chartha<span style="color:#b90027">Go</span></h1>
+      <p class="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">Panel Admin</p>
     </div>
   </div>
 
@@ -742,6 +749,7 @@ function exportPDF() {
   win.document.write(`<!DOCTYPE html>
 <html lang="fr">
 <head>
+<link rel="icon" type="image/svg+xml" href="assets/images/icons/favicon.svg"/>
   <meta charset="utf-8"/>
   <title>Réservations CharthaGo — ${date}</title>
   <style>

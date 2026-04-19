@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120">
+  <circle cx="60" cy="60" r="52" fill="#b90027"/>
+  <circle cx="60" cy="60" r="46" fill="none" stroke="white" stroke-width="1" opacity="0.3"/>
+  <path d="M20 68 Q24 48 42 44 L72 44 Q88 44 98 54 L104 62 Q100 66 92 66 L28 66 Q22 66 20 68 Z" fill="white"/>
+  <circle cx="38" cy="66" r="5.5" fill="#0f172a"/>
+  <circle cx="38" cy="66" r="2" fill="white"/>
+  <circle cx="84" cy="66" r="5.5" fill="#0f172a"/>
+  <circle cx="84" cy="66" r="2" fill="white"/>
+  <text x="215" y="54" font-family="Inter, sans-serif" font-size="28" font-weight="900" fill="#0f172a" text-anchor="middle">Chartha<tspan fill="#b90027">Go</tspan></text>
+  <text x="215" y="74" font-family="Inter, sans-serif" font-size="9" font-weight="700" fill="#6b7280" letter-spacing="0.3em" text-anchor="middle">LOCATION AUTO</text>
+</svg>

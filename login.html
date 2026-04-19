@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html class="light" lang="fr">
 <head>
+<link rel="icon" type="image/svg+xml" href="assets/images/icons/favicon.svg"/>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Connexion - CharthaGo</title>
@@ -172,7 +173,17 @@ tailwind.config = {
 
       <!-- Brand -->
       <div class="md:col-span-1">
-        <p class="text-2xl font-black text-white tracking-tighter mb-3">Auto<span style="color:#e31837">Drive</span></p>
+        <div class="flex items-center gap-3 mb-3">
+          <svg width="38" height="38" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="56" fill="#b90027"/>
+            <path d="M20 68 Q24 48 42 44 L72 44 Q88 44 98 54 L104 62 Q100 66 92 66 L28 66 Q22 66 20 68 Z" fill="white"/>
+            <circle cx="38" cy="66" r="6" fill="#0f172a"/>
+            <circle cx="38" cy="66" r="2.2" fill="white"/>
+            <circle cx="84" cy="66" r="6" fill="#0f172a"/>
+            <circle cx="84" cy="66" r="2.2" fill="white"/>
+          </svg>
+          <p class="text-2xl font-black text-white tracking-tighter">Chartha<span style="color:#e31837">Go</span></p>
+        </div>
         <p class="text-zinc-400 text-sm leading-relaxed mb-5">Votre partenaire de confiance pour la location de voitures en Tunisie depuis 2015.</p>
         <div class="flex gap-3">
           <a href="#" class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:rgba(255,255,255,0.08)">
