@@ -80,6 +80,17 @@ tailwind.config = {
   .btn-suppr:hover { background:#ba1a1a; color:white; }
   .btn-edit  { transition:all .15s; font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px; border:none; cursor:pointer; background:rgba(0,101,111,0.1); color:#00656f; }
   .btn-edit:hover  { background:#00656f; color:white; }
+  /* Rapport IA */
+  #rapport-content p   { margin:.4rem 0; line-height:1.7; font-size:14px; }
+  #rapport-content h3  { font-size:15px; font-weight:700; margin:1.2rem 0 .4rem; color:#1a1c1c; }
+  #rapport-content ul  { list-style:disc; padding-left:1.4rem; margin:.4rem 0; }
+  #rapport-content li  { margin:.3rem 0; font-size:13px; }
+  #rapport-content strong { font-weight:700; color:#b90027; }
+  html.dark #rapport-content h3 { color:#e8e6e3; }
+  .rapport-kpi { background:linear-gradient(135deg,#b90027,#e31837); color:white; border-radius:16px; padding:20px 24px; }
+  @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .pulse-dot { animation:pulse-dot 1.2s infinite; }
+  .pulse-dot:nth-child(2){animation-delay:.2s} .pulse-dot:nth-child(3){animation-delay:.4s}
   /* Compteurs animés */
   .stat-num {
     display: inline-block;
@@ -129,6 +140,11 @@ tailwind.config = {
     </a>
     <a onclick="afficherSection('reservations')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-reservations">
       <span class="material-symbols-outlined">calendar_today</span><span>Réservations</span>
+    </a>
+    <a onclick="afficherSection('rapport')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-rapport">
+      <span class="material-symbols-outlined">auto_awesome</span>
+      <span>Rapport IA</span>
+      <span class="ml-auto text-[9px] font-black bg-primary text-white px-1.5 py-0.5 rounded-full">NEW</span>
     </a>
   </nav>
 
@@ -333,14 +349,21 @@ let toutesVoitures = [];
 
 // Navigation sections
 function afficherSection(section) {
-  const isVoitures = section === 'voitures';
-  document.getElementById('section-voitures').classList.toggle('hidden', !isVoitures);
-  document.getElementById('section-reservations').classList.toggle('hidden', isVoitures);
-  document.getElementById('page-title').textContent = isVoitures ? 'Gestion de la flotte' : 'Réservations';
-  document.getElementById('nav-voitures').classList.toggle('active', isVoitures);
-  document.getElementById('nav-voitures').classList.toggle('text-zinc-500', !isVoitures);
-  document.getElementById('nav-reservations').classList.toggle('active', !isVoitures);
-  document.getElementById('nav-reservations').classList.toggle('text-zinc-500', isVoitures);
+  const sections = ['voitures','reservations','rapport'];
+  sections.forEach(s => {
+    const el = document.getElementById('section-' + s);
+    if (el) el.classList.toggle('hidden', s !== section);
+    const nav = document.getElementById('nav-' + s);
+    if (nav) {
+      nav.classList.toggle('active', s === section);
+      nav.classList.toggle('text-zinc-500', s !== section);
+    }
+  });
+  const titles = { voitures:'Gestion de la flotte', reservations:'Réservations', rapport:'Rapport IA' };
+  document.getElementById('page-title').textContent = titles[section] || 'Dashboard';
+  // Cacher/montrer btn-ajouter
+  const btnAjouter = document.getElementById('btn-ajouter');
+  if (btnAjouter) btnAjouter.style.display = section === 'voitures' ? 'flex' : 'none';
 }
 
 // Toast notifications
@@ -776,6 +799,127 @@ async function supprimerVoiture(id, nom) {
     }
   } catch {
     showToast('Erreur serveur.', 'error');
+  }
+}
+
+
+// ── Rapport IA ────────────────────────────────────────────
+async function activerCleRapport() {
+  const cle = document.getElementById('rapport-key-inp').value.trim();
+  if (!cle || !cle.startsWith('AIza')) return;
+  localStorage.setItem('autodrive_gemini_key', cle);
+  document.getElementById('rapport-cfg').classList.add('hidden');
+  showToast('Clé activée !', 'success');
+}
+
+async function genererRapport() {
+  const key = localStorage.getItem('autodrive_gemini_key');
+  if (!key) {
+    document.getElementById('rapport-cfg').classList.remove('hidden');
+    return;
+  }
+
+  // Afficher chargement
+  document.getElementById('rapport-initial').classList.add('hidden');
+  document.getElementById('rapport-content').classList.add('hidden');
+  document.getElementById('rapport-kpis').classList.add('hidden');
+  document.getElementById('rapport-loading').classList.remove('hidden');
+  document.getElementById('btn-rapport').disabled = true;
+
+  // Calculer les KPIs
+  const totalV      = toutesVoitures.length;
+  const dispoV      = toutesVoitures.filter(v => v.statut === 'disponible').length;
+  const loueesV     = totalV - dispoV;
+  const occupation  = totalV > 0 ? Math.round((loueesV / totalV) * 100) : 0;
+  const totalR      = toutesReservations.length;
+  const confirmees  = toutesReservations.filter(r => r.statut === 'confirmee').length;
+  const attente     = toutesReservations.filter(r => r.statut === 'en_attente').length;
+  const annulees    = toutesReservations.filter(r => r.statut === 'annulee').length;
+  const revenus     = toutesReservations.reduce((s,r) => s + parseFloat(r.prix_total||0), 0);
+  const revMoy      = totalR > 0 ? Math.round(revenus / totalR) : 0;
+  const today       = new Date().toLocaleDateString('fr-TN', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  // Détail voitures
+  const detailV = toutesVoitures.map(v =>
+    `- ${v.marque} ${v.modele} (${v.prix_jour} DT/jour) : ${v.statut}`
+  ).join('
+');
+
+  const prompt = `Tu es un analyste business expert pour AutoDrive Tunisie, agence de location de voitures.
+
+DONNÉES DU JOUR (${today}) :
+Flotte : ${totalV} véhicules (${dispoV} disponibles, ${loueesV} louées) → taux d'occupation : ${occupation}%
+Réservations : ${totalR} au total (${confirmees} confirmées, ${attente} en attente, ${annulees} annulées)
+Revenus totaux : ${Math.round(revenus)} DT — Revenu moyen par réservation : ${revMoy} DT
+
+Détail flotte :
+${detailV}
+
+Génère un rapport de performance structuré avec :
+1. **Résumé exécutif** (2-3 phrases sur l'état global)
+2. **Points forts** (ce qui va bien)
+3. **Points d'attention** (ce qui nécessite une action)
+4. **Recommandations concrètes** (3 actions prioritaires pour améliorer les performances)
+5. **Prévision** (tendance probable sur les 7 prochains jours)
+
+Sois précis, professionnel, utilise les chiffres fournis. Réponds en français. Format markdown avec titres ###.`;
+
+  try {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+      { method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 800, temperature: 0.7 }
+        })
+      }
+    );
+
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      if (res.status === 401 || res.status === 403) {
+        localStorage.removeItem('autodrive_gemini_key');
+        document.getElementById('rapport-cfg').classList.remove('hidden');
+      }
+      throw new Error(e.error?.message || `Erreur ${res.status}`);
+    }
+
+    const data    = await res.json();
+    const rapport = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Impossible de générer le rapport.';
+
+    // Afficher le rapport
+    document.getElementById('rapport-loading').classList.add('hidden');
+    const contentEl = document.getElementById('rapport-content');
+    contentEl.classList.remove('hidden');
+    // Convertir markdown en HTML
+    contentEl.innerHTML = rapport
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+      .replace(/^## (.+)$/gm,'<h3>$1</h3>')
+      .replace(/^[\*\-] (.+)$/gm,'<li>$1</li>')
+      .replace(/(<li>[\s\S]*?(?=<h3>|$))/g, m => m.includes('<li>') ? '<ul>'+m+'</ul>' : m)
+      .replace(/
+{2,}/g,'</p><p>').replace(/
+/g,'<br/>')
+      .replace(/^(?!<[hup])/gm, '<p>').replace(/(?<![>])$/gm,'</p>');
+
+    // Afficher les KPIs
+    document.getElementById('rapport-kpis').classList.remove('hidden');
+    document.getElementById('kpi-occupation').textContent = occupation + '%';
+    document.getElementById('kpi-revmoy').textContent = revMoy + ' DT';
+    document.getElementById('kpi-confirmees').textContent = confirmees;
+    document.getElementById('rapport-date').textContent = `Généré le ${today} par Gemini AI`;
+
+    showToast('Rapport généré !', 'success');
+
+  } catch(e) {
+    document.getElementById('rapport-loading').classList.add('hidden');
+    document.getElementById('rapport-initial').classList.remove('hidden');
+    showToast('Erreur : ' + e.message, 'error');
+  } finally {
+    document.getElementById('btn-rapport').disabled = false;
   }
 }
 
