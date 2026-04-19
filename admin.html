@@ -166,6 +166,10 @@ tailwind.config = {
       <span class="material-symbols-outlined text-sm">open_in_new</span>
       Voir le site
     </a>
+    <button onclick="ouvrirModalMdp()" class="w-full bg-surface-container text-secondary rounded-xl py-2.5 px-4 font-semibold text-sm hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2 mb-2">
+      <span class="material-symbols-outlined text-sm">lock</span>
+      Changer mot de passe
+    </button>
     <button onclick="seDeconnecter()" class="w-full bg-error-container text-error rounded-xl py-3 px-4 font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
       <span class="material-symbols-outlined text-sm">logout</span>
       Déconnexion
@@ -268,7 +272,15 @@ tailwind.config = {
   <!-- Section Réservations (masquée par défaut) -->
   <div id="section-reservations" class="hidden bg-surface-container-lowest rounded-3xl kinetic-shadow overflow-hidden">
     <div class="p-6 border-b border-surface-container bg-white flex justify-between items-center flex-wrap gap-3">
-      <h4 class="font-bold text-lg text-on-surface">Toutes les Réservations</h4>
+      <div class="flex items-center gap-4 flex-wrap">
+        <h4 class="font-bold text-lg text-on-surface">Toutes les Réservations</h4>
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">search</span>
+          <input id="search-resa" type="text" placeholder="Nom client ou téléphone..."
+            oninput="rechercherReservations()"
+            class="bg-surface-container-low border border-zinc-200 rounded-lg py-2 pl-10 pr-4 text-xs outline-none focus:ring-1 focus:ring-primary/30 w-52"/>
+        </div>
+      </div>
       <div class="flex gap-2 items-center">
         <select id="filtre-statut" onchange="filtrerReservations()" class="text-xs font-semibold border border-zinc-200 rounded-lg px-3 py-2 outline-none bg-white text-secondary cursor-pointer">
           <option value="">Tous les statuts</option>
@@ -361,6 +373,34 @@ tailwind.config = {
         <span id="modal-btn-text">Enregistrer</span>
         <svg id="modal-spin" class="hidden animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 4V2A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8z"/></svg>
       </button>
+    </div>
+  </div>
+</div>
+<!-- Modal Mot de passe -->
+<div id="modal-mdp" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1001;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);">
+  <div style="background:white;border-radius:20px;padding:32px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,0.2);animation:modalIn .25s cubic-bezier(.4,0,.2,1)">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-on-surface">Changer le mot de passe</h3>
+      <button onclick="fermerModalMdp()" class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary hover:text-primary text-lg font-bold">✕</button>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="modal-label">Mot de passe actuel</label>
+        <input id="mdp-actuel" type="password" placeholder="••••••••" class="modal-input"/>
+      </div>
+      <div>
+        <label class="modal-label">Nouveau mot de passe</label>
+        <input id="mdp-nouveau" type="password" placeholder="••••••••" class="modal-input"/>
+      </div>
+      <div>
+        <label class="modal-label">Confirmer le nouveau</label>
+        <input id="mdp-confirm" type="password" placeholder="••••••••" class="modal-input"/>
+      </div>
+      <p id="mdp-error" class="text-xs text-error hidden"></p>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="fermerModalMdp()" class="flex-1 py-3 rounded-xl font-bold text-sm bg-surface-container-low text-secondary hover:bg-surface-container transition-colors">Annuler</button>
+      <button onclick="changerMotDePasse()" class="flex-1 py-3 rounded-xl font-bold text-sm text-white" style="background:linear-gradient(135deg,#b90027,#e31837)">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -1105,6 +1145,72 @@ function renderClients(clients) {
       <td class="px-6 py-4 text-right font-black text-primary">${Math.round(c.total)} DT</td>
       <td class="px-6 py-4 text-secondary text-xs">${c.derniere ? c.derniere.split('T')[0] : '—'}</td>
     </tr>`).join('');
+}
+
+
+// ── Recherche réservations ────────────────────────────────
+function rechercherReservations() {
+  const q = document.getElementById('search-resa').value.toLowerCase().trim();
+  if (!q) { filtrerReservations(); return; }
+  const filtrees = toutesReservations.filter(r =>
+    (r.nom_client || '').toLowerCase().includes(q) ||
+    (r.telephone  || '').toLowerCase().includes(q) ||
+    (r.marque     || '').toLowerCase().includes(q) ||
+    String(r.id).includes(q)
+  );
+  renderReservations(filtrees);
+}
+
+// ── Mot de passe admin ────────────────────────────────────
+function ouvrirModalMdp() {
+  ['mdp-actuel','mdp-nouveau','mdp-confirm'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('mdp-error').classList.add('hidden');
+  document.getElementById('modal-mdp').style.display = 'flex';
+}
+function fermerModalMdp() {
+  document.getElementById('modal-mdp').style.display = 'none';
+}
+async function changerMotDePasse() {
+  const actuel  = document.getElementById('mdp-actuel').value;
+  const nouveau = document.getElementById('mdp-nouveau').value;
+  const confirm = document.getElementById('mdp-confirm').value;
+  const errEl   = document.getElementById('mdp-error');
+  errEl.classList.add('hidden');
+
+  if (!actuel || !nouveau || !confirm) {
+    errEl.textContent = 'Veuillez remplir tous les champs.';
+    errEl.classList.remove('hidden'); return;
+  }
+  if (nouveau.length < 6) {
+    errEl.textContent = 'Le nouveau mot de passe doit contenir au moins 6 caractères.';
+    errEl.classList.remove('hidden'); return;
+  }
+  if (nouveau !== confirm) {
+    errEl.textContent = 'Les mots de passe ne correspondent pas.';
+    errEl.classList.remove('hidden'); return;
+  }
+  try {
+    const user = JSON.parse(localStorage.getItem('autodrive_user') || '{}');
+    const res  = await fetch('api/changer_mdp.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: user.email, actuel, nouveau })
+    });
+    const data = await res.json();
+    if (data.success) {
+      fermerModalMdp();
+      showToast('Mot de passe modifié !', 'success');
+    } else {
+      errEl.textContent = data.message || 'Erreur.';
+      errEl.classList.remove('hidden');
+    }
+  } catch {
+    errEl.textContent = 'Erreur serveur.';
+    errEl.classList.remove('hidden');
+  }
 }
 
 // Initialisation
