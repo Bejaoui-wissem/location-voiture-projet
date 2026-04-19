@@ -42,8 +42,15 @@ tailwind.config = {
   .nav-link:hover { transform: translateX(4px); }
   .nav-link.active { background: white; color: #b90027; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
   #toast { display: none; }
-  .badge-dispo { background: rgba(0,128,140,0.1); color: #00656f; }
-  .badge-louee { background: rgba(186,26,26,0.1); color: #ba1a1a; }
+  .badge-dispo    { background: rgba(0,128,140,0.1); color: #00656f; }
+  .badge-louee    { background: rgba(186,26,26,0.1); color: #ba1a1a; }
+  .badge-attente  { background: rgba(234,179,8,0.12); color: #a16207; }
+  .btn-confirmer  { transition:all .15s; font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px; border:none; cursor:pointer; background:rgba(0,128,140,0.1); color:#00656f; }
+  .btn-confirmer:hover { background:#00656f; color:white; }
+  .btn-annuler    { transition:all .15s; font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px; border:none; cursor:pointer; background:rgba(186,26,26,0.1); color:#ba1a1a; }
+  .btn-annuler:hover { background:#ba1a1a; color:white; }
+  html.dark .btn-confirmer { background:rgba(0,128,140,0.2); }
+  html.dark .btn-annuler   { background:rgba(186,26,26,0.2); }
   /* Compteurs animés */
   .stat-num {
     display: inline-block;
@@ -339,6 +346,34 @@ async function chargerVoitures() {
   }
 }
 
+// Changer statut d'une réservation
+async function changerStatutResa(id, statut) {
+  try {
+    const res = await fetch('api/update_reservation.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, statut })
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    if (data.success) {
+      showToast(statut === 'confirmee' ? 'Réservation confirmée !' : 'Réservation annulée.', statut === 'confirmee' ? 'success' : 'error');
+      // Mettre à jour le badge sans recharger
+      const badge = document.getElementById('badge-' + id);
+      const row   = document.getElementById('resa-row-' + id);
+      if (badge) {
+        badge.textContent = statut;
+        badge.className = `px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statut === 'confirmee' ? 'badge-dispo' : 'badge-louee'}`;
+      }
+      // Cacher les boutons de la ligne
+      const btns = row?.querySelectorAll('.btn-confirmer, .btn-annuler');
+      btns?.forEach(b => b.remove());
+    }
+  } catch {
+    showToast('Erreur lors de la mise à jour.', 'error');
+  }
+}
+
 // Charger réservations
 async function chargerReservations() {
   try {
@@ -349,23 +384,27 @@ async function chargerReservations() {
     let revenus = 0;
 
     if (data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center py-12 text-secondary">Aucune réservation pour le moment</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-12 text-secondary">Aucune réservation pour le moment</td></tr>';
     } else {
       tbody.innerHTML = data.map(r => {
         revenus += parseFloat(r.prix_total || 0);
         const statutClass = r.statut === 'confirmee' ? 'badge-dispo' : r.statut === 'annulee' ? 'badge-louee' : 'bg-amber-100 text-amber-700';
         return `
-        <tr class="hover:bg-zinc-50 transition-colors">
+        <tr class="hover:bg-zinc-50 transition-colors" id="resa-row-${r.id}">
           <td class="px-6 py-4 font-mono text-sm text-secondary">#${r.id}</td>
           <td class="px-6 py-4 font-bold text-on-surface">${r.nom_client}</td>
           <td class="px-6 py-4 text-zinc-600">${r.telephone}</td>
           <td class="px-6 py-4 text-zinc-600">${r.marque || '—'} ${r.modele || ''}</td>
-          <td class="px-6 py-4 text-xs text-zinc-500">
-            ${r.date_debut} → ${r.date_fin}
-          </td>
+          <td class="px-6 py-4 text-xs text-zinc-500">${r.date_debut} → ${r.date_fin}</td>
           <td class="px-6 py-4 font-bold">${parseFloat(r.prix_total).toFixed(0)} DT</td>
           <td class="px-6 py-4">
-            <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statutClass}">${r.statut}</span>
+            <span id="badge-${r.id}" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statutClass}">${r.statut}</span>
+          </td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex justify-end gap-2">
+              ${r.statut !== 'confirmee' ? `<button class="btn-confirmer" onclick="changerStatutResa(${r.id}, 'confirmee')">✓ Confirmer</button>` : ''}
+              ${r.statut !== 'annulee'   ? `<button class="btn-annuler"   onclick="changerStatutResa(${r.id}, 'annulee')">✕ Annuler</button>` : ''}
+            </div>
           </td>
         </tr>`;
       }).join('');
@@ -377,7 +416,7 @@ async function chargerReservations() {
     animBar('bar-revenus', Math.min((revenus / 5000) * 100, 100));
   } catch {
     document.getElementById('tbody-reservations').innerHTML =
-      '<tr><td colspan="7" class="text-center py-12 text-error">Erreur API — vérifiez le serveur PHP</td></tr>';
+      '<tr><td colspan="8" class="text-center py-12 text-error">Erreur API — vérifiez le serveur PHP</td></tr>';
   }
 }
 
