@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html class="light" lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Inscription - AutoDrive Tunisie</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#b90027", "primary-container": "#e31837",
+        "secondary": "#5f5e5e", "surface": "#f9f9f9",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#f3f3f3",
+        "surface-container-high": "#e8e8e8",
+        "on-surface": "#1a1c1c",
+        "error": "#ba1a1a", "error-container": "#ffdad6",
+      },
+      fontFamily: { "body": ["Inter"] }
+    }
+  }
+}
+</script>
+<script src="assets/js/darkmode.js"></script>
+<script src="assets/js/animations.js"></script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .bg-kinetic {
+    background-image: linear-gradient(rgba(249,249,249,0.93), rgba(249,249,249,0.93)),
+      url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1400&q=60');
+    background-size: cover; background-position: center;
+  }
+  html.dark .bg-kinetic { background-image: linear-gradient(rgba(15,16,17,0.97), rgba(15,16,17,0.97)), url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1400&q=60'); }
+  html.dark body { background: #0f1011; color: #e8e6e3; }
+  html.dark .bg-surface-container-lowest { background: #1c1e1f !important; }
+  html.dark .bg-surface-container-low    { background: #232526 !important; }
+  html.dark nav { background: rgba(15,16,17,0.85) !important; }
+  html.dark input { background: #232526 !important; color: #e8e6e3 !important; border-color: #3a3c3d !important; }
+  html.dark input::placeholder { color: #5a5855 !important; }
+
+  /* Indicateur de force du mot de passe */
+  .strength-bar { height: 4px; border-radius: 99px; transition: width 0.3s ease, background 0.3s ease; }
+
+  /* Validation champs */
+  .field-ok    { border-color: #00656f !important; }
+  .field-error { border-color: #ba1a1a !important; }
+</style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+
+<!-- Navbar -->
+<header class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm h-20 px-8">
+  <div class="max-w-screen-2xl mx-auto flex justify-between items-center h-full">
+    <a href="index.html" class="text-2xl font-black tracking-tighter text-zinc-900">
+      Auto<span style="color:#b90027">Drive</span> Tunisie
+    </a>
+    <div class="flex items-center gap-3">
+      <button id="btn-dark" onclick="toggleDark()" title="Mode sombre" class="w-9 h-9 rounded-xl border border-zinc-200 flex items-center justify-center hover:border-red-600 transition-colors"></button>
+      <a href="login.html" class="text-zinc-600 font-medium hover:text-primary transition-colors text-sm">Déjà un compte ?</a>
+    </div>
+  </div>
+</header>
+
+<main class="flex-grow flex items-center justify-center pt-20 px-6 bg-kinetic py-12">
+  <div class="w-full max-w-lg">
+
+    <!-- Accents décoratifs -->
+    <div class="absolute -top-12 -right-12 w-64 h-64 rounded-full blur-3xl -z-10" style="background:rgba(185,0,39,0.05)"></div>
+    <div class="absolute -bottom-12 -left-12 w-48 h-48 rounded-full blur-3xl -z-10" style="background:rgba(0,101,111,0.05)"></div>
+
+    <!-- Card -->
+    <div class="bg-surface-container-lowest rounded-3xl p-10 shadow-[0_20px_40px_rgba(26,28,28,0.08)] border border-zinc-100">
+
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <div class="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center" style="background:linear-gradient(135deg,#b90027,#e31837);box-shadow:0 8px 20px rgba(185,0,39,0.25)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-on-surface mb-1">Créer un compte</h1>
+        <p class="text-secondary text-sm">Rejoignez AutoDrive et réservez votre voiture.</p>
+      </div>
+
+      <!-- Alerte erreur -->
+      <div id="alert-error" class="hidden mb-6 bg-error-container text-error rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-medium">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        <span id="alert-error-msg"></span>
+      </div>
+
+      <!-- Alerte succès -->
+      <div id="alert-success" class="hidden mb-6 rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-medium" style="background:#e1f5ee;color:#00656f">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        <span>Compte créé avec succès ! Redirection vers la connexion...</span>
+      </div>
+
+      <div class="space-y-5">
+        <!-- Nom & Prénom -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="text-xs font-semibold uppercase tracking-wider text-on-surface">Prénom</label>
+            <input id="prenom" type="text" placeholder="Mohamed"
+              class="w-full bg-surface-container-low border-0 rounded-xl py-3.5 px-4 text-on-surface placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 outline-none text-sm transition-all"
+              oninput="validerChamp(this, v => v.length >= 2, 'prenom-err', 'Min. 2 caractères')"/>
+            <p id="prenom-err" class="text-[11px] text-error hidden"></p>
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs font-semibold uppercase tracking-wider text-on-surface">Nom</label>
+            <input id="nom" type="text" placeholder="Ben Ali"
+              class="w-full bg-surface-container-low border-0 rounded-xl py-3.5 px-4 text-on-surface placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 outline-none text-sm transition-all"
+              oninput="validerChamp(this, v => v.length >= 2, 'nom-err', 'Min. 2 caractères')"/>
+            <p id="nom-err" class="text-[11px] text-error hidden"></p>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold uppercase tracking-wider text-on-surface">Adresse email</label>
+          <input id="email" type="email" placeholder="nom@exemple.com"
+            class="w-full bg-surface-container-low border-0 rounded-xl py-3.5 px-4 text-on-surface placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 outline-none text-sm transition-all"
+            oninput="validerChamp(this, v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), 'email-err', 'Email invalide')"/>
+          <p id="email-err" class="text-[11px] text-error hidden"></p>
+        </div>
+
+        <!-- Téléphone -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold uppercase tracking-wider text-on-surface">Téléphone (+216)</label>
+          <div class="flex">
+            <span class="bg-surface-container-high flex items-center px-4 rounded-l-xl text-sm font-bold text-on-surface border-r border-zinc-200">+216</span>
+            <input id="telephone" type="tel" placeholder="20 000 000"
+              class="flex-1 bg-surface-container-low border-0 rounded-r-xl py-3.5 px-4 text-on-surface placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 outline-none text-sm transition-all"
+              oninput="validerChamp(this, v => /^[0-9\s]{8,}$/.test(v), 'tel-err', 'Min. 8 chiffres')"/>
+          </div>
+          <p id="tel-err" class="text-[11px] text-error hidden"></p>
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold uppercase tracking-wider text-on-surface">Mot de passe</label>
+          <div class="relative">
+            <input id="password" type="password" placeholder="••••••••"
+              class="w-full bg-surface-container-low border-0 rounded-xl py-3.5 px-4 pr-12 text-on-surface placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 outline-none text-sm transition-all"
+              oninput="evaluerMotDePasse(this.value)"/>
+            <button type="button" onclick="togglePassword('password', 'eye1')"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors">
+              <svg id="eye1" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            </button>
+          </div>
+          <!-- Barre de force -->
+          <div class="bg-surface-container-high rounded-full overflow-hidden mt-2" style="height:4px;">
+            <div id="strength-bar" class="strength-bar" style="width:0%;background:#e5e7eb;"></div>
+          </div>
+          <p id="strength-label" class="text-[11px] text-zinc-400"></p>
+        </div>
+
+        <!-- Confirmer mot de passe -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold uppercase tracking-wider text-on-surface">Confirmer le mot de passe</label>
+          <div class="relative">
+            <input id="password2" type="password" placeholder="••••••••"
+              class="w-full bg-surface-container-low border-0 rounded-xl py-3.5 px-4 pr-12 text-on-surface placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 outline-none text-sm transition-all"
+              oninput="validerConfirmation()"/>
+            <button type="button" onclick="togglePassword('password2', 'eye2')"
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-primary transition-colors">
+              <svg id="eye2" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+            </button>
+          </div>
+          <p id="pwd2-err" class="text-[11px] text-error hidden">Les mots de passe ne correspondent pas.</p>
+        </div>
+
+        <!-- Bouton -->
+        <div class="pt-2">
+          <button id="btn-register" onclick="sInscrire()"
+            class="w-full text-white font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2"
+            style="background:linear-gradient(135deg,#b90027,#e31837);box-shadow:0 8px 20px rgba(185,0,39,0.25)">
+            <span id="btn-text">Créer mon compte</span>
+            <svg id="btn-spin" class="hidden animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 4V2A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Lien connexion -->
+      <div class="mt-8 pt-6 border-t border-zinc-100 text-center">
+        <p class="text-sm text-secondary">
+          Déjà un compte ?
+          <a href="login.html" class="font-bold text-on-surface hover:text-primary transition-colors">Se connecter</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── Validation en temps réel ──────────────────────────────
+function validerChamp(input, testFn, errId, msg) {
+  const val = input.value.trim();
+  const err = document.getElementById(errId);
+  if (val && !testFn(val)) {
+    input.classList.add('field-error'); input.classList.remove('field-ok');
+    err.textContent = msg; err.classList.remove('hidden');
+  } else if (val) {
+    input.classList.remove('field-error'); input.classList.add('field-ok');
+    err.classList.add('hidden');
+  }
+}
+
+// ── Force du mot de passe ─────────────────────────────────
+function evaluerMotDePasse(val) {
+  const bar   = document.getElementById('strength-bar');
+  const label = document.getElementById('strength-label');
+  let score = 0;
+  if (val.length >= 8)              score++;
+  if (/[A-Z]/.test(val))            score++;
+  if (/[0-9]/.test(val))            score++;
+  if (/[^A-Za-z0-9]/.test(val))     score++;
+
+  const configs = [
+    { width:'0%',   color:'#e5e7eb', text:'' },
+    { width:'25%',  color:'#ba1a1a', text:'Faible' },
+    { width:'50%',  color:'#f97316', text:'Moyen' },
+    { width:'75%',  color:'#eab308', text:'Bon' },
+    { width:'100%', color:'#00656f', text:'Excellent' },
+  ];
+  const c = configs[score];
+  bar.style.width = c.width; bar.style.background = c.color;
+  label.textContent = c.text;
+  label.style.color = c.color;
+}
+
+// ── Confirmer mot de passe ────────────────────────────────
+function validerConfirmation() {
+  const p1  = document.getElementById('password').value;
+  const p2  = document.getElementById('password2').value;
+  const err = document.getElementById('pwd2-err');
+  const inp = document.getElementById('password2');
+  if (p2 && p1 !== p2) {
+    inp.classList.add('field-error'); err.classList.remove('hidden');
+  } else if (p2) {
+    inp.classList.remove('field-error'); inp.classList.add('field-ok');
+    err.classList.add('hidden');
+  }
+}
+
+// ── Toggle visibilité mot de passe ────────────────────────
+function togglePassword(id, eyeId) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// ── Inscription ───────────────────────────────────────────
+async function sInscrire() {
+  const prenom    = document.getElementById('prenom').value.trim();
+  const nom       = document.getElementById('nom').value.trim();
+  const email     = document.getElementById('email').value.trim();
+  const telephone = document.getElementById('telephone').value.trim();
+  const password  = document.getElementById('password').value;
+  const password2 = document.getElementById('password2').value;
+
+  document.getElementById('alert-error').classList.add('hidden');
+
+  // Validations
+  if (!prenom || !nom)          return showError('Veuillez renseigner votre prénom et nom.');
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('Adresse email invalide.');
+  if (!telephone || telephone.replace(/\s/g,'').length < 8)  return showError('Numéro de téléphone invalide.');
+  if (password.length < 6)      return showError('Le mot de passe doit contenir au moins 6 caractères.');
+  if (password !== password2)   return showError('Les mots de passe ne correspondent pas.');
+
+  setLoading(true);
+  try {
+    const res = await fetch('api/register.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nom: `${prenom} ${nom}`,
+        email,
+        telephone: '+216 ' + telephone,
+        password
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('alert-success').classList.remove('hidden');
+      document.getElementById('alert-success').classList.add('flex');
+      setTimeout(() => window.location.href = 'login.html', 2000);
+    } else {
+      showError(data.message || 'Erreur lors de l\'inscription.');
+    }
+  } catch (e) {
+    showError('Erreur de connexion au serveur PHP.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('alert-error');
+  document.getElementById('alert-error-msg').textContent = msg;
+  el.classList.remove('hidden'); el.classList.add('flex');
+}
+
+function setLoading(on) {
+  document.getElementById('btn-register').disabled = on;
+  document.getElementById('btn-text').textContent = on ? 'Création en cours...' : 'Créer mon compte';
+  document.getElementById('btn-spin').classList.toggle('hidden', !on);
+}
+
+// Entrée clavier
+document.addEventListener('keydown', e => { if (e.key === 'Enter') sInscrire(); });
+</script>
+</body>
+</html>
