@@ -99,12 +99,14 @@ tailwind.config = {
         </div>
       </div>
       <div class="space-y-2">
-        <label class="text-xs font-semibold text-secondary uppercase tracking-widest px-1">Statut</label>
+        <label class="text-xs font-semibold text-secondary uppercase tracking-widest px-1">Catégorie</label>
         <div class="relative">
-          <select id="filter-statut" class="w-full bg-surface-container-low border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 appearance-none text-on-background font-medium outline-none">
-            <option value="">Tous les véhicules</option>
-            <option value="disponible">Disponibles uniquement</option>
-            <option value="louee">Actuellement loués</option>
+          <select id="filter-categorie" class="w-full bg-surface-container-low border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary/20 appearance-none text-on-background font-medium outline-none">
+            <option value="">Toutes les catégories</option>
+            <option value="Citadine">Citadine</option>
+            <option value="Berline">Berline</option>
+            <option value="SUV">SUV</option>
+            <option value="Premium">Premium</option>
           </select>
           <span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
         </div>
@@ -190,20 +192,23 @@ tailwind.config = {
 <script>
 // Images de fallback par marque
 const imagesFallback = {
-  'peugeot':    'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=60',
-  'renault':    'https://images.unsplash.com/photo-1621007947382-34c769ce59d6?auto=format&fit=crop&w=600&q=60',
-  'mercedes':   'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=600&q=60',
-  'bmw':        'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=600&q=60',
-  'volkswagen': 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=600&q=60',
-  'toyota':     'https://images.unsplash.com/photo-1623869675781-80aa31012a5a?auto=format&fit=crop&w=600&q=60',
-  'hyundai':    'https://images.unsplash.com/photo-1600706432502-77a0e2e32790?auto=format&fit=crop&w=600&q=60',
-  'kia':        'https://images.unsplash.com/photo-1617531653332-bd46c16f4d68?auto=format&fit=crop&w=600&q=60',
-  'seat':       'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=600&q=60',
-  'dacia':      'https://images.unsplash.com/photo-1617654112329-91f57f9c79c4?auto=format&fit=crop&w=600&q=60',
-  'citroen':    'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=600&q=60',
-  'symbol':     'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=600&q=60',
-  'clio':       'https://images.unsplash.com/photo-1621007947382-34c769ce59d6?auto=format&fit=crop&w=600&q=60',
-  'default':    'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=600&q=60'
+  'peugeot':    'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=70',
+  'renault':    'https://images.unsplash.com/photo-1621007947382-34c769ce59d6?auto=format&fit=crop&w=800&q=70',
+  'mercedes':   'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=800&q=70',
+  'bmw':        'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=800&q=70',
+  'volkswagen': 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=800&q=70',
+  'toyota':     'https://images.unsplash.com/photo-1623869675781-80aa31012a5a?auto=format&fit=crop&w=800&q=70',
+  'hyundai':    'https://images.unsplash.com/photo-1603386329225-868f9b1ee6c9?auto=format&fit=crop&w=800&q=70',
+  'kia':        'https://images.unsplash.com/photo-1617531653332-bd46c16f4d68?auto=format&fit=crop&w=800&q=70',
+  'seat':       'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=70',
+  'dacia':      'https://images.unsplash.com/photo-1617654112329-91f57f9c79c4?auto=format&fit=crop&w=800&q=70',
+  'citroen':    'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=800&q=70',
+  'suzuki':     'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=800&q=70',
+  'symbol':     'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=800&q=70',
+  'clio':       'https://images.unsplash.com/photo-1621007947382-34c769ce59d6?auto=format&fit=crop&w=800&q=70',
+  'sandero':    'https://images.unsplash.com/photo-1617654112329-91f57f9c79c4?auto=format&fit=crop&w=800&q=70',
+  'swift':      'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=800&q=70',
+  'default':    'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=800&q=70'
 };
 
 let toutesVoitures = [];
@@ -242,32 +247,46 @@ function renderVoitures(voitures) {
     const img = getImage(v);
     return `
     <div class="car-card group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm">
-      <div class="relative h-56 overflow-hidden bg-surface-container-low">
+      <div class="relative h-52 overflow-hidden bg-surface-container-low">
         <img class="car-img w-full h-full object-cover" src="${img}" alt="${v.marque} ${v.modele}" onerror="this.src='${imagesFallback.default}'"/>
-        <div class="absolute top-4 right-4">
-          <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${dispo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+        <div class="absolute top-3 left-3">
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-black/40 text-white backdrop-blur-sm">
+            ${v.categorie || 'Citadine'}
+          </span>
+        </div>
+        <div class="absolute top-3 right-3">
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${dispo ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}">
             ${dispo ? 'Disponible' : 'Louée'}
           </span>
         </div>
       </div>
-      <div class="p-8">
-        <div class="flex justify-between items-start mb-4">
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-3">
           <div>
-            <h3 class="text-2xl font-bold text-on-background tracking-tight">${v.marque} ${v.modele}</h3>
-            <p class="text-xs font-semibold text-secondary tracking-widest uppercase mt-1">Véhicule de location</p>
+            <h3 class="text-lg font-bold text-on-background tracking-tight">${v.marque} ${v.modele}</h3>
+            <div class="flex items-center gap-3 mt-1.5">
+              <span class="flex items-center gap-1 text-[11px] text-secondary">
+                <span class="material-symbols-outlined" style="font-size:14px">person</span>
+                ${v.places || 5} places
+              </span>
+              <span class="flex items-center gap-1 text-[11px] text-secondary">
+                <span class="material-symbols-outlined" style="font-size:14px">settings</span>
+                ${v.transmission || 'Manuelle'}
+              </span>
+            </div>
           </div>
           <div class="text-right">
             <p class="text-[10px] font-bold text-secondary uppercase">Depuis</p>
-            <p class="text-xl font-black text-primary">${parseFloat(v.prix_jour).toFixed(0)} DT <span class="text-xs font-bold text-secondary">/ JOUR</span></p>
+            <p class="text-lg font-black text-primary">${parseFloat(v.prix_jour).toFixed(0)} <span class="text-xs font-bold text-secondary">DT/j</span></p>
           </div>
         </div>
         ${dispo
           ? `<a href="reservation.html?id=${v.id}&marque=${encodeURIComponent(v.marque)}&modele=${encodeURIComponent(v.modele)}&prix=${v.prix_jour}"
-               class="w-full bg-primary text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-all active:scale-95 mt-4">
+               class="w-full bg-primary text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-all active:scale-95 mt-3 text-sm">
                Réserver maintenant
                <span class="material-symbols-outlined text-sm">arrow_forward</span>
              </a>`
-          : `<button disabled class="w-full bg-surface-container-high text-secondary font-bold py-3 rounded-xl flex items-center justify-center gap-2 mt-4 cursor-not-allowed">
+          : `<button disabled class="w-full bg-surface-container-high text-secondary font-bold py-3 rounded-xl flex items-center justify-center gap-2 mt-3 cursor-not-allowed text-sm">
                <span class="material-symbols-outlined text-sm">block</span>
                Non disponible
              </button>`
@@ -278,12 +297,12 @@ function renderVoitures(voitures) {
 }
 
 function appliquerFiltres() {
-  const search = document.getElementById('search-input').value.toLowerCase();
-  const statut = document.getElementById('filter-statut').value;
-  const filtrees = toutesVoitures.filter(v => {
-    const matchSearch = !search || `${v.marque} ${v.modele}`.toLowerCase().includes(search);
-    const matchStatut = !statut || v.statut === statut;
-    return matchSearch && matchStatut;
+  const search    = document.getElementById('search-input').value.toLowerCase();
+  const categorie = document.getElementById('filter-categorie').value;
+  const filtrees  = toutesVoitures.filter(v => {
+    const matchSearch    = !search    || `${v.marque} ${v.modele}`.toLowerCase().includes(search);
+    const matchCategorie = !categorie || (v.categorie || '') === categorie;
+    return matchSearch && matchCategorie;
   });
   renderVoitures(filtrees);
 }
@@ -315,7 +334,7 @@ async function chargerVoitures() {
 
 // Filtrage en temps réel
 document.getElementById('search-input').addEventListener('input', appliquerFiltres);
-document.getElementById('filter-statut').addEventListener('change', appliquerFiltres);
+document.getElementById('filter-categorie').addEventListener('change', appliquerFiltres);
 
 // Vider tous les champs au chargement
 document.getElementById("search-input").value = "";
