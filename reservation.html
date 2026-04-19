@@ -1,133 +1,392 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html class="light" lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Réservation - AutoDrive Tunisie</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; }
-        .navbar { background-color: #2d3436 !important; }
-        .card { border-radius: 15px; border: none; }
-    </style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Réservation - AutoDrive Tunisie</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "primary": "#b90027",
+        "primary-container": "#e31837",
+        "secondary": "#5f5e5e",
+        "tertiary": "#00656f",
+        "surface": "#f9f9f9",
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#f3f3f3",
+        "surface-container": "#eeeeee",
+        "surface-container-high": "#e8e8e8",
+        "surface-container-highest": "#e2e2e2",
+        "on-surface": "#1a1c1c",
+        "on-background": "#1a1c1c",
+        "error": "#ba1a1a",
+        "error-container": "#ffdad6",
+      },
+      borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "1.5rem", "full": "9999px" },
+      fontFamily: { "headline": ["Inter"], "body": ["Inter"] }
+    }
+  }
+}
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+  .kinetic-gradient { background: linear-gradient(135deg, #b90027 0%, #e31837 100%); }
+  #success-overlay { display: none; }
+  .option-btn { transition: all 0.2s; }
+  .option-btn.active { background: #ffdad6; color: #b90027; border: 2px solid #b90027; }
+</style>
 </head>
-<body>
+<body class="bg-surface text-on-surface font-body">
 
-    <nav class="navbar navbar-expand-lg navbar-dark mb-5">
-      <div class="container">
-        <a class="navbar-brand" href="index.html">🇹🇳 AutoDrive Tunisie</a>
-        <div class="navbar-nav">
-          <a class="nav-link" href="index.html">Catalogue</a>
-          <a class="nav-link" href="login.html">Connexion</a>
+<!-- Navbar -->
+<nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm shadow-zinc-900/5 h-20">
+  <div class="flex justify-between items-center h-full px-8 max-w-screen-2xl mx-auto">
+    <a href="index.html" class="text-2xl font-black tracking-tighter text-zinc-900">AutoDrive Tunisie</a>
+    <div class="hidden md:flex items-center space-x-8 font-bold">
+      <a href="index.html" class="text-zinc-600 hover:text-zinc-900 hover:scale-[1.02] transition-transform">Catalogue</a>
+    </div>
+    <a href="login.html" class="text-red-600 font-bold px-6 py-2 rounded-xl border-2 border-red-600 hover:scale-[1.02] transition-transform">
+      Connexion
+    </a>
+  </div>
+</nav>
+
+<!-- Overlay succès -->
+<div id="success-overlay" class="fixed inset-0 bg-zinc-900/60 z-50 flex items-center justify-center p-6">
+  <div class="bg-white rounded-3xl p-12 max-w-md w-full text-center shadow-2xl">
+    <div class="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+      <span class="material-symbols-outlined text-4xl text-green-600" style="font-variation-settings:'FILL' 1;">check_circle</span>
+    </div>
+    <h2 class="text-2xl font-black text-on-surface mb-3">Réservation confirmée !</h2>
+    <p class="text-secondary mb-2">Votre réservation a été enregistrée avec succès.</p>
+    <p class="text-secondary text-sm mb-8">Un agent AutoDrive vous contactera au numéro fourni pour finaliser votre location.</p>
+    <a href="index.html" class="block w-full kinetic-gradient text-white font-bold py-4 rounded-xl hover:scale-[1.02] transition-transform">
+      Retour au catalogue
+    </a>
+  </div>
+</div>
+
+<main class="pt-32 pb-24 px-6 md:px-12 max-w-screen-2xl mx-auto min-h-screen">
+  <header class="mb-12">
+    <span class="text-primary font-bold tracking-widest uppercase block mb-4 text-sm">Réservation</span>
+    <h1 class="text-5xl md:text-6xl font-black tracking-tighter text-on-surface leading-none">
+      Finaliser votre <br/><span class="text-primary">réservation</span>
+    </h1>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+
+    <!-- Formulaire -->
+    <div class="lg:col-span-7 space-y-8">
+      <section class="bg-surface-container-low rounded-xl p-8 md:p-10 space-y-8">
+
+        <!-- Sélection voiture -->
+        <div class="space-y-3">
+          <label class="text-sm font-semibold text-secondary px-1">Modèle de véhicule</label>
+          <div class="relative group">
+            <select id="voiture-select" class="w-full bg-surface-container-lowest border-none rounded-xl py-4 px-6 text-lg font-medium focus:ring-2 focus:ring-primary/20 transition-all appearance-none outline-none">
+              <option value="">Chargement des véhicules...</option>
+            </select>
+            <span class="material-symbols-outlined absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-secondary">expand_more</span>
+          </div>
         </div>
+
+        <!-- Dates -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-3">
+            <label class="text-sm font-semibold text-secondary px-1">Date de début</label>
+            <input id="date-debut" type="date" class="w-full bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none"/>
+          </div>
+          <div class="space-y-3">
+            <label class="text-sm font-semibold text-secondary px-1">Date de fin</label>
+            <input id="date-fin" type="date" class="w-full bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none"/>
+          </div>
+        </div>
+
+        <!-- Téléphone -->
+        <div class="space-y-3">
+          <label class="text-sm font-semibold text-secondary px-1">Numéro de téléphone</label>
+          <div class="flex">
+            <span class="bg-surface-container-highest flex items-center px-6 rounded-l-xl font-bold text-on-surface border-r border-surface-container">+216</span>
+            <input id="telephone" type="tel" placeholder="20 000 000" class="w-full bg-surface-container-lowest border-none rounded-r-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none"/>
+          </div>
+        </div>
+
+        <!-- Informations personnelles -->
+        <div class="pt-6 border-t border-surface-container-highest">
+          <h3 class="text-xl font-bold mb-6">Informations personnelles</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <input id="prenom" type="text" placeholder="Prénom" class="bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none"/>
+            <input id="nom" type="text" placeholder="Nom" class="bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none"/>
+            <input id="email" type="email" placeholder="Email (optionnel)" class="bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none md:col-span-2"/>
+          </div>
+        </div>
+
+        <!-- Alerte validation -->
+        <div id="form-alert" class="hidden bg-error-container text-error rounded-xl px-4 py-3 flex items-center gap-3 text-sm font-medium">
+          <span class="material-symbols-outlined">error</span>
+          <span id="form-alert-msg"></span>
+        </div>
+      </section>
+
+      <!-- Options -->
+      <div class="flex flex-wrap gap-4">
+        <button class="option-btn flex items-center gap-3 bg-surface-container-low px-6 py-4 rounded-xl hover:bg-surface-container-high transition-colors border-2 border-transparent" onclick="toggleOption(this, 'assurance', 25)">
+          <span class="material-symbols-outlined text-primary">verified_user</span>
+          <div class="text-left">
+            <p class="font-semibold text-sm">Assurance Premium</p>
+            <p class="text-xs text-secondary">+25 DT/jour</p>
+          </div>
+        </button>
+        <button class="option-btn flex items-center gap-3 bg-surface-container-low px-6 py-4 rounded-xl hover:bg-surface-container-high transition-colors border-2 border-transparent" onclick="toggleOption(this, 'siege', 10)">
+          <span class="material-symbols-outlined text-primary">child_care</span>
+          <div class="text-left">
+            <p class="font-semibold text-sm">Siège enfant</p>
+            <p class="text-xs text-secondary">+10 DT/jour</p>
+          </div>
+        </button>
+        <button class="option-btn flex items-center gap-3 bg-surface-container-low px-6 py-4 rounded-xl hover:bg-surface-container-high transition-colors border-2 border-transparent" onclick="toggleOption(this, 'gps', 15)">
+          <span class="material-symbols-outlined text-primary">gps_fixed</span>
+          <div class="text-left">
+            <p class="font-semibold text-sm">GPS Inclus</p>
+            <p class="text-xs text-secondary">+15 DT/jour</p>
+          </div>
+        </button>
       </div>
-    </nav>
-
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card shadow-lg p-4">
-                    <h2 class="text-center mb-4">Finaliser votre réservation</h2>
-                    <form id="resa-form">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Modèle choisi</label>
-                            <select id="voiture-select" class="form-select">
-                                <option value="110">Renault Symbol (110 DT/jour)</option>
-                                <option value="120">Kia Picanto (120 DT/jour)</option>
-                                <option value="140">VW Polo 8 (140 DT/jour)</option>
-                            </select>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Début</label>
-                                <input type="date" class="form-control" id="date-debut" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Fin</label>
-                                <input type="date" class="form-control" id="date-fin" required>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-    <label class="form-label fw-bold">Nom complet</label>
-    <input type="text" class="form-control" id="nom" placeholder="Ex: Mohamed Ali" required>
-</div>
-<div class="mb-3">
-    <label class="form-label fw-bold">Numéro de téléphone (+216)</label>
-    <input type="text" class="form-control" id="telephone" placeholder="Ex: 98 123 456" required>
-</div>
-                        
-                        <div class="alert alert-danger text-center shadow-sm">
-                            <h4 class="mb-0">Total : <span id="prix-total">0</span> DT</h4>
-                        </div>
-
-                        <button type="button" class="btn btn-dark w-100 btn-lg" onclick="confirmer()">Confirmer la location</button>
-                    </form>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <script>
-        const dateDebut = document.getElementById('date-debut');
-        const dateFin = document.getElementById('date-fin');
-        const voitureSelect = document.getElementById('voiture-select');
-        const prixTotalAffichage = document.getElementById('prix-total');
+    <!-- Récapitulatif -->
+    <div class="lg:col-span-5 sticky top-28">
+      <div class="bg-on-surface text-surface rounded-xl overflow-hidden shadow-2xl">
+        <div class="p-8 pb-0 flex justify-between items-start">
+          <div>
+            <h4 class="text-zinc-400 text-xs font-bold tracking-[0.2em] uppercase mb-1">Résumé</h4>
+            <h2 class="text-2xl font-black" id="recap-modele">Sélectionnez un véhicule</h2>
+          </div>
+          <div class="kinetic-gradient px-4 py-2 rounded-lg text-xs font-black uppercase tracking-tighter text-white" id="recap-statut">
+            En attente
+          </div>
+        </div>
 
-        function calculerPrix() {
-            if (dateDebut.value && dateFin.value) {
-                let debut = new Date(dateDebut.value);
-                let fin = new Date(dateFin.value);
-                let difference = fin - debut;
-                let jours = difference / (1000 * 60 * 60 * 24);
+        <div class="p-8 space-y-5">
+          <div class="flex justify-between items-center text-sm border-b border-zinc-800 pb-4">
+            <span class="text-zinc-500">Tarif journalier</span>
+            <span class="font-mono text-lg" id="recap-prix-jour">— DT</span>
+          </div>
+          <div class="flex justify-between items-center text-sm border-b border-zinc-800 pb-4">
+            <span class="text-zinc-500">Durée</span>
+            <span class="font-mono text-lg" id="recap-duree">— jours</span>
+          </div>
+          <div class="flex justify-between items-center text-sm border-b border-zinc-800 pb-4">
+            <span class="text-zinc-500">Options</span>
+            <span class="font-mono text-lg" id="recap-options">0 DT</span>
+          </div>
+          <div class="pt-4 flex flex-col items-center">
+            <div class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Total à payer</div>
+            <div class="text-5xl font-black text-white tracking-tighter" id="recap-total">
+              0 <span class="text-xl font-medium text-primary">DT</span>
+            </div>
+          </div>
+        </div>
 
-                if (jours > 0) {
-                    let prixJour = parseInt(voitureSelect.value);
-                    prixTotalAffichage.innerText = jours * prixJour;
-                } else {
-                    prixTotalAffichage.innerText = "0";
-                }
-            }
-        }
+        <div class="p-8 pt-0">
+          <button id="btn-confirmer" onclick="confirmer()"
+            class="w-full kinetic-gradient py-5 rounded-xl text-lg font-black tracking-tighter uppercase flex items-center justify-center gap-3 hover:scale-[1.02] transition-transform shadow-[0_20px_40px_rgba(185,0,39,0.3)]">
+            <span id="btn-confirmer-text">Confirmer la location</span>
+            <span class="material-symbols-outlined text-xl">arrow_forward</span>
+          </button>
+          <p class="text-center text-zinc-500 text-[10px] mt-4 leading-relaxed px-6">
+            En confirmant, vous acceptez nos conditions générales de vente.
+          </p>
+        </div>
+      </div>
 
-        dateDebut.addEventListener('change', calculerPrix);
-        dateFin.addEventListener('change', calculerPrix);
-        voitureSelect.addEventListener('change', calculerPrix);
+      <!-- Assistance -->
+      <div class="mt-6 bg-surface-container-high rounded-xl p-6 flex items-center gap-6">
+        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary shadow-sm flex-shrink-0">
+          <span class="material-symbols-outlined">headset_mic</span>
+        </div>
+        <div>
+          <p class="text-xs font-bold text-secondary uppercase tracking-widest">Besoin d'aide ?</p>
+          <p class="font-bold text-on-surface">Assistance 24/7 au +216 71 000 000</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
 
-        function confirmer() {
-    const total = prixTotalAffichage.innerText;
-    if(total === "0") {
-        alert("Veuillez choisir des dates valides !");
-        return;
-    }
+<!-- Footer -->
+<footer class="bg-zinc-900 w-full pt-12 pb-8">
+  <div class="max-w-screen-2xl mx-auto px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+    <div><p class="text-xl font-black text-white mb-3">AutoDrive Tunisie</p>
+      <p class="text-xs text-zinc-400">© 2024 AutoDrive Tunisie. Premium Mobility Solutions.</p></div>
+    <div><h5 class="text-white font-bold text-sm mb-3">Agences</h5>
+      <ul class="text-xs text-zinc-400 space-y-2"><li>Tunis (Siège)</li><li>Sousse</li><li>Sfax</li></ul></div>
+    <div><h5 class="text-white font-bold text-sm mb-3">Légal</h5>
+      <ul class="text-xs text-zinc-400 space-y-2"><li>Conditions Générales</li><li>Confidentialité</li></ul></div>
+    <div><h5 class="text-white font-bold text-sm mb-3">Service Client</h5>
+      <ul class="text-xs text-zinc-400 space-y-2"><li>Assistance 24/7</li><li>Contact</li></ul></div>
+  </div>
+</footer>
 
-    const params = new URLSearchParams(window.location.search);
-    const data = {
-        voiture_id: params.get('id') || 1,
-        nom_client: document.getElementById('nom').value,
-        telephone: document.getElementById('telephone').value,
-        date_debut: dateDebut.value,
-        date_fin: dateFin.value,
-        prix_total: total
-    };
+<script>
+// État
+let voitures = [];
+let optionsActives = { assurance: 0, siege: 0, gps: 0 };
+let prixJourActuel = 0;
 
-    if(!data.nom_client || !data.telephone) {
-        alert("Veuillez remplir tous les champs !");
-        return;
-    }
+// Lire les paramètres URL transmis depuis index.html
+const params = new URLSearchParams(window.location.search);
+const voitureIdUrl = params.get('id');
+const marqueUrl = params.get('marque');
+const modeleUrl = params.get('modele');
+const prixUrl = params.get('prix');
 
-    fetch('api/reservation.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(result => {
-        if(result.success) {
-            alert('Reservation confirmee ! Un agent vous contactera.');
-            window.location.href = 'index.html';
-        }
-    });
+// Définir la date min = aujourd'hui
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('date-debut').min = today;
+document.getElementById('date-fin').min = today;
+
+function toggleOption(btn, key, montantJour) {
+  const isActive = btn.classList.contains('active');
+  if (isActive) {
+    btn.classList.remove('active');
+    optionsActives[key] = 0;
+  } else {
+    btn.classList.add('active');
+    optionsActives[key] = montantJour;
+  }
+  calculer();
 }
-    </script>
+
+function calculer() {
+  const debut = new Date(document.getElementById('date-debut').value);
+  const fin = new Date(document.getElementById('date-fin').value);
+  const select = document.getElementById('voiture-select');
+  const voitureSelId = parseInt(select.value);
+  const voiture = voitures.find(v => v.id == voitureSelId);
+  prixJourActuel = voiture ? parseFloat(voiture.prix_jour) : 0;
+
+  const jours = fin > debut ? Math.ceil((fin - debut) / (1000*60*60*24)) : 0;
+  const totalOptions = Object.values(optionsActives).reduce((a,b) => a+b, 0);
+  const total = jours > 0 ? (prixJourActuel + totalOptions) * jours : 0;
+
+  document.getElementById('recap-modele').textContent = voiture ? `${voiture.marque} ${voiture.modele}` : 'Sélectionnez un véhicule';
+  document.getElementById('recap-prix-jour').textContent = prixJourActuel ? `${prixJourActuel} DT` : '— DT';
+  document.getElementById('recap-duree').textContent = jours > 0 ? `${jours} jour${jours > 1 ? 's' : ''}` : '— jours';
+  document.getElementById('recap-options').textContent = `${totalOptions * (jours || 1)} DT`;
+  document.getElementById('recap-total').innerHTML = `${Math.round(total)} <span class="text-xl font-medium text-primary">DT</span>`;
+
+  if (jours > 0 && prixJourActuel > 0) {
+    document.getElementById('recap-statut').textContent = 'Prêt';
+  } else {
+    document.getElementById('recap-statut').textContent = 'En attente';
+  }
+}
+
+async function chargerVoitures() {
+  try {
+    const res = await fetch('api/voitures.php');
+    const data = await res.json();
+    voitures = data.filter(v => v.statut === 'disponible');
+
+    const select = document.getElementById('voiture-select');
+    select.innerHTML = '<option value="">-- Choisissez un véhicule --</option>' +
+      voitures.map(v => `<option value="${v.id}" ${v.id == voitureIdUrl ? 'selected' : ''}>${v.marque} ${v.modele} — ${parseFloat(v.prix_jour).toFixed(0)} DT/jour</option>`).join('');
+    calculer();
+  } catch (err) {
+    // Fallback avec les paramètres URL si API indisponible
+    if (voitureIdUrl && prixUrl) {
+      voitures = [{ id: voitureIdUrl, marque: marqueUrl || 'Voiture', modele: modeleUrl || '', prix_jour: prixUrl, statut: 'disponible' }];
+      const select = document.getElementById('voiture-select');
+      select.innerHTML = `<option value="${voitureIdUrl}" selected>${marqueUrl} ${modeleUrl} — ${parseFloat(prixUrl).toFixed(0)} DT/jour</option>`;
+      calculer();
+    } else {
+      document.getElementById('voiture-select').innerHTML = '<option>Erreur chargement API</option>';
+    }
+  }
+}
+
+function showFormAlert(msg) {
+  const el = document.getElementById('form-alert');
+  document.getElementById('form-alert-msg').textContent = msg;
+  el.classList.remove('hidden');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+async function confirmer() {
+  document.getElementById('form-alert').classList.add('hidden');
+
+  const prenom = document.getElementById('prenom').value.trim();
+  const nom = document.getElementById('nom').value.trim();
+  const telephone = document.getElementById('telephone').value.trim();
+  const dateDebut = document.getElementById('date-debut').value;
+  const dateFin = document.getElementById('date-fin').value;
+  const voitureSelId = document.getElementById('voiture-select').value;
+
+  // Validations côté client
+  if (!prenom || !nom) return showFormAlert('Veuillez indiquer votre prénom et nom.');
+  if (!telephone) return showFormAlert('Veuillez indiquer votre numéro de téléphone.');
+  if (!/^[0-9\s]{8,}$/.test(telephone)) return showFormAlert('Numéro de téléphone invalide (min. 8 chiffres).');
+  if (!dateDebut || !dateFin) return showFormAlert('Veuillez sélectionner les dates de début et de fin.');
+  if (new Date(dateFin) <= new Date(dateDebut)) return showFormAlert('La date de fin doit être après la date de début.');
+  if (!voitureSelId) return showFormAlert('Veuillez sélectionner un véhicule.');
+
+  const jours = Math.ceil((new Date(dateFin) - new Date(dateDebut)) / (1000*60*60*24));
+  const totalOptions = Object.values(optionsActives).reduce((a,b) => a+b, 0);
+  const prixTotal = (prixJourActuel + totalOptions) * jours;
+
+  const btn = document.getElementById('btn-confirmer');
+  const btnText = document.getElementById('btn-confirmer-text');
+  btn.style.pointerEvents = 'none';
+  btn.style.opacity = '0.7';
+  btnText.textContent = 'Envoi en cours...';
+
+  try {
+    const res = await fetch('api/reservation.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        voiture_id: parseInt(voitureSelId),
+        nom_client: `${prenom} ${nom}`,
+        telephone: `+216 ${telephone}`,
+        date_debut: dateDebut,
+        date_fin: dateFin,
+        prix_total: Math.round(prixTotal)
+      })
+    });
+
+    if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
+    const result = await res.json();
+
+    if (result.success) {
+      document.getElementById('success-overlay').style.display = 'flex';
+    } else {
+      showFormAlert(result.message || 'Erreur lors de l\'enregistrement.');
+    }
+  } catch (err) {
+    showFormAlert('Erreur de connexion au serveur PHP. Vérifiez que le serveur est actif.');
+  } finally {
+    btn.style.pointerEvents = '';
+    btn.style.opacity = '';
+    btnText.textContent = 'Confirmer la location';
+  }
+}
+
+// Écouter les changements
+['voiture-select','date-debut','date-fin'].forEach(id => {
+  document.getElementById(id).addEventListener('change', calculer);
+});
+
+chargerVoitures();
+</script>
+<script src="chatbot-widget.js"></script>
 </body>
 </html>
