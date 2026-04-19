@@ -51,6 +51,21 @@ tailwind.config = {
   .btn-annuler:hover { background:#ba1a1a; color:white; }
   html.dark .btn-confirmer { background:rgba(0,128,140,0.2); }
   html.dark .btn-annuler   { background:rgba(186,26,26,0.2); }
+  /* Export */
+  .btn-export { transition:all .15s; display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:8px 14px; border-radius:10px; border:none; cursor:pointer; font-family:'Inter',sans-serif; }
+  .btn-export-csv { background:rgba(0,101,111,0.1); color:#00656f; }
+  .btn-export-csv:hover { background:#00656f; color:white; }
+  .btn-export-pdf { background:rgba(185,0,39,0.1); color:#b90027; }
+  .btn-export-pdf:hover { background:#b90027; color:white; }
+  html.dark .btn-export-csv { background:rgba(0,101,111,0.2); }
+  html.dark .btn-export-pdf { background:rgba(185,0,39,0.2); }
+  @media print {
+    aside, #btn-dark, #ad-widget-btn, #ad-panel, #ad-bubble { display:none !important; }
+    main { margin-left:0 !important; }
+    .btn-export, button { display:none !important; }
+    #section-reservations { display:block !important; }
+    #section-voitures { display:none !important; }
+  }
   /* Modal */
   #modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
   #modal-overlay.open { display:flex; }
@@ -223,8 +238,24 @@ tailwind.config = {
 
   <!-- Section Réservations (masquée par défaut) -->
   <div id="section-reservations" class="hidden bg-surface-container-lowest rounded-3xl kinetic-shadow overflow-hidden">
-    <div class="p-6 border-b border-surface-container bg-white">
+    <div class="p-6 border-b border-surface-container bg-white flex justify-between items-center flex-wrap gap-3">
       <h4 class="font-bold text-lg text-on-surface">Toutes les Réservations</h4>
+      <div class="flex gap-2 items-center">
+        <select id="filtre-statut" onchange="filtrerReservations()" class="text-xs font-semibold border border-zinc-200 rounded-lg px-3 py-2 outline-none bg-white text-secondary cursor-pointer">
+          <option value="">Tous les statuts</option>
+          <option value="en_attente">En attente</option>
+          <option value="confirmee">Confirmées</option>
+          <option value="annulee">Annulées</option>
+        </select>
+        <button class="btn-export btn-export-csv" onclick="exportCSV()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+          Export CSV
+        </button>
+        <button class="btn-export btn-export-pdf" onclick="exportPDF()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+          Imprimer PDF
+        </button>
+      </div>
     </div>
     <div class="overflow-x-auto">
       <table class="w-full text-left border-collapse">
@@ -437,6 +468,154 @@ async function changerStatutResa(id, statut) {
   }
 }
 
+
+// ── Export CSV ────────────────────────────────────────────
+function exportCSV() {
+  const rows = toutesReservations;
+  if (!rows || rows.length === 0) { showToast('Aucune réservation à exporter.', 'error'); return; }
+
+  const headers = ['ID','Client','Téléphone','Voiture','Date début','Date fin','Total (DT)','Statut'];
+  const lines = [headers.join(',')];
+
+  rows.forEach(r => {
+    lines.push([
+      `#${r.id}`,
+      `"${r.nom_client}"`,
+      `"${r.telephone}"`,
+      `"${(r.marque||'')+' '+(r.modele||'')}"`,
+      r.date_debut,
+      r.date_fin,
+      parseFloat(r.prix_total).toFixed(0),
+      r.statut
+    ].join(','));
+  });
+
+  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `reservations_autodrive_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Export CSV téléchargé !', 'success');
+}
+
+// ── Export PDF (impression navigateur) ───────────────────
+function exportPDF() {
+  if (!toutesReservations || toutesReservations.length === 0) {
+    showToast('Aucune réservation à imprimer.', 'error'); return;
+  }
+
+  // Générer une page d'impression propre
+  const rows = toutesReservations;
+  const date = new Date().toLocaleDateString('fr-TN');
+  let tableRows = rows.map(r => `
+    <tr>
+      <td>#${r.id}</td>
+      <td>${r.nom_client}</td>
+      <td>${r.telephone}</td>
+      <td>${(r.marque||'')+ ' '+(r.modele||'')}</td>
+      <td>${r.date_debut} → ${r.date_fin}</td>
+      <td style="font-weight:700">${parseFloat(r.prix_total).toFixed(0)} DT</td>
+      <td><span class="badge badge-${r.statut}">${r.statut}</span></td>
+    </tr>`).join('');
+
+  const totalRevenus = rows.reduce((s,r) => s + parseFloat(r.prix_total||0), 0);
+
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <title>Réservations AutoDrive — ${date}</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',Arial,sans-serif; color:#1a1c1c; padding:32px; font-size:13px; }
+    header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; padding-bottom:16px; border-bottom:2px solid #b90027; }
+    .brand { font-size:22px; font-weight:900; letter-spacing:-0.04em; }
+    .brand span { color:#b90027; }
+    .meta  { text-align:right; font-size:11px; color:#5f5e5e; line-height:1.8; }
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; }
+    .stat  { background:#f9f9f9; border-radius:10px; padding:14px 18px; }
+    .stat-label { font-size:11px; font-weight:600; color:#5f5e5e; text-transform:uppercase; letter-spacing:.05em; }
+    .stat-val   { font-size:22px; font-weight:900; margin-top:4px; }
+    table  { width:100%; border-collapse:collapse; }
+    th     { background:#1a1c1c; color:white; padding:10px 12px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+    td     { padding:10px 12px; border-bottom:1px solid #f3f3f3; font-size:12px; }
+    tr:nth-child(even) td { background:#f9f9f9; }
+    .badge { padding:3px 8px; border-radius:99px; font-size:10px; font-weight:800; text-transform:uppercase; }
+    .badge-confirmee  { background:rgba(0,101,111,.12); color:#00656f; }
+    .badge-en_attente { background:rgba(234,179,8,.15);  color:#a16207; }
+    .badge-annulee    { background:rgba(186,26,26,.1);   color:#ba1a1a; }
+    footer { margin-top:28px; padding-top:14px; border-top:1px solid #e8e8e8; font-size:11px; color:#9ca3af; text-align:center; }
+    @media print { body { padding:16px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">Auto<span>Drive</span> Tunisie</div>
+    <div class="meta">
+      <div>Rapport des réservations</div>
+      <div>Généré le : ${date}</div>
+      <div>Total : ${rows.length} réservation${rows.length>1?'s':''}</div>
+    </div>
+  </header>
+  <div class="stats">
+    <div class="stat"><div class="stat-label">Total réservations</div><div class="stat-val">${rows.length}</div></div>
+    <div class="stat"><div class="stat-label">Confirmées</div><div class="stat-val" style="color:#00656f">${rows.filter(r=>r.statut==='confirmee').length}</div></div>
+    <div class="stat"><div class="stat-label">Revenus totaux</div><div class="stat-val" style="color:#b90027">${Math.round(totalRevenus).toLocaleString('fr-TN')} DT</div></div>
+  </div>
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Client</th><th>Téléphone</th><th>Voiture</th><th>Dates</th><th>Total</th><th>Statut</th></tr>
+    </thead>
+    <tbody>${tableRows}</tbody>
+  </table>
+  <footer>AutoDrive Tunisie · Document généré automatiquement le ${date}</footer>
+  <script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`);
+  win.document.close();
+}
+
+// ── Filtre par statut ─────────────────────────────────────
+let toutesReservations = [];
+
+function filtrerReservations() {
+  const filtre = document.getElementById('filtre-statut')?.value || '';
+  const filtrees = filtre ? toutesReservations.filter(r => r.statut === filtre) : toutesReservations;
+  renderReservations(filtrees);
+}
+
+function renderReservations(data) {
+  const tbody = document.getElementById('tbody-reservations');
+  if (data.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-12 text-secondary">Aucune réservation trouvée</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(r => {
+    const statutClass = r.statut === 'confirmee' ? 'badge-dispo' : r.statut === 'annulee' ? 'badge-louee' : 'badge-attente';
+    return `
+    <tr class="hover:bg-zinc-50 transition-colors" id="resa-row-${r.id}">
+      <td class="px-6 py-4 font-mono text-sm text-secondary">#${r.id}</td>
+      <td class="px-6 py-4 font-bold text-on-surface">${r.nom_client}</td>
+      <td class="px-6 py-4 text-zinc-600">${r.telephone}</td>
+      <td class="px-6 py-4 text-zinc-600">${r.marque||'—'} ${r.modele||''}</td>
+      <td class="px-6 py-4 text-xs text-zinc-500">${r.date_debut} → ${r.date_fin}</td>
+      <td class="px-6 py-4 font-bold">${parseFloat(r.prix_total).toFixed(0)} DT</td>
+      <td class="px-6 py-4">
+        <span id="badge-${r.id}" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statutClass}">${r.statut}</span>
+      </td>
+      <td class="px-6 py-4 text-right">
+        <div class="flex justify-end gap-2">
+          ${r.statut !== 'confirmee' ? `<button class="btn-confirmer" onclick="changerStatutResa(${r.id}, 'confirmee')">✓ Confirmer</button>` : ''}
+          ${r.statut !== 'annulee'   ? `<button class="btn-annuler"   onclick="changerStatutResa(${r.id}, 'annulee')">✕ Annuler</button>`   : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
 // Charger réservations
 async function chargerReservations() {
   try {
@@ -446,32 +625,9 @@ async function chargerReservations() {
     const tbody = document.getElementById('tbody-reservations');
     let revenus = 0;
 
-    if (data.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-12 text-secondary">Aucune réservation pour le moment</td></tr>';
-    } else {
-      tbody.innerHTML = data.map(r => {
-        revenus += parseFloat(r.prix_total || 0);
-        const statutClass = r.statut === 'confirmee' ? 'badge-dispo' : r.statut === 'annulee' ? 'badge-louee' : 'bg-amber-100 text-amber-700';
-        return `
-        <tr class="hover:bg-zinc-50 transition-colors" id="resa-row-${r.id}">
-          <td class="px-6 py-4 font-mono text-sm text-secondary">#${r.id}</td>
-          <td class="px-6 py-4 font-bold text-on-surface">${r.nom_client}</td>
-          <td class="px-6 py-4 text-zinc-600">${r.telephone}</td>
-          <td class="px-6 py-4 text-zinc-600">${r.marque || '—'} ${r.modele || ''}</td>
-          <td class="px-6 py-4 text-xs text-zinc-500">${r.date_debut} → ${r.date_fin}</td>
-          <td class="px-6 py-4 font-bold">${parseFloat(r.prix_total).toFixed(0)} DT</td>
-          <td class="px-6 py-4">
-            <span id="badge-${r.id}" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statutClass}">${r.statut}</span>
-          </td>
-          <td class="px-6 py-4 text-right">
-            <div class="flex justify-end gap-2">
-              ${r.statut !== 'confirmee' ? `<button class="btn-confirmer" onclick="changerStatutResa(${r.id}, 'confirmee')">✓ Confirmer</button>` : ''}
-              ${r.statut !== 'annulee'   ? `<button class="btn-annuler"   onclick="changerStatutResa(${r.id}, 'annulee')">✕ Annuler</button>` : ''}
-            </div>
-          </td>
-        </tr>`;
-      }).join('');
-    }
+    toutesReservations = data;
+    data.forEach(r => { revenus += parseFloat(r.prix_total || 0); });
+    renderReservations(data);
 
     countUp('stat-resa', data.length);
     animBar('bar-resa', Math.min((data.length / 50) * 100, 100));
