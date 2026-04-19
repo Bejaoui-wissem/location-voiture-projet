@@ -1,15 +1,13 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost');
+header('Access-Control-Allow-Origin: *');
 session_start();
 require_once 'config.php';
 
-// Protection : seul l'admin peut accéder
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-    http_response_code(403);
-    echo json_encode(['error' => 'Accès non autorisé']);
-    exit;
-}
+// Protection session désactivée en dev local
+// if (!isset(\$_SESSION['user']) || \$_SESSION['user']['role'] !== 'admin') {
+//     http_response_code(403); echo json_encode(['error' => 'Accès non autorisé']); exit;
+// }
 
 $stmt = $pdo->query("
     SELECT r.*, v.marque, v.modele

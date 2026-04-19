@@ -387,6 +387,7 @@ async function confirmer() {
   document.getElementById(id).addEventListener('change', calculer);
 });
 
+document.querySelectorAll('input[type=text], input[type=email], input[type=tel]').forEach(i => { i.value=''; i.setAttribute('autocomplete','off'); });
 chargerVoitures();
 </script>
 <script src="chatbot-widget.js"></script>

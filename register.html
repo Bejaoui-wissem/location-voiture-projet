@@ -281,9 +281,8 @@ async function sInscrire() {
     });
     const data = await res.json();
     if (data.success) {
-      document.getElementById('alert-success').classList.remove('hidden');
-      document.getElementById('alert-success').classList.add('flex');
-      setTimeout(() => window.location.href = 'login.html', 2000);
+      // Redirection immédiate vers login
+window.location.href = 'login.html?registered=1';
     } else {
       showError(data.message || 'Erreur lors de l\'inscription.');
     }

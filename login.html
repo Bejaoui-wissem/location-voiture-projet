@@ -85,7 +85,7 @@ tailwind.config = {
           <label class="block text-xs font-semibold text-on-surface tracking-wider uppercase ml-1" for="email">Email</label>
           <div class="relative group">
             <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary group-focus-within:text-primary transition-colors">mail</span>
-            <input id="email" type="email" placeholder="admin@autodrive.com"
+            <input id="email" type="email" placeholder="Votre adresse email" autocomplete="off"
               class="w-full bg-surface-container-low border-0 rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 transition-all duration-200 outline-none"/>
           </div>
         </div>
@@ -110,12 +110,7 @@ tailwind.config = {
         </div>
       </div>
 
-      <!-- Compte démo -->
-      <div class="mt-6 p-4 bg-surface-container-low rounded-xl">
-        <p class="text-xs text-secondary text-center font-medium mb-2">Compte administrateur de démo</p>
-        <p class="text-xs text-center font-mono text-on-surface">admin@autodrive.com · admin123</p>
-      </div>
-    </div>
+      
 
     <!-- Trust badges -->
     <div class="mt-8 flex items-center justify-center gap-6 opacity-40">
@@ -202,6 +197,11 @@ async function seConnecter() {
 }
 
 // Connexion via touche Entrée
+// Vider les champs au chargement
+document.addEventListener('DOMContentLoaded', () => {
+  ['email','password'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+});
+
 ['email', 'password'].forEach(id => {
   document.getElementById(id).addEventListener('keydown', e => {
     if (e.key === 'Enter') seConnecter();
