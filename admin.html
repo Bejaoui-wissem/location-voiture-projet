@@ -51,6 +51,20 @@ tailwind.config = {
   .btn-annuler:hover { background:#ba1a1a; color:white; }
   html.dark .btn-confirmer { background:rgba(0,128,140,0.2); }
   html.dark .btn-annuler   { background:rgba(186,26,26,0.2); }
+  /* Modal */
+  #modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
+  #modal-overlay.open { display:flex; }
+  #modal-box { background:white; border-radius:20px; padding:32px; width:100%; max-width:480px; box-shadow:0 24px 60px rgba(0,0,0,0.2); animation:modalIn .25s cubic-bezier(.4,0,.2,1); }
+  @keyframes modalIn { from{opacity:0;transform:scale(.95) translateY(10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+  html.dark #modal-box { background:#1c1e1f; border:1px solid #2f3132; }
+  html.dark #modal-box input, html.dark #modal-box select { background:#232526 !important; color:#e8e6e3 !important; border-color:#3a3c3d !important; }
+  .modal-input { width:100%; background:#f3f3f3; border:1.5px solid transparent; border-radius:10px; padding:11px 14px; font-size:13px; outline:none; transition:all .2s; font-family:'Inter',sans-serif; color:#1a1c1c; }
+  .modal-input:focus { background:white; border-color:#b90027; box-shadow:0 0 0 3px rgba(185,0,39,.08); }
+  .modal-label { display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:#5f5e5e; margin-bottom:6px; }
+  .btn-suppr { transition:all .15s; font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px; border:none; cursor:pointer; background:rgba(186,26,26,0.1); color:#ba1a1a; }
+  .btn-suppr:hover { background:#ba1a1a; color:white; }
+  .btn-edit  { transition:all .15s; font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px; border:none; cursor:pointer; background:rgba(0,101,111,0.1); color:#00656f; }
+  .btn-edit:hover  { background:#00656f; color:white; }
   /* Compteurs animés */
   .stat-num {
     display: inline-block;
@@ -131,7 +145,7 @@ tailwind.config = {
       <h2 class="text-4xl font-bold tracking-tight text-on-surface" id="page-title">Gestion de la flotte</h2>
     </div>
     <div class="flex gap-4">
-      <button onclick="afficherSection('voitures')" id="btn-ajouter"
+      <button onclick="ouvrirModal()" id="btn-ajouter"
         class="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl kinetic-shadow font-semibold text-sm hover:scale-[1.02] transition-all">
         <span class="material-symbols-outlined text-sm">add</span>
         Ajouter un véhicule
@@ -232,6 +246,55 @@ tailwind.config = {
     </div>
   </div>
 
+<!-- ===== MODAL VOITURE ===== -->
+<div id="modal-overlay" onclick="fermerModal(event)">
+  <div id="modal-box">
+    <div class="flex items-center justify-between mb-6">
+      <h3 id="modal-title" class="text-lg font-bold text-on-surface">Ajouter un véhicule</h3>
+      <button onclick="fermerModal(null, true)" class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-secondary hover:text-primary transition-colors text-lg font-bold">✕</button>
+    </div>
+    <input type="hidden" id="modal-id"/>
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="modal-label">Marque</label>
+          <input id="modal-marque" type="text" placeholder="Ex: Renault" class="modal-input"/>
+        </div>
+        <div>
+          <label class="modal-label">Modèle</label>
+          <input id="modal-modele" type="text" placeholder="Ex: Clio 5" class="modal-input"/>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="modal-label">Prix / jour (DT)</label>
+          <input id="modal-prix" type="number" min="1" placeholder="Ex: 40" class="modal-input"/>
+        </div>
+        <div>
+          <label class="modal-label">Statut</label>
+          <select id="modal-statut" class="modal-input">
+            <option value="disponible">Disponible</option>
+            <option value="louee">Louée</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="modal-label">URL Image (optionnel)</label>
+        <input id="modal-image" type="url" placeholder="https://..." class="modal-input"/>
+      </div>
+      <p id="modal-error" class="text-xs text-error hidden"></p>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="fermerModal(null, true)" class="flex-1 py-3 rounded-xl font-bold text-sm bg-surface-container-low text-secondary hover:bg-surface-container transition-colors">Annuler</button>
+      <button id="modal-btn-save" onclick="sauvegarderVoiture()"
+        class="flex-1 py-3 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2"
+        style="background:linear-gradient(135deg,#b90027,#e31837)">
+        <span id="modal-btn-text">Enregistrer</span>
+        <svg id="modal-spin" class="hidden animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 4V2A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
 </main>
 
 <script>
@@ -463,6 +526,101 @@ function countUp(id, target, suffix = '') {
       el.innerHTML = target.toLocaleString('fr-TN') + suffix;
     }
   }, interval);
+}
+
+
+// ── Modal voiture ─────────────────────────────────────────
+function ouvrirModal() {
+  document.getElementById('modal-title').textContent = 'Ajouter un véhicule';
+  document.getElementById('modal-id').value = '';
+  document.getElementById('modal-marque').value = '';
+  document.getElementById('modal-modele').value = '';
+  document.getElementById('modal-prix').value = '';
+  document.getElementById('modal-statut').value = 'disponible';
+  document.getElementById('modal-image').value = '';
+  document.getElementById('modal-error').classList.add('hidden');
+  document.getElementById('modal-btn-text').textContent = 'Ajouter';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function ouvrirModalEdit(id, marque, modele, prix, statut) {
+  document.getElementById('modal-title').textContent = 'Modifier le véhicule';
+  document.getElementById('modal-id').value = id;
+  document.getElementById('modal-marque').value = marque;
+  document.getElementById('modal-modele').value = modele;
+  document.getElementById('modal-prix').value = prix;
+  document.getElementById('modal-statut').value = statut;
+  document.getElementById('modal-image').value = '';
+  document.getElementById('modal-error').classList.add('hidden');
+  document.getElementById('modal-btn-text').textContent = 'Enregistrer';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function fermerModal(e, force = false) {
+  if (force || e?.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+  }
+}
+
+async function sauvegarderVoiture() {
+  const id     = document.getElementById('modal-id').value;
+  const marque = document.getElementById('modal-marque').value.trim();
+  const modele = document.getElementById('modal-modele').value.trim();
+  const prix   = parseFloat(document.getElementById('modal-prix').value);
+  const statut = document.getElementById('modal-statut').value;
+  const image  = document.getElementById('modal-image').value.trim();
+  const errEl  = document.getElementById('modal-error');
+
+  errEl.classList.add('hidden');
+  if (!marque) { errEl.textContent = 'La marque est requise.'; errEl.classList.remove('hidden'); return; }
+  if (!modele) { errEl.textContent = 'Le modèle est requis.';  errEl.classList.remove('hidden'); return; }
+  if (!prix || prix <= 0) { errEl.textContent = 'Prix invalide.'; errEl.classList.remove('hidden'); return; }
+
+  document.getElementById('modal-btn-save').disabled = true;
+  document.getElementById('modal-btn-text').textContent = 'Enregistrement...';
+  document.getElementById('modal-spin').classList.remove('hidden');
+
+  try {
+    const res = await fetch('api/gestion_voitures.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: id ? 'update' : 'create', id: id ? parseInt(id) : null, marque, modele, prix_jour: prix, statut, image_url: image })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(id ? 'Véhicule modifié !' : 'Véhicule ajouté !', 'success');
+      fermerModal(null, true);
+      chargerVoitures();
+    } else {
+      errEl.textContent = data.message || 'Erreur.'; errEl.classList.remove('hidden');
+    }
+  } catch (e) {
+    errEl.textContent = 'Erreur serveur.'; errEl.classList.remove('hidden');
+  } finally {
+    document.getElementById('modal-btn-save').disabled = false;
+    document.getElementById('modal-btn-text').textContent = 'Enregistrer';
+    document.getElementById('modal-spin').classList.add('hidden');
+  }
+}
+
+async function supprimerVoiture(id, nom) {
+  if (!confirm(`Supprimer "${nom}" de la flotte ? Cette action est irréversible.`)) return;
+  try {
+    const res = await fetch('api/gestion_voitures.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Véhicule supprimé.', 'success');
+      chargerVoitures();
+    } else {
+      showToast(data.message || 'Erreur suppression.', 'error');
+    }
+  } catch {
+    showToast('Erreur serveur.', 'error');
+  }
 }
 
 // Initialisation
