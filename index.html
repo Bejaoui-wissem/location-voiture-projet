@@ -61,9 +61,9 @@ tailwind.config = {
       <a href="index.html" class="text-red-600 border-b-2 border-red-600 pb-1 font-bold">Catalogue</a>
     </div>
     <button id="btn-dark" onclick="toggleDark()" title="Mode sombre"></button>
-    <a href="login.html" class="bg-primary-container text-white px-6 py-2 rounded-xl font-bold hover:scale-[1.02] transition-transform duration-200 active:scale-95">
-      Connexion
-    </a>
+    <div id="nav-auth">
+      <a href="login.html" class="bg-primary-container text-white px-6 py-2 rounded-xl font-bold hover:scale-[1.02] transition-transform duration-200 active:scale-95">Connexion</a>
+    </div>
   </div>
 </nav>
 
@@ -95,7 +95,7 @@ tailwind.config = {
         <label class="text-xs font-semibold text-secondary uppercase tracking-widest px-1">Rechercher</label>
         <div class="relative">
           <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary">search</span>
-          <input id="search-input" type="text" placeholder="Peugeot, Renault..." autocomplete="off" class="w-full bg-surface-container-low border-none rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary/20 text-on-surface font-medium outline-none"/>
+          <input id="search-input" type="text" placeholder="Peugeot, Renault..." autocomplete="off" name="search_xr7k" readonly onfocus="this.removeAttribute('readonly')" class="w-full bg-surface-container-low border-none rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-primary/20 text-on-surface font-medium outline-none"/>
         </div>
       </div>
       <div class="space-y-2">
@@ -361,11 +361,28 @@ async function chargerVoitures() {
 document.getElementById('search-input').addEventListener('input', appliquerFiltres);
 document.getElementById('filter-categorie').addEventListener('change', appliquerFiltres);
 
-// Vider tous les champs au chargement
-document.getElementById("search-input").value = "";
-document.querySelectorAll("input").forEach(i => { i.value = ""; });
+// Vider le champ de recherche — protection anti-autofill
+function viderRecherche() {
+  const inp = document.getElementById("search-input");
+  if (inp) inp.value = "";
+}
+viderRecherche();
+setTimeout(viderRecherche, 100);
+setTimeout(viderRecherche, 500);
+setTimeout(viderRecherche, 1000);
 chargerVoitures();
 </script>
 <script src="chatbot-widget.js"></script>
+<script>
+(function() {
+  const u = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
+  if (u && u.nom) {
+    const navAuth = document.getElementById('nav-auth');
+    if (navAuth) {
+      navAuth.innerHTML = '<a href="mon-compte.html" class="flex items-center gap-2 text-sm font-bold text-zinc-700 hover:text-primary transition-colors"><span class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-black" style="background:#b90027">' + u.nom[0].toUpperCase() + '</span>' + u.nom.split(' ')[0] + '</a>';
+    }
+  }
+})();
+</script>
 </body>
 </html>

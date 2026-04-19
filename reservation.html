@@ -127,7 +127,7 @@ tailwind.config = {
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <input id="prenom" type="text" placeholder="Prénom" class="bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none"/>
             <input id="nom" type="text" placeholder="Nom" class="bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none"/>
-            <input id="email" type="email" placeholder="Email (optionnel)" class="bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none md:col-span-2"/>
+            <input id="email" type="email" placeholder="Email (optionnel)" autocomplete="off" name="email_xr9k" readonly onfocus="this.removeAttribute('readonly')" class="bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none md:col-span-2"/>
           </div>
         </div>
 
@@ -170,6 +170,9 @@ tailwind.config = {
         <div class="p-8 pb-0 flex justify-between items-start">
           <div>
             <h4 class="text-zinc-400 text-xs font-bold tracking-[0.2em] uppercase mb-1">Résumé</h4>
+            <div id="recap-img-wrap" class="hidden mb-4 rounded-2xl overflow-hidden" style="height:140px;">
+              <img id="recap-car-img" src="" alt="Voiture" class="w-full h-full object-cover"/>
+            </div>
             <h2 class="text-2xl font-black" id="recap-modele">Sélectionnez un véhicule</h2>
           </div>
           <div class="kinetic-gradient px-4 py-2 rounded-lg text-xs font-black uppercase tracking-tighter text-white" id="recap-statut">
@@ -251,6 +254,13 @@ const marqueUrl = params.get('marque');
 const modeleUrl = params.get('modele');
 const prixUrl = params.get('prix');
 
+// Pré-remplir avec les infos de l'utilisateur connecté
+const userSession = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
+if (userSession) {
+  const nomInp = document.getElementById('nom-client');
+  if (nomInp) nomInp.value = userSession.nom || '';
+}
+
 // Définir la date min = aujourd'hui
 const today = new Date().toISOString().split('T')[0];
 document.getElementById('date-debut').min = today;
@@ -294,6 +304,15 @@ function calculer() {
 }
 
 async function chargerVoitures() {
+  // Pré-remplir immédiatement depuis les paramètres URL
+  if (voitureIdUrl && marqueUrl && modeleUrl && prixUrl) {
+    document.getElementById('recap-modele').textContent = `${decodeURIComponent(marqueUrl)} ${decodeURIComponent(modeleUrl)}`;
+    document.getElementById('recap-prix-jour').textContent = `${parseFloat(prixUrl).toFixed(0)} DT`;
+    // Afficher image si disponible
+    const imgEl = document.getElementById('recap-image');
+    if (imgEl) imgEl.style.display = 'block';
+  }
+
   try {
     const res = await fetch('api/voitures.php');
     const data = await res.json();
@@ -302,13 +321,27 @@ async function chargerVoitures() {
     const select = document.getElementById('voiture-select');
     select.innerHTML = '<option value="">-- Choisissez un véhicule --</option>' +
       voitures.map(v => `<option value="${v.id}" ${v.id == voitureIdUrl ? 'selected' : ''}>${v.marque} ${v.modele} — ${parseFloat(v.prix_jour).toFixed(0)} DT/jour</option>`).join('');
+
+    // Forcer la sélection de la voiture depuis l'URL
+    if (voitureIdUrl) {
+      select.value = voitureIdUrl;
+      // Afficher l'image de la voiture sélectionnée
+      const voiture = voitures.find(v => v.id == voitureIdUrl);
+      if (voiture && voiture.image_url) {
+        const imgWrap = document.getElementById('recap-img-wrap');
+        const imgEl   = document.getElementById('recap-car-img');
+        if (imgWrap && imgEl) {
+          imgEl.src = voiture.image_url;
+          imgWrap.classList.remove('hidden');
+        }
+      }
+    }
     calculer();
   } catch (err) {
-    // Fallback avec les paramètres URL si API indisponible
     if (voitureIdUrl && prixUrl) {
-      voitures = [{ id: voitureIdUrl, marque: marqueUrl || 'Voiture', modele: modeleUrl || '', prix_jour: prixUrl, statut: 'disponible' }];
+      voitures = [{ id: voitureIdUrl, marque: decodeURIComponent(marqueUrl||'Voiture'), modele: decodeURIComponent(modeleUrl||''), prix_jour: prixUrl, statut: 'disponible' }];
       const select = document.getElementById('voiture-select');
-      select.innerHTML = `<option value="${voitureIdUrl}" selected>${marqueUrl} ${modeleUrl} — ${parseFloat(prixUrl).toFixed(0)} DT/jour</option>`;
+      select.innerHTML = `<option value="${voitureIdUrl}" selected>${decodeURIComponent(marqueUrl)} ${decodeURIComponent(modeleUrl)} — ${parseFloat(prixUrl).toFixed(0)} DT/jour</option>`;
       calculer();
     } else {
       document.getElementById('voiture-select').innerHTML = '<option>Erreur chargement API</option>';
@@ -388,8 +421,20 @@ async function confirmer() {
 });
 
 document.querySelectorAll('input[type=text], input[type=email], input[type=tel]').forEach(i => { i.value=''; i.setAttribute('autocomplete','off'); });
+setTimeout(() => { const e=document.getElementById('email'); if(e) e.value=''; }, 500);
 chargerVoitures();
 </script>
 <script src="chatbot-widget.js"></script>
+<script>
+(function() {
+  const u = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
+  if (u && u.nom) {
+    const navAuth = document.getElementById('nav-auth');
+    if (navAuth) {
+      navAuth.innerHTML = '<a href="mon-compte.html" class="flex items-center gap-2 text-sm font-bold text-zinc-700 hover:text-primary transition-colors"><span class="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-black" style="background:#b90027">' + u.nom[0].toUpperCase() + '</span>' + u.nom.split(' ')[0] + '</a>';
+    }
+  }
+})();
+</script>
 </body>
 </html>
