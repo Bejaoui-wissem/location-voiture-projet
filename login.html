@@ -44,6 +44,7 @@ tailwind.config = {
   #alert-box { display: none; }
   .btn-loading { pointer-events: none; opacity: 0.7; }
 </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="assets/js/darkmode.js"></script>
 <script src="assets/js/animations.js"></script>
 </head>
@@ -98,6 +99,34 @@ tailwind.config = {
             <input id="password" type="password" placeholder="••••••••" autocomplete="new-password"
               class="w-full bg-surface-container-low border-0 rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-zinc-400 focus:ring-2 focus:ring-primary/20 transition-all duration-200 outline-none"/>
           </div>
+        </div>
+
+        <!-- Bouton Google -->
+        <div class="pt-2 pb-4">
+          <div id="g_id_onload"
+               data-client_id="388166246400-a1d178dtf4r90q6g675dbctpk5kj0hl3.apps.googleusercontent.com"
+               data-callback="handleGoogleLogin"
+               data-auto_prompt="false">
+          </div>
+          <div class="g_id_signin w-full flex justify-center"
+               data-type="standard"
+               data-shape="rectangular"
+               data-theme="outline"
+               data-text="continue_with"
+               data-size="large"
+               data-logo_alignment="left"
+               data-width="360"></div>
+
+          <div class="flex items-center gap-3 mt-5 mb-2">
+            <div class="flex-1 h-px bg-zinc-200"></div>
+            <span class="text-xs text-secondary font-semibold uppercase tracking-widest">ou</span>
+            <div class="flex-1 h-px bg-zinc-200"></div>
+          </div>
+        </div>
+
+        <!-- Lien mot de passe oublié -->
+        <div class="flex justify-end mb-1">
+          <a href="#" onclick="ouvrirModalMdp();return false;" class="text-xs font-bold text-primary hover:underline">Mot de passe oublié ?</a>
         </div>
 
         <!-- Bouton -->
@@ -294,5 +323,163 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <script src="chatbot-widget.js"></script>
+<!-- Modal Mot de passe oublié -->
+<div id="modal-mdp-oublie" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1001;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px)">
+  <div style="background:white;border-radius:20px;padding:32px;width:100%;max-width:440px;box-shadow:0 24px 60px rgba(0,0,0,0.25)">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-on-surface">Mot de passe oublié</h3>
+      <button onclick="fermerModalMdp()" style="width:32px;height:32px;border-radius:8px;background:#f3f4f6;border:none;cursor:pointer;font-weight:700">✕</button>
+    </div>
+
+    <!-- Étape 1 : Email -->
+    <div id="mdp-etape-1">
+      <p class="text-sm text-secondary mb-4">Entrez votre email. Nous vous enverrons un code de vérification.</p>
+      <input id="mdp-email" type="email" placeholder="votre@email.com" autocomplete="off"
+        class="w-full bg-surface-container-low rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 border-none mb-3"/>
+      <p id="mdp-msg-1" class="text-xs mb-4"></p>
+      <button onclick="envoyerCode()" class="w-full py-3 rounded-xl font-bold text-sm text-white" style="background:linear-gradient(135deg,#b90027,#e31837)">Envoyer le code</button>
+    </div>
+
+    <!-- Étape 2 : Code -->
+    <div id="mdp-etape-2" style="display:none">
+      <p class="text-sm text-secondary mb-4">Un code a été envoyé. Vérifiez votre email (ou la console pour la démo).</p>
+      <input id="mdp-code" type="text" placeholder="Code à 6 chiffres" autocomplete="off" maxlength="6"
+        class="w-full bg-surface-container-low rounded-xl py-3 px-4 text-lg outline-none focus:ring-2 focus:ring-primary/20 border-none mb-3 text-center font-mono font-black tracking-[0.3em]"/>
+      <p id="mdp-msg-2" class="text-xs mb-4"></p>
+      <button onclick="verifierCode()" class="w-full py-3 rounded-xl font-bold text-sm text-white" style="background:linear-gradient(135deg,#b90027,#e31837)">Vérifier le code</button>
+    </div>
+
+    <!-- Étape 3 : Nouveau mot de passe -->
+    <div id="mdp-etape-3" style="display:none">
+      <p class="text-sm text-secondary mb-4">Choisissez votre nouveau mot de passe (6 caractères minimum).</p>
+      <input id="mdp-nouveau" type="password" placeholder="Nouveau mot de passe" autocomplete="new-password"
+        class="w-full bg-surface-container-low rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 border-none mb-3"/>
+      <input id="mdp-confirm" type="password" placeholder="Confirmer le mot de passe" autocomplete="new-password"
+        class="w-full bg-surface-container-low rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 border-none mb-3"/>
+      <p id="mdp-msg-3" class="text-xs mb-4"></p>
+      <button onclick="changerMdp()" class="w-full py-3 rounded-xl font-bold text-sm text-white" style="background:linear-gradient(135deg,#b90027,#e31837)">Changer le mot de passe</button>
+    </div>
+
+    <!-- Étape 4 : Succès -->
+    <div id="mdp-etape-4" style="display:none;text-align:center;padding:20px 0">
+      <div style="font-size:48px;margin-bottom:12px">✓</div>
+      <p class="font-bold text-base mb-2 text-on-surface">Mot de passe changé !</p>
+      <p class="text-sm text-secondary mb-6">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
+      <button onclick="fermerModalMdp()" class="w-full py-3 rounded-xl font-bold text-sm text-white" style="background:#b90027">Se connecter</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Google Login ──────────────────────────────────
+async function handleGoogleLogin(response) {
+  const token = response.credential;
+  const payload = JSON.parse(atob(token.split('.')[1]));
+  try {
+    const res = await fetch('api/google_login.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: payload.email, nom: payload.name, sub: payload.sub })
+    });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem('autodrive_user', JSON.stringify({
+        id: data.id, nom: data.nom, email: data.email, role: data.role
+      }));
+      window.location.href = data.role === 'admin' ? 'admin.html' : 'index.html';
+    } else {
+      showAlert('Erreur Google : ' + (data.message || 'impossible de connecter'));
+    }
+  } catch(e) {
+    showAlert('Erreur de connexion avec Google');
+  }
+}
+
+// ── Mot de passe oublié — 4 étapes ────────────────
+let emailReset = '', codeEnvoye = '';
+
+function ouvrirModalMdp() {
+  ['mdp-email','mdp-code','mdp-nouveau','mdp-confirm'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  ['mdp-msg-1','mdp-msg-2','mdp-msg-3'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.textContent = '';
+  });
+  document.getElementById('modal-mdp-oublie').style.display = 'flex';
+  ['1','2','3','4'].forEach(n => {
+    document.getElementById('mdp-etape-' + n).style.display = n === '1' ? 'block' : 'none';
+  });
+}
+
+function fermerModalMdp() {
+  document.getElementById('modal-mdp-oublie').style.display = 'none';
+}
+
+async function envoyerCode() {
+  const email = document.getElementById('mdp-email').value.trim();
+  const msg   = document.getElementById('mdp-msg-1');
+  if (!email) { msg.innerHTML = '<span style="color:#ba1a1a">Entrez votre email</span>'; return; }
+
+  emailReset = email;
+  try {
+    const res = await fetch('api/mdp_envoyer_code.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    if (data.success) {
+      codeEnvoye = data.code;
+      console.log('[DEMO] Code envoyé :', data.code);
+      msg.innerHTML = '<span style="color:#15803d">✓ Code envoyé ! (visible dans la console pour la démo)</span>';
+      setTimeout(() => {
+        document.getElementById('mdp-etape-1').style.display = 'none';
+        document.getElementById('mdp-etape-2').style.display = 'block';
+      }, 1200);
+    } else {
+      msg.innerHTML = '<span style="color:#ba1a1a">' + (data.message || 'Email introuvable') + '</span>';
+    }
+  } catch(e) {
+    msg.innerHTML = '<span style="color:#ba1a1a">Erreur serveur</span>';
+  }
+}
+
+function verifierCode() {
+  const code = document.getElementById('mdp-code').value.trim();
+  const msg  = document.getElementById('mdp-msg-2');
+  if (code !== codeEnvoye) {
+    msg.innerHTML = '<span style="color:#ba1a1a">Code incorrect</span>';
+    return;
+  }
+  document.getElementById('mdp-etape-2').style.display = 'none';
+  document.getElementById('mdp-etape-3').style.display = 'block';
+}
+
+async function changerMdp() {
+  const nouveau = document.getElementById('mdp-nouveau').value;
+  const confirm = document.getElementById('mdp-confirm').value;
+  const msg     = document.getElementById('mdp-msg-3');
+
+  if (nouveau.length < 6) { msg.innerHTML = '<span style="color:#ba1a1a">6 caractères minimum</span>'; return; }
+  if (nouveau !== confirm) { msg.innerHTML = '<span style="color:#ba1a1a">Les mots de passe ne correspondent pas</span>'; return; }
+
+  try {
+    const res = await fetch('api/mdp_reset.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailReset, code: codeEnvoye, nouveau })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('mdp-etape-3').style.display = 'none';
+      document.getElementById('mdp-etape-4').style.display = 'block';
+    } else {
+      msg.innerHTML = '<span style="color:#ba1a1a">' + (data.message || 'Erreur') + '</span>';
+    }
+  } catch(e) {
+    msg.innerHTML = '<span style="color:#ba1a1a">Erreur serveur</span>';
+  }
+}
+</script>
 </body>
 </html>

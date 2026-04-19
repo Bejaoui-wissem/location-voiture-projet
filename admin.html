@@ -151,6 +151,9 @@ tailwind.config = {
     <a onclick="afficherSection('graphiques')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-graphiques">
       <span class="material-symbols-outlined">bar_chart</span><span>Graphiques</span>
     </a>
+    <a onclick="afficherSection('chatbot')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-chatbot">
+      <span class="material-symbols-outlined">smart_toy</span><span>Chatbot IA</span>
+    </a>
     <a onclick="afficherSection('clients')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-clients">
       <span class="material-symbols-outlined">group</span><span>Clients</span>
     </a>
@@ -202,7 +205,7 @@ tailwind.config = {
   </header>
 
   <!-- Stats cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+  <div id="stats-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
     <div class="bg-surface-container-lowest p-8 rounded-3xl kinetic-shadow relative overflow-hidden group">
       <div class="absolute top-0 right-0 p-5 opacity-10 group-hover:scale-110 transition-transform">
         <span class="material-symbols-outlined text-6xl">directions_car</span>
@@ -318,6 +321,112 @@ tailwind.config = {
     </div>
   </div>
 
+  <!-- Section Chatbot IA -->
+  <div id="section-chatbot" class="hidden">
+    <div class="bg-surface-container-lowest rounded-3xl shadow-sm border border-zinc-100 p-8 max-w-2xl">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background:linear-gradient(135deg,#b90027,#e31837)">
+          <span class="material-symbols-outlined text-white text-2xl" style="font-variation-settings:'FILL' 1;">smart_toy</span>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold text-on-surface">Configuration Assistant IA</h3>
+          <p class="text-sm text-secondary">Activez le chatbot Gemini pour tous les clients</p>
+        </div>
+      </div>
+
+      <div id="chatbot-status" class="mb-6 p-4 rounded-xl flex items-center gap-3 text-sm"></div>
+
+      <div class="mb-5">
+        <label class="text-xs font-bold uppercase tracking-widest text-secondary block mb-2">Clé API Google Gemini</label>
+        <div class="flex gap-2">
+          <input id="admin-gemini-key" type="password" placeholder="AIza..." autocomplete="off"
+            class="flex-1 bg-surface-container-low rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20 border-none font-mono"/>
+          <button onclick="toggleKeyVisibility()" class="px-4 bg-surface-container-low rounded-xl hover:bg-surface-container text-sm font-bold">👁</button>
+        </div>
+        <p class="text-xs text-secondary mt-2">Obtenez votre clé gratuite sur <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-primary font-bold hover:underline">aistudio.google.com</a></p>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="sauvegarderCle()" class="flex-1 py-3 rounded-xl font-bold text-sm text-white" style="background:linear-gradient(135deg,#b90027,#e31837)">Activer le chatbot</button>
+        <button onclick="desactiverChatbot()" class="px-6 py-3 rounded-xl font-bold text-sm bg-surface-container-low text-secondary hover:bg-surface-container">Désactiver</button>
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-zinc-100">
+        <p class="text-sm font-bold text-on-surface mb-3">ℹ️ Comment ça marche</p>
+        <ul class="text-xs text-secondary space-y-2 leading-relaxed">
+          <li>• Une fois activé, le chatbot apparaît pour tous les visiteurs du site</li>
+          <li>• Les clients peuvent poser des questions sur les voitures, tarifs, offres</li>
+          <li>• La clé est sauvegardée localement dans votre navigateur</li>
+          <li>• Gemini 2.5 Flash est gratuit jusqu'à 60 requêtes/minute</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Graphiques -->
+  <div id="section-graphiques" class="hidden space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-sm border border-zinc-100">
+        <p class="font-bold text-sm text-on-surface mb-1">Réservations par statut</p>
+        <p class="text-xs text-secondary mb-4">Distribution des réservations</p>
+        <canvas id="chart-statuts" height="220"></canvas>
+      </div>
+      <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-sm border border-zinc-100">
+        <p class="font-bold text-sm text-on-surface mb-1">Flotte par catégorie</p>
+        <p class="text-xs text-secondary mb-4">Répartition des véhicules</p>
+        <canvas id="chart-categories" height="220"></canvas>
+      </div>
+    </div>
+    <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-sm border border-zinc-100">
+      <p class="font-bold text-sm text-on-surface mb-1">Revenus par voiture</p>
+      <p class="text-xs text-secondary mb-4">Top 8 voitures les plus rentables</p>
+      <canvas id="chart-revenus" height="120"></canvas>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-surface-container-lowest rounded-2xl p-5 border border-zinc-100">
+        <p class="text-xs text-secondary font-semibold uppercase tracking-wider mb-1">Prix moyen/jour</p>
+        <p class="text-3xl font-black text-primary" id="kpi-prix-moy">— DT</p>
+      </div>
+      <div class="bg-surface-container-lowest rounded-2xl p-5 border border-zinc-100">
+        <p class="text-xs text-secondary font-semibold uppercase tracking-wider mb-1">Voiture la + louée</p>
+        <p class="text-lg font-black text-on-surface" id="kpi-top-voiture">—</p>
+      </div>
+      <div class="bg-surface-container-lowest rounded-2xl p-5 border border-zinc-100">
+        <p class="text-xs text-secondary font-semibold uppercase tracking-wider mb-1">Taux confirmation</p>
+        <p class="text-3xl font-black text-green-600" id="kpi-taux-confirm">—%</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Clients -->
+  <div id="section-clients" class="hidden bg-surface-container-lowest rounded-3xl shadow-sm border border-zinc-100 overflow-hidden">
+    <div class="p-6 border-b border-zinc-100 flex justify-between items-center bg-white">
+      <h4 class="font-bold text-lg text-on-surface">Gestion des Clients</h4>
+      <div class="relative w-64">
+        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">search</span>
+        <input id="search-client" type="text" placeholder="Rechercher un client..."
+          class="w-full bg-surface-container-low border-none rounded-full py-2 pl-12 pr-6 text-sm focus:ring-2 focus:ring-primary/20 outline-none placeholder:text-zinc-400"
+          oninput="filtrerClients()"/>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low">
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Client</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Téléphone</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary text-center">Réservations</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary text-right">Total dépensé</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Dernière résa</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-clients" class="divide-y divide-surface-container">
+          <tr><td colspan="5" class="text-center py-12 text-secondary">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 <!-- ===== MODAL VOITURE ===== -->
 <div id="modal-overlay" onclick="fermerModal(event)">
   <div id="modal-box">
@@ -424,7 +533,7 @@ let toutesVoitures = [];
 
 // Navigation sections
 function afficherSection(section) {
-  const sections = ['voitures','reservations','rapport','graphiques','clients'];
+  const sections = ['voitures','reservations','rapport','graphiques','clients','chatbot'];
   sections.forEach(s => {
     const el = document.getElementById('section-' + s);
     if (el) el.classList.toggle('hidden', s !== section);
@@ -436,13 +545,17 @@ function afficherSection(section) {
   });
   const titles = {
     voitures:'Gestion de la flotte', reservations:'Réservations',
-    rapport:'Rapport IA', graphiques:'Graphiques & Stats', clients:'Gestion des Clients'
+    rapport:'Rapport IA', graphiques:'Graphiques & Stats', clients:'Gestion des Clients', chatbot:'Chatbot IA'
   };
   document.getElementById('page-title').textContent = titles[section] || 'Dashboard';
   const btnAjouter = document.getElementById('btn-ajouter');
   if (btnAjouter) btnAjouter.style.display = section === 'voitures' ? 'flex' : 'none';
+  // Cacher les 3 stats cards sauf pour voitures et reservations
+  const statsCards = document.getElementById('stats-cards');
+  if (statsCards) statsCards.style.display = (section === 'voitures' || section === 'reservations') ? 'grid' : 'none';
   if (section === 'graphiques') genererGraphiques();
   if (section === 'clients')    chargerClients();
+  if (section === 'chatbot')    initChatbotAdmin();
 }
 
 // Toast notifications
@@ -900,13 +1013,13 @@ async function supprimerVoiture(id, nom) {
 async function activerCleRapport() {
   const cle = document.getElementById('rapport-key-inp').value.trim();
   if (!cle || !cle.startsWith('AIza')) return;
-  localStorage.setItem('autodrive_gemini_key', cle);
+  localStorage.setItem('chartago_admin_gemini_key', cle);
   document.getElementById('rapport-cfg').classList.add('hidden');
   showToast('Clé activée !', 'success');
 }
 
 async function genererRapport() {
-  const key = localStorage.getItem('autodrive_gemini_key');
+  const key = localStorage.getItem('chartago_admin_gemini_key');
   if (!key) {
     document.getElementById('rapport-cfg').classList.remove('hidden');
     return;
@@ -971,7 +1084,7 @@ Sois précis, professionnel, utilise les chiffres fournis. Réponds en français
     if (!res.ok) {
       const e = await res.json().catch(() => ({}));
       if (res.status === 401 || res.status === 403) {
-        localStorage.removeItem('autodrive_gemini_key');
+        localStorage.removeItem('chartago_admin_gemini_key');
         document.getElementById('rapport-cfg').classList.remove('hidden');
       }
       throw new Error(e.error?.message || `Erreur ${res.status}`);
@@ -1147,6 +1260,45 @@ function renderClients(clients) {
     </tr>`).join('');
 }
 
+
+// ── Chatbot admin ──────────────────────────────
+function initChatbotAdmin() {
+  const key = localStorage.getItem('chartago_admin_gemini_key');
+  const status = document.getElementById('chatbot-status');
+  const input = document.getElementById('admin-gemini-key');
+  if (key) {
+    status.style.cssText = 'background:#dcfce7;color:#166534';
+    status.innerHTML = '<span class="material-symbols-outlined text-base">check_circle</span> Chatbot activé et fonctionnel';
+    if (input) input.value = key;
+  } else {
+    status.style.cssText = 'background:#fef3c7;color:#92400e';
+    status.innerHTML = '<span class="material-symbols-outlined text-base">warning</span> Chatbot inactif — configurez votre clé API';
+  }
+}
+
+function sauvegarderCle() {
+  const key = document.getElementById('admin-gemini-key').value.trim();
+  if (!key) { showToast('Veuillez entrer une clé API', 'error'); return; }
+  if (!key.startsWith('AIza')) {
+    if (!confirm('Cette clé ne ressemble pas à une clé Google Gemini (doit commencer par AIza). Continuer quand même ?')) return;
+  }
+  localStorage.setItem('chartago_admin_gemini_key', key);
+  showToast('✓ Chatbot activé ! Il est maintenant disponible pour les clients.', 'success');
+  initChatbotAdmin();
+}
+
+function desactiverChatbot() {
+  if (!confirm('Désactiver le chatbot ? Les clients ne pourront plus l\'utiliser.')) return;
+  localStorage.removeItem('chartago_admin_gemini_key');
+  document.getElementById('admin-gemini-key').value = '';
+  showToast('Chatbot désactivé', 'success');
+  initChatbotAdmin();
+}
+
+function toggleKeyVisibility() {
+  const inp = document.getElementById('admin-gemini-key');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
 
 // ── Recherche réservations ────────────────────────────────
 function rechercherReservations() {

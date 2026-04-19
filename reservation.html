@@ -194,19 +194,25 @@ tailwind.config = {
             <span class="font-mono text-lg" id="recap-options">0 DT</span>
           </div>
 
-          <div class="border-b border-zinc-800 pb-4">
-            <label class="text-zinc-500 text-xs font-bold uppercase tracking-wider">Code promo</label>
-            <div class="flex gap-2 mt-2">
-              <input id="code-promo" type="text" placeholder="BIENVENUE15" autocomplete="off"
-                class="flex-1 bg-zinc-800 text-white border-none rounded-lg py-2 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30 uppercase font-mono font-bold"/>
-              <button onclick="appliquerCodePromo()" class="bg-primary text-white px-4 py-2 rounded-lg font-bold text-xs hover:scale-[1.02] transition-transform">APPLIQUER</button>
-            </div>
-            <p id="promo-msg" class="text-xs mt-2"></p>
-            <div id="recap-promo" class="hidden flex justify-between items-center mt-3">
-              <span class="text-green-400 text-sm flex items-center gap-1">✓ Code <span id="code-applique" class="font-bold"></span></span>
-              <span class="font-mono text-lg text-green-400" id="recap-remise">— DT</span>
-            </div>
+          <!-- Remise / promo -->
+          <div id="promo-discount" class="hidden flex justify-between items-center text-sm border-b border-zinc-800 pb-4">
+            <span class="text-green-400">Réduction</span>
+            <span class="font-mono text-lg text-green-400" id="recap-promo">0 DT</span>
           </div>
+
+          <!-- Code promo -->
+          <div class="border-b border-zinc-800 pb-4">
+            <label class="text-zinc-500 text-xs font-bold uppercase tracking-widest block mb-2">Code promo</label>
+            <div class="flex gap-2">
+              <input id="code-promo" type="text" placeholder="Ex: BIENVENUE10"
+                class="flex-1 bg-zinc-800 text-white rounded-xl px-4 py-2 text-sm font-medium outline-none focus:ring-2 focus:ring-primary/40 placeholder:text-zinc-600"/>
+              <button onclick="verifierPromo()" class="kinetic-gradient text-white text-xs font-bold px-4 py-2 rounded-xl hover:scale-[1.02] transition-transform">
+                Appliquer
+              </button>
+            </div>
+            <p id="promo-msg" class="hidden text-[11px] mt-2 font-bold"></p>
+          </div>
+
           <div class="pt-4 flex flex-col items-center">
             <div class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-2">Total à payer</div>
             <div class="text-5xl font-black text-white tracking-tighter" id="recap-total">
@@ -341,67 +347,14 @@ function getRemiseJours(j) {
   return 0;
 }
 
-
-// ── CODES PROMO ─────────────────────────
-const codesPromo = {
-  'BIENVENUE15': { remise: 0.15, label: '-15%' },
-  'BIENVENUE10': { remise: 0.10, label: '-10%' },
-  'ETE2024':     { remise: 0.15, label: '-15%' },
-  'WEEKEND25':   { remise: 0.25, label: '-25%' },
-  'FIRSTRIDE':   { remise: 0.20, label: '-20%' },
-  'ROUE5':       { remise: 0.05, label: '-5%' },
-  'ROUE10':      { remise: 0.10, label: '-10%' },
-  'ROUE15':      { remise: 0.15, label: '-15%' },
-  'ROUE20':      { remise: 0.20, label: '-20%' },
-  'ROUE25':      { remise: 0.25, label: '-25%' },
-  'QUIZ10':      { remise: 0.10, label: '-10%' },
-  'LIVRAISON':   { remise: 0, label: 'Livraison gratuite' },
-  'SURPRISE':    { remise: 0.12, label: '-12% surprise' }
-};
-
-let promoActif = null;
-
-function appliquerCodePromo() {
-  const code = document.getElementById('code-promo').value.trim().toUpperCase();
-  const msg  = document.getElementById('promo-msg');
-
-  if (!code) {
-    msg.innerHTML = '<span style="color:#f87171">Entrez un code</span>';
-    return;
-  }
-
-  if (codesPromo[code]) {
-    promoActif = { code, ...codesPromo[code] };
-    msg.innerHTML = `<span style="color:#4ade80">✓ Code valide : ${codesPromo[code].label}</span>`;
-    document.getElementById('code-applique').textContent = code;
-    document.getElementById('recap-promo').classList.remove('hidden');
-    document.getElementById('recap-promo').classList.add('flex');
-    calculer();
-  } else {
-    msg.innerHTML = '<span style="color:#f87171">❌ Code invalide ou expiré</span>';
-    promoActif = null;
-  }
-}
-
-// Auto-remplir si coupon gagné
-(function() {
-  const couponRoue = localStorage.getItem('chartago_coupon');
-  if (couponRoue) {
-    const inp = document.getElementById('code-promo');
-    if (inp) {
-      inp.value = couponRoue;
-      setTimeout(() => { if (codesPromo[couponRoue]) appliquerCodePromo(); }, 500);
-    }
-  }
-})();
-
 function calculer() {
   const debut = new Date(document.getElementById('date-debut').value);
   const fin = new Date(document.getElementById('date-fin').value);
   const select = document.getElementById('voiture-select');
   const voitureSelId = parseInt(select.value);
   const voiture = voitures.find(v => v.id == voitureSelId);
-  prixJourActuel = voiture ? parseFloat(voiture.prix_jour) : 0;
+  // Fallback: use URL price param if voitures not loaded from API yet
+  prixJourActuel = voiture ? parseFloat(voiture.prix_jour) : (prixUrl ? parseFloat(prixUrl) : 0);
 
   const jours = fin > debut ? Math.ceil((fin - debut) / (1000*60*60*24)) : 0;
   const totalOptions = Object.values(optionsActives).reduce((a,b) => a+b, 0);
@@ -435,6 +388,19 @@ function calculer() {
 
   document.getElementById('recap-modele').textContent = voiture ? `${voiture.marque} ${voiture.modele}` : 'Sélectionnez un véhicule';
   document.getElementById('recap-prix-jour').textContent = prixJourActuel ? `${prixJourActuel} DT` : '— DT';
+
+  // Mettre à jour l'image selon la voiture sélectionnée
+  const imgWrap = document.getElementById('recap-img-wrap');
+  const imgEl   = document.getElementById('recap-car-img');
+  if (imgWrap && imgEl) {
+    if (voiture && voiture.image_url) {
+      imgEl.src = voiture.image_url;
+      imgWrap.classList.remove('hidden');
+    } else {
+      imgWrap.classList.add('hidden');
+      imgEl.src = '';
+    }
+  }
   document.getElementById('recap-duree').textContent = jours > 0 ? `${jours} jour${jours > 1 ? 's' : ''}` : '— jours';
   document.getElementById('recap-options').textContent = `${totalOptions * (jours || 1)} DT`;
   document.getElementById('recap-total').innerHTML = `${Math.round(total)} <span class="text-xl font-medium text-primary">DT</span>`;

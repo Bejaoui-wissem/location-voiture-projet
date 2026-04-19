@@ -340,7 +340,107 @@ tailwind.config = {
   </section>
 </main>
 
+
+  <!-- Coming Soon -->
+  <section class="max-w-screen-2xl mx-auto px-8 py-16">
+    <div class="relative rounded-3xl overflow-hidden" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);min-height:280px">
+      <div style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.08">
+        <svg width="100%" height="100%"><pattern id="grid-cs" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse"><circle cx="16" cy="16" r="1.5" fill="#b90027"/></pattern><rect width="100%" height="100%" fill="url(#grid-cs)"/></svg>
+      </div>
+      <div class="relative p-10 md:p-14 grid md:grid-cols-2 gap-8 items-center">
+        <div>
+          <span class="inline-block bg-primary/20 border border-primary/30 text-red-400 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full mb-4">🚀 Coming Soon</span>
+          <h2 class="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4 leading-[1]">Nouvelles voitures bientôt</h2>
+          <p class="text-zinc-400 text-sm md:text-base leading-relaxed mb-6 max-w-md">Une sélection premium arrive très prochainement. Soyez les premiers informés — inscrivez-vous à notre liste d'attente.</p>
+
+          <!-- Liste des voitures à venir -->
+          <div class="flex flex-wrap gap-2 mb-6">
+            <span class="bg-white/5 border border-white/10 text-zinc-300 text-xs font-bold px-3 py-1.5 rounded-lg">🏎️ Tesla Model 3</span>
+            <span class="bg-white/5 border border-white/10 text-zinc-300 text-xs font-bold px-3 py-1.5 rounded-lg">🚙 Audi Q5</span>
+            <span class="bg-white/5 border border-white/10 text-zinc-300 text-xs font-bold px-3 py-1.5 rounded-lg">✨ BMW X3</span>
+            <span class="bg-white/5 border border-white/10 text-zinc-300 text-xs font-bold px-3 py-1.5 rounded-lg">🌟 Range Rover Evoque</span>
+          </div>
+
+          <!-- Formulaire liste d'attente -->
+          <div class="flex gap-2 flex-wrap">
+            <input id="cs-email" type="email" placeholder="votre@email.com" autocomplete="off"
+              class="flex-1 min-w-[200px] bg-white/10 backdrop-blur border border-white/20 text-white placeholder:text-zinc-500 rounded-xl py-3 px-4 text-sm outline-none focus:border-primary transition-colors"/>
+            <button onclick="inscrireListe()" class="bg-primary hover:bg-red-700 text-white px-6 rounded-xl font-bold text-sm transition-colors flex items-center gap-2">
+              M'inscrire
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2l4 4h-3v12h-2V6H8z" transform="rotate(90 12 12)"/></svg>
+            </button>
+          </div>
+          <p id="cs-msg" class="text-xs mt-3 min-h-[16px]"></p>
+        </div>
+
+        <!-- Compte à rebours -->
+        <div class="relative">
+          <div class="bg-white/5 backdrop-blur border border-white/10 rounded-2xl p-6">
+            <p class="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-3 text-center">Lancement dans</p>
+            <div class="grid grid-cols-4 gap-2 text-center">
+              <div class="bg-white/5 rounded-xl py-3">
+                <p class="text-3xl font-black text-white tabular-nums" id="cs-j">00</p>
+                <p class="text-[10px] text-zinc-400 uppercase tracking-wider mt-1">Jours</p>
+              </div>
+              <div class="bg-white/5 rounded-xl py-3">
+                <p class="text-3xl font-black text-white tabular-nums" id="cs-h">00</p>
+                <p class="text-[10px] text-zinc-400 uppercase tracking-wider mt-1">Heures</p>
+              </div>
+              <div class="bg-white/5 rounded-xl py-3">
+                <p class="text-3xl font-black text-white tabular-nums" id="cs-m">00</p>
+                <p class="text-[10px] text-zinc-400 uppercase tracking-wider mt-1">Min</p>
+              </div>
+              <div class="bg-white/5 rounded-xl py-3">
+                <p class="text-3xl font-black text-primary tabular-nums" id="cs-s">00</p>
+                <p class="text-[10px] text-zinc-400 uppercase tracking-wider mt-1">Sec</p>
+              </div>
+            </div>
+            <p class="text-center text-zinc-500 text-[11px] mt-4">🎁 Les 10 premiers inscrits bénéficient de <strong class="text-primary">-30%</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+  // Compte à rebours Coming Soon (45 jours)
+  (function() {
+    const target = Date.now() + 45*24*60*60*1000;
+    function upd() {
+      const diff = target - Date.now();
+      if (diff <= 0) return;
+      const j = Math.floor(diff / 86400000);
+      const h = Math.floor((diff / 3600000) % 24);
+      const m = Math.floor((diff / 60000) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = String(v).padStart(2,'0'); };
+      set('cs-j', j); set('cs-h', h); set('cs-m', m); set('cs-s', s);
+    }
+    upd(); setInterval(upd, 1000);
+  })();
+
+  function inscrireListe() {
+    const email = document.getElementById('cs-email').value.trim();
+    const msg = document.getElementById('cs-msg');
+    if (!email || !email.includes('@')) {
+      msg.innerHTML = '<span class="text-red-400">Email invalide</span>';
+      return;
+    }
+    const liste = JSON.parse(localStorage.getItem('chartago_waitlist') || '[]');
+    if (liste.includes(email)) {
+      msg.innerHTML = '<span class="text-amber-400">Vous êtes déjà inscrit !</span>';
+      return;
+    }
+    liste.push(email);
+    localStorage.setItem('chartago_waitlist', JSON.stringify(liste));
+    msg.innerHTML = '<span class="text-green-400">✓ Inscription confirmée ! Vous serez notifié en priorité.</span>';
+    document.getElementById('cs-email').value = '';
+  }
+  </script>
+
+
 <!-- Footer -->
+
 
 <!-- Footer -->
 <footer style="background:#1a1c1c;" class="mt-16">

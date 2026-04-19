@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Assistant IA - AutoDrive Tunisie</title>
+<title>Assistant IA - CharthaGo</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -56,7 +56,7 @@ tailwind.config = {
 <!-- Navbar -->
 <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm shadow-zinc-900/5">
   <div class="flex justify-between items-center h-20 px-8 max-w-screen-2xl mx-auto">
-    <a href="index.html" class="text-2xl font-black tracking-tighter text-zinc-900">AutoDrive Tunisie</a>
+    <a href="index.html" class="text-2xl font-black tracking-tighter text-zinc-900">CharthaGo</a>
     <div class="hidden md:flex items-center gap-8">
       <a href="index.html" class="text-zinc-600 hover:text-zinc-900 font-bold transition-colors">Catalogue</a>
       <a href="chatbot.html" class="text-red-600 border-b-2 border-red-600 pb-1 font-bold">Assistant IA</a>
@@ -74,7 +74,7 @@ tailwind.config = {
       <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary-container flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary/20">
         <span class="material-symbols-outlined text-white text-3xl" style="font-variation-settings:'FILL' 1;">smart_toy</span>
       </div>
-      <h1 class="text-2xl font-bold text-center text-on-surface mb-2">Assistant AutoDrive</h1>
+      <h1 class="text-2xl font-bold text-center text-on-surface mb-2">Assistant CharthaGo</h1>
       <p class="text-secondary text-sm text-center mb-8">Entrez votre clé API Gemini pour activer l'assistant IA.</p>
 
       <div class="space-y-2 mb-4">
@@ -127,7 +127,7 @@ tailwind.config = {
         <span class="material-symbols-outlined text-white text-lg" style="font-variation-settings:'FILL' 1;">smart_toy</span>
       </div>
       <div class="flex-1">
-        <h1 class="text-sm font-bold text-on-surface">Assistant AutoDrive</h1>
+        <h1 class="text-sm font-bold text-on-surface">Assistant CharthaGo</h1>
         <div class="flex items-center gap-1.5">
           <span class="w-1.5 h-1.5 rounded-full bg-green-500 inline-block"></span>
           <p class="text-[11px] text-secondary">Gemini AI · Flotte en temps réel</p>
@@ -167,7 +167,7 @@ tailwind.config = {
 </div>
 
 <script>
-let API_KEY    = localStorage.getItem('autodrive_gemini_key') || '';
+let API_KEY    = localStorage.getItem('chartago_admin_gemini_key') || '';
 let historique = [];
 let flotte     = [];
 let loading    = false;
@@ -231,7 +231,7 @@ async function activerAssistant() {
     if (r.status===429) throw new Error('Quota dépassé — réessayez dans quelques instants.');
     if (!r.ok) { const e=await r.json().catch(()=>({})); throw new Error(e.error?.message||`Erreur ${r.status}`); }
     API_KEY = cle;
-    localStorage.setItem('autodrive_gemini_key', cle);
+    localStorage.setItem('chartago_admin_gemini_key', cle);
     ouvrirChat();
   } catch(e) {
     errConfig(e.message);
@@ -271,7 +271,7 @@ function buildSystem() {
     `  • ${v.marque} ${v.modele} — ${parseFloat(v.prix_jour).toFixed(0)} DT/jour [LOUÉE]`
   ).join('\n');
 
-  return `Tu es un conseiller expert d'AutoDrive Tunisie, spécialisé dans la recommandation personnalisée de véhicules.
+  return `Tu es un conseiller expert d'CharthaGo, spécialisé dans la recommandation personnalisée de véhicules.
 
 FLOTTE EN TEMPS RÉEL :
 Disponibles :
@@ -308,7 +308,7 @@ async function appelGemini(msg) {
   );
   if (!r.ok) {
     const e = await r.json().catch(()=>({}));
-    if (r.status===401||r.status===403) { localStorage.removeItem('autodrive_gemini_key'); API_KEY=''; setTimeout(changerCle,1500); }
+    if (r.status===401||r.status===403) { localStorage.removeItem('chartago_admin_gemini_key'); API_KEY=''; setTimeout(changerCle,1500); }
     throw new Error(e.error?.message||`Erreur API (${r.status})`);
   }
   const data = await r.json();
@@ -419,7 +419,7 @@ function afficherBienvenue() {
       <span class="material-symbols-outlined text-white text-sm" style="font-variation-settings:'FILL' 1;">smart_toy</span>
     </div>
     <div class="bot-text max-w-[85%] bg-surface-container-low rounded-2xl rounded-bl-sm px-4 py-3 text-sm text-on-surface leading-relaxed">
-      <p>Bonjour ! Je suis votre assistant AutoDrive, propulsé par Gemini AI. 🚗</p>
+      <p>Bonjour ! Je suis votre assistant CharthaGo, propulsé par Gemini AI. 🚗</p>
       <p class="mt-2">Je connais notre flotte en temps réel et peux vous aider à choisir le véhicule idéal selon votre budget et vos besoins.</p>
       ${dispos.length>0?`<div class="mt-3 flex flex-wrap gap-2">${chips}</div>`:''}
     </div>`;

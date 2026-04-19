@@ -1,56 +1,45 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: http://localhost');
+header('Access-Control-Allow-Origin: *');
+session_start();
 require_once 'config.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-// ── Validation serveur ────────────────────────────────────
-$required = ['nom', 'email', 'telephone', 'password'];
-foreach ($required as $field) {
-    if (empty($data[$field])) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => "Champ manquant : $field"]);
-        exit;
-    }
+if (!$data || empty($data['nom']) || empty($data['email']) || empty($data['password'])) {
+    echo json_encode(['success' => false, 'message' => 'Tous les champs sont requis']);
+    exit;
 }
 
-$nom       = htmlspecialchars(trim($data['nom']));
-$email     = filter_var(trim($data['email']), FILTER_VALIDATE_EMAIL);
-$telephone = htmlspecialchars(trim($data['telephone']));
-$password  = $data['password'];
+$nom = trim(strip_tags($data['nom']));
+$email = filter_var(trim($data['email']), FILTER_VALIDATE_EMAIL);
+$password = $data['password'];
+$telephone = isset($data['telephone']) ? preg_replace('/[^0-9+\s]/', '', $data['telephone']) : null;
+
+if (strlen($nom) < 2 || strlen($nom) > 50) {
+    echo json_encode(['success' => false, 'message' => 'Nom invalide (entre 2 et 50 caracteres)']);
+    exit;
+}
 
 if (!$email) {
-    echo json_encode(['success' => false, 'message' => 'Adresse email invalide.']);
+    echo json_encode(['success' => false, 'message' => 'Email invalide']);
     exit;
 }
 
-if (strlen($password) < 6) {
-    echo json_encode(['success' => false, 'message' => 'Le mot de passe doit contenir au moins 6 caractères.']);
+if (strlen($password) < 6 || strlen($password) > 100) {
+    echo json_encode(['success' => false, 'message' => 'Le mot de passe doit contenir entre 6 et 100 caracteres']);
     exit;
 }
 
-// ── Vérifier si email déjà utilisé ───────────────────────
 $stmt = $pdo->prepare("SELECT id FROM utilisateurs WHERE email = ?");
 $stmt->execute([$email]);
 if ($stmt->fetch()) {
-    echo json_encode(['success' => false, 'message' => 'Cette adresse email est déjà utilisée.']);
+    echo json_encode(['success' => false, 'message' => 'Cet email est deja utilise']);
     exit;
 }
 
-// ── Hasher le mot de passe ────────────────────────────────
-$hash = password_hash($password, PASSWORD_BCRYPT);
-
-// ── Insérer le nouvel utilisateur ─────────────────────────
-$stmt = $pdo->prepare("
-    INSERT INTO utilisateurs (nom, email, mot_de_passe, telephone, role)
-    VALUES (?, ?, ?, ?, 'client')
-");
+$hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+$stmt = $pdo->prepare("INSERT INTO utilisateurs (nom, email, mot_de_passe, telephone, role) VALUES (?, ?, ?, ?, 'client')");
 $stmt->execute([$nom, $email, $hash, $telephone]);
 
-echo json_encode([
-    'success' => true,
-    'message' => 'Compte créé avec succès !',
-    'id'      => $pdo->lastInsertId()
-]);
-?>
+echo json_encode(['success' => true, 'message' => 'Compte cree avec succes']);
