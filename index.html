@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Catalogue - AutoDrive Tunisie</title>
+<title>Catalogue - CharthaGo</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -47,6 +47,33 @@ tailwind.config = {
   .skeleton { background: linear-gradient(90deg, #eeeeee 25%, #e2e2e2 50%, #eeeeee 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
   @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
   #error-banner { display: none; }
+  /* Favoris */
+  .fav-btn { background:transparent; border:none; cursor:pointer; padding:4px; transition:transform .15s; }
+  .fav-btn:hover { transform:scale(1.2); }
+  .fav-btn.actif .fav-icon { fill:#b90027; stroke:#b90027; animation:favPop .3s ease; }
+  @keyframes favPop { 0%,100%{transform:scale(1)} 50%{transform:scale(1.35)} }
+  /* Bouton retour haut */
+  #btn-top { position:fixed; bottom:28px; right:100px; z-index:9998; width:48px; height:48px; border-radius:14px; background:#1a1c1c; color:white; border:none; cursor:pointer; display:none; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(0,0,0,0.2); transition:transform .2s, background .15s; }
+  #btn-top:hover { transform:translateY(-2px); background:#b90027; }
+  #btn-top.visible { display:flex; animation:fadeInUp .3s; }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  /* WhatsApp popup */
+  #wa-popup { position:fixed; bottom:96px; left:28px; z-index:9998; background:white; border-radius:16px; padding:14px 16px 14px 14px; box-shadow:0 12px 32px rgba(0,0,0,0.18); max-width:280px; animation:waSlide .4s cubic-bezier(.4,0,.2,1); display:none; border:1px solid #e5e7eb; }
+  #wa-popup.show { display:block; }
+  @keyframes waSlide { from{opacity:0;transform:translateX(-20px)} to{opacity:1;transform:translateX(0)} }
+  #wa-popup::before { content:''; position:absolute; bottom:-8px; left:22px; border:8px solid transparent; border-top-color:white; border-bottom:0; }
+  /* Filtre favoris */
+  .fav-filter-active { background:#b90027 !important; color:white !important; }
+  .badge-populaire { position:absolute; top:12px; left:12px; z-index:5; background:#b90027; color:white; font-size:10px; font-weight:800; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.03em; }
+  .badge-nouveau   { position:absolute; top:12px; left:12px; z-index:5; background:#00656f; color:white; font-size:10px; font-weight:800; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.03em; }
+  .btn-fav { position:absolute; top:12px; right:52px; z-index:5; width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.3); backdrop-filter:blur(4px); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; }
+  .btn-fav:hover, .btn-fav.liked { background:#e31837; }
+  .btn-fav svg { width:16px; height:16px; fill:white; }
+  #scroll-top { position:fixed; bottom:28px; left:28px; z-index:50; width:44px; height:44px; border-radius:12px; background:#b90027; border:none; cursor:pointer; display:none; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(185,0,39,0.35); transition:all .2s; }
+  #scroll-top:hover { transform:scale(1.1); }
+  #scroll-top svg { width:20px; height:20px; fill:white; }
+  #wa-popup { position:fixed; bottom:96px; left:28px; z-index:49; background:#25d366; color:white; padding:12px 16px; border-radius:14px 14px 14px 4px; font-size:13px; font-weight:600; box-shadow:0 8px 20px rgba(37,211,102,0.3); display:none; cursor:pointer; animation:adBubbleIn .3s ease-out; font-family:Inter,sans-serif; max-width:240px; line-height:1.5; }
+  @keyframes adBubbleIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 </style>
 <script src="assets/js/darkmode.js"></script>
 <script src="assets/js/animations.js"></script>
@@ -56,7 +83,10 @@ tailwind.config = {
 <!-- Navbar -->
 <nav class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm shadow-zinc-900/5">
   <div class="flex justify-between items-center h-20 px-8 max-w-screen-2xl mx-auto">
-    <a href="index.html" class="text-2xl font-black tracking-tighter text-zinc-900">AutoDrive Tunisie</a>
+    <a href="index.html" class="flex items-center gap-2">
+      <svg width="32" height="32" viewBox="0 0 40 40" fill="none"><rect width="40" height="40" rx="10" fill="#b90027"/><path d="M10 24h20M14 24c0-3 2-8 6-8s6 5 6 8" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="15" cy="24" r="3" fill="white"/><circle cx="25" cy="24" r="3" fill="white"/><circle cx="15" cy="24" r="1.2" fill="#b90027"/><circle cx="25" cy="24" r="1.2" fill="#b90027"/><rect x="17" y="14" width="6" height="4" rx="1" fill="rgba(255,255,255,0.4)"/></svg>
+      <span class="text-2xl font-black tracking-tighter text-zinc-900">Chartha<span style="color:#b90027">Go</span></span>
+    </a>
     <div class="hidden md:flex items-center gap-8">
       <a href="index.html" class="text-red-600 border-b-2 border-red-600 pb-1 font-bold">Catalogue</a>
       <a href="about.html" class="text-zinc-600 hover:text-primary font-medium transition-colors">À propos</a>
@@ -72,16 +102,26 @@ tailwind.config = {
   <!-- Hero -->
   <section class="relative h-[580px] flex items-center overflow-hidden">
     <div class="absolute inset-0 z-0">
-      <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1600&q=80" alt="AutoDrive hero"/>
+      <img class="w-full h-full object-cover" src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=1600&q=80" alt="CharthaGo hero"/>
       <div class="absolute inset-0 bg-gradient-to-r from-zinc-900/80 to-transparent"></div>
     </div>
     <div class="relative z-10 max-w-screen-2xl mx-auto px-8 w-full">
+      <p id="hero-greeting" class="text-white/70 text-sm font-bold uppercase tracking-widest mb-4"></p>
       <h1 class="text-[3.5rem] leading-none font-bold text-white tracking-tighter max-w-2xl mb-6">
         Louez votre liberté en Tunisie
       </h1>
-      <p class="text-xl text-zinc-300 font-medium max-w-xl mb-8">
+      <p class="text-xl text-zinc-300 font-medium max-w-xl mb-4">
         Une flotte sélectionnée pour vos exigences de confort et de performance.
       </p>
+      <div class="flex items-center gap-6 mb-8">
+        <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+          <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+          <span class="text-white text-sm font-medium"><span id="hero-count">—</span> véhicules disponibles</span>
+        </div>
+        <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full">
+          <span class="text-white text-sm font-medium">À partir de <span id="hero-min-prix">—</span> DT/jour</span>
+        </div>
+      </div>
       <a href="#catalogue" class="inline-flex items-center gap-2 bg-primary text-white font-bold px-8 py-4 rounded-xl hover:scale-[1.02] transition-transform shadow-lg shadow-primary/30">
         Voir le catalogue
         <span class="material-symbols-outlined">arrow_downward</span>
@@ -116,6 +156,18 @@ tailwind.config = {
         <span class="material-symbols-outlined">filter_list</span>
         Filtrer
       </button>
+      <button id="btn-fav-filter" onclick="toggleFavFilter()" class="h-12 rounded-xl bg-surface-container-low text-zinc-700 font-bold flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all px-4" title="Mes favoris">
+        <span class="material-symbols-outlined">favorite</span>
+      </button>
+    </div>
+
+    <!-- Calculateur rapide -->
+    <div class="mt-3 bg-zinc-900 rounded-2xl p-4 flex items-center gap-4 text-white flex-wrap">
+      <span class="text-xs font-bold uppercase tracking-widest">Je loue pour</span>
+      <input id="calc-jours" type="range" min="1" max="30" value="1" oninput="mettreAJourCalc(this.value)"
+        class="flex-1 min-w-[200px]" style="accent-color:#e31837"/>
+      <span class="text-2xl font-black" id="calc-jours-num">1</span>
+      <span class="text-xs font-medium text-zinc-300">jour(s) — les prix se mettent à jour ci-dessous</span>
     </div>
 
     <!-- Filtre dates -->
@@ -146,6 +198,7 @@ tailwind.config = {
   </div>
 
   <!-- Catalogue -->
+
   <!-- Bandeau admin -->
   <div id="admin-banner" class="hidden max-w-screen-2xl mx-auto px-8 mt-6">
     <div class="flex items-center justify-between bg-zinc-900 text-white rounded-2xl px-6 py-4">
@@ -163,13 +216,30 @@ tailwind.config = {
   </div>
 
   <section id="catalogue" class="max-w-screen-2xl mx-auto px-8 py-16">
-    <div class="flex items-end justify-between mb-10">
+    <div class="flex items-end justify-between mb-6 flex-wrap gap-4">
       <div>
         <h2 class="text-3xl font-bold tracking-tight text-on-background">Notre Flotte</h2>
         <p class="text-secondary font-medium mt-1">
           <span id="count-label">Chargement...</span>
         </p>
       </div>
+      <div class="flex items-center gap-3 bg-surface-container-lowest rounded-2xl px-5 py-3 border border-zinc-100 shadow-sm" id="jours-slider-wrap">
+        <span class="text-xs font-semibold text-secondary">Durée :</span>
+        <input type="range" id="slider-jours" min="1" max="30" value="1" step="1" class="w-28 accent-red-600" oninput="majSliderJours(this.value)"/>
+        <span id="label-jours" class="text-sm font-black text-primary w-16">1 jour</span>
+      </div>
+    </div>
+    <div class="flex gap-2 mb-6 flex-wrap" id="filtres-rapides">
+      <button onclick="filtreRapide('')"   class="text-xs font-bold px-4 py-2 rounded-full bg-primary text-white">Tous</button>
+      <button onclick="filtreRapide('Citadine')" class="text-xs font-bold px-4 py-2 rounded-full bg-zinc-100 text-zinc-600 hover:bg-primary hover:text-white transition-colors">Citadine</button>
+      <button onclick="filtreRapide('Berline')"  class="text-xs font-bold px-4 py-2 rounded-full bg-zinc-100 text-zinc-600 hover:bg-primary hover:text-white transition-colors">Berline</button>
+      <button onclick="filtreRapide('SUV')"      class="text-xs font-bold px-4 py-2 rounded-full bg-zinc-100 text-zinc-600 hover:bg-primary hover:text-white transition-colors">SUV</button>
+      <button onclick="filtreRapide('Premium')"  class="text-xs font-bold px-4 py-2 rounded-full bg-zinc-100 text-zinc-600 hover:bg-primary hover:text-white transition-colors">Premium</button>
+      <span class="mx-2 border-l border-zinc-200"></span>
+      <button onclick="filtreRapide('favoris')" class="text-xs font-bold px-4 py-2 rounded-full bg-zinc-100 text-zinc-600 hover:bg-pink-600 hover:text-white transition-colors flex items-center gap-1">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        Favoris
+      </button>
     </div>
 
     <!-- Skeletons pendant chargement -->
@@ -258,7 +328,7 @@ tailwind.config = {
       <div>
         <p class="text-white font-bold text-sm mb-4 uppercase tracking-widest">Contact</p>
         <ul class="space-y-2.5">
-          <li class="text-zinc-400 text-sm">📧 contact@autodrive.tn</li>
+          <li class="text-zinc-400 text-sm">📧 contact@charthago.tn</li>
           <li class="text-zinc-400 text-sm">🕐 Lun–Sam : 8h00 – 20h00</li>
           <li class="text-zinc-400 text-sm">🚗 Livraison dans toute la Tunisie</li>
         </ul>
@@ -269,7 +339,7 @@ tailwind.config = {
     </div>
 
     <div class="border-t border-zinc-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-      <p class="text-zinc-500 text-xs">© 2024 AutoDrive Tunisie. Tous droits réservés.</p>
+      <p class="text-zinc-500 text-xs">© 2024 CharthaGo. Tous droits réservés.</p>
       <div class="flex gap-6">
         <a href="#" class="text-zinc-500 text-xs hover:text-zinc-300 transition-colors">Conditions générales</a>
         <a href="#" class="text-zinc-500 text-xs hover:text-zinc-300 transition-colors">Confidentialité</a>
@@ -324,6 +394,46 @@ const imagesFallback = {
 };
 
 let toutesVoitures = [];
+let favoris = JSON.parse(localStorage.getItem('autodrive_favoris') || '[]');
+let filtreFavorisActif = false;
+let joursCalc = 1;
+
+// ── Favoris ──────────────────────────────────────────────
+function toggleFav(id, event) {
+  if (event) event.preventDefault();
+  if (event) event.stopPropagation();
+  const idx = favoris.indexOf(id);
+  if (idx > -1) favoris.splice(idx, 1);
+  else favoris.push(id);
+  localStorage.setItem('autodrive_favoris', JSON.stringify(favoris));
+  document.querySelectorAll(`.fav-btn[data-id="${id}"]`).forEach(btn => {
+    btn.classList.toggle('actif', idx === -1);
+  });
+}
+
+function toggleFavFilter() {
+  filtreFavorisActif = !filtreFavorisActif;
+  const btn = document.getElementById('btn-fav-filter');
+  if (btn) btn.classList.toggle('fav-filter-active', filtreFavorisActif);
+  appliquerFiltres();
+}
+
+// ── Calculateur prix ─────────────────────────────────────
+function mettreAJourCalc(jours) {
+  joursCalc = parseInt(jours) || 1;
+  document.getElementById('calc-jours-num').textContent = joursCalc;
+  document.querySelectorAll('[id^="total-"]').forEach(el => {
+    const id = parseInt(el.id.replace('total-', ''));
+    const v  = toutesVoitures.find(x => x.id === id);
+    if (v && joursCalc > 1) {
+      el.textContent = `Total: ${(parseFloat(v.prix_jour) * joursCalc).toFixed(0)} DT`;
+    } else {
+      el.textContent = '';
+    }
+  });
+}
+
+
 
 function getStars(v) {
   // Note basée sur catégorie : Premium=5, SUV=4.5, Berline=4, Citadine=4
@@ -369,9 +479,19 @@ function renderVoitures(voitures) {
   grid.classList.remove('hidden');
   countLabel.textContent = `${voitures.length} véhicule${voitures.length > 1 ? 's' : ''} disponible${voitures.length > 1 ? 's' : ''}`;
 
-  // Cacher le loader
+  // Cacher le loader et skeletons
   const loader = document.getElementById('catalogue-loader');
   if (loader) loader.style.display = 'none';
+  const skel = document.getElementById('skeletons');
+  if (skel) skel.style.display = 'none';
+
+  ajouterBadges(voitures);
+  currentRender = voitures;
+
+  // Mettre à jour hero count
+  const dispoCount = voitures.filter(v => v.statut === 'disponible').length;
+  const heroCount  = document.getElementById('hero-dispo-count');
+  if (heroCount) heroCount.textContent = dispoCount;
 
   grid.innerHTML = voitures.map(v => {
     const dispo = v.statut === 'disponible';
@@ -379,11 +499,17 @@ function renderVoitures(voitures) {
     return `
     <div class="car-card group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm">
       <div class="relative h-52 overflow-hidden bg-surface-container-low">
+        ${v._badge === 'populaire' ? '<span class="badge-populaire">Populaire</span>' : v._badge === 'nouveau' ? '<span class="badge-nouveau">Nouveau</span>' : ''}
+        <button class="btn-fav ${isFavori(v.id) ? 'liked' : ''}" onclick="event.preventDefault();event.stopPropagation();toggleFavori(${v.id})">
+          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </button>
         <img class="car-img w-full h-full object-cover" src="${img}" alt="${v.marque} ${v.modele}" onerror="this.src='${imagesFallback.default}'"/>
-        <div class="absolute top-3 left-3">
+        <div class="absolute top-3 left-3 flex gap-1.5 flex-wrap">
           <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-black/40 text-white backdrop-blur-sm">
             ${v.categorie || 'Citadine'}
           </span>
+          ${v.id <= 5 ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-400 text-amber-900">🔥 Populaire</span>' : ''}
+          ${v.id >= 25 ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-green-500 text-white">✨ Nouveau</span>' : ''}
         </div>
         <div class="absolute top-3 right-3">
           <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${dispo ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}">
@@ -411,7 +537,12 @@ function renderVoitures(voitures) {
           </div>
           <div class="text-right">
             <p class="text-[10px] font-bold text-secondary uppercase">Depuis</p>
-            <p class="text-lg font-black text-primary">${parseFloat(v.prix_jour).toFixed(0)} <span class="text-xs font-bold text-secondary">DT/j</span></p>
+            <p class="text-lg font-black text-primary">
+              ${nbJoursSlider > 1
+                ? `${Math.round(parseFloat(v.prix_jour) * nbJoursSlider)} <span class="text-xs font-bold text-secondary">DT/${nbJoursSlider}j</span>`
+                : `${parseFloat(v.prix_jour).toFixed(0)} <span class="text-xs font-bold text-secondary">DT/j</span>`
+              }
+            </p>
           </div>
         </div>
         ${window._isAdmin
@@ -487,7 +618,8 @@ function appliquerFiltres() {
   const filtrees  = toutesVoitures.filter(v => {
     const matchSearch    = !search    || `${v.marque} ${v.modele}`.toLowerCase().includes(search);
     const matchCategorie = !categorie || (v.categorie || '') === categorie;
-    return matchSearch && matchCategorie;
+    const matchFav       = !filtreFavorisActif || favoris.includes(v.id);
+    return matchSearch && matchCategorie && matchFav;
   });
   renderVoitures(filtrees);
 }
@@ -521,6 +653,22 @@ async function chargerVoitures() {
 document.getElementById('search-input').addEventListener('input', appliquerFiltres);
 document.getElementById('filter-categorie').addEventListener('change', appliquerFiltres);
 
+// Bouton retour en haut
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('btn-top');
+  if (btn) btn.classList.toggle('visible', window.scrollY > 300);
+});
+
+// Popup WhatsApp après 30 secondes
+setTimeout(() => {
+  const pop = document.getElementById('wa-popup');
+  if (pop && !localStorage.getItem('autodrive_wa_closed')) {
+    pop.classList.add('show');
+    // Auto-fermer après 15 secondes
+    setTimeout(() => { pop.classList.remove('show'); localStorage.setItem('autodrive_wa_closed', '1'); }, 15000);
+  }
+}, 30000);
+
 // Afficher bandeau admin si connecté comme admin
 if (window._isAdmin) {
   document.addEventListener('DOMContentLoaded', () => {
@@ -539,9 +687,113 @@ setTimeout(viderRecherche, 100);
 setTimeout(viderRecherche, 500);
 setTimeout(viderRecherche, 1000);
 chargerVoitures();
+// Après chargement, mettre à jour hero
+setTimeout(majHero, 1500);
 </script>
+<!-- Bouton Retour en haut -->
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg viewBox="0 0 24 24"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+</button>
+
+<!-- Popup WhatsApp -->
+<div id="wa-popup" onclick="window.open('https://wa.me/21671234567?text=Bonjour, je souhaite louer une voiture','_blank')">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style="display:inline;vertical-align:middle;margin-right:6px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0 0 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/></svg>
+  Besoin d'aide ? Contactez-nous sur WhatsApp
+</div>
+
 <script src="chatbot-widget.js"></script>
 <script>
+// ── Favoris ──────────────────────────────────────────
+function getFavoris() {
+  return JSON.parse(localStorage.getItem('autodrive_favoris') || '[]');
+}
+function isFavori(id) {
+  return getFavoris().includes(parseInt(id));
+}
+function toggleFavori(id) {
+  id = parseInt(id);
+  let favs = getFavoris();
+  if (favs.includes(id)) {
+    favs = favs.filter(f => f !== id);
+  } else {
+    favs.push(id);
+  }
+  localStorage.setItem('autodrive_favoris', JSON.stringify(favs));
+  renderVoitures(currentRender || toutesVoitures);
+}
+
+// ── Slider jours ─────────────────────────────────────
+let nbJoursSlider = 1;
+function majSliderJours(val) {
+  nbJoursSlider = parseInt(val);
+  document.getElementById('label-jours').textContent = val + (val > 1 ? ' jours' : ' jour');
+  renderVoitures(currentRender || toutesVoitures);
+}
+
+// ── Filtre rapide par catégorie ──────────────────────
+let currentRender = null;
+function filtreRapide(cat) {
+  document.querySelectorAll('#filtres-rapides button').forEach(b => {
+    b.classList.remove('bg-primary','text-white');
+    b.classList.add('bg-zinc-100','text-zinc-600');
+  });
+  event.target.classList.add('bg-primary','text-white');
+  event.target.classList.remove('bg-zinc-100','text-zinc-600');
+  
+  if (cat === 'favoris') {
+    const favs = getFavoris();
+    currentRender = toutesVoitures.filter(v => favs.includes(v.id));
+  } else if (cat) {
+    currentRender = toutesVoitures.filter(v => (v.categorie || '') === cat);
+  } else {
+    currentRender = toutesVoitures;
+  }
+  renderVoitures(currentRender);
+}
+
+// ── Hero dynamique ───────────────────────────────────
+function majHero() {
+  const u = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
+  const greet = document.getElementById('hero-greeting');
+  if (greet && u && u.nom) {
+    greet.textContent = 'Bonjour ' + u.nom.split(' ')[0] + ' !';
+  }
+  const dispos = toutesVoitures.filter(v => v.statut === 'disponible');
+  const countEl = document.getElementById('hero-count');
+  if (countEl) countEl.textContent = dispos.length;
+  const minPrix = dispos.length > 0 ? Math.min(...dispos.map(v => parseFloat(v.prix_jour))) : 0;
+  const minEl = document.getElementById('hero-min-prix');
+  if (minEl) minEl.textContent = Math.round(minPrix);
+}
+
+// ── Badges Populaire/Nouveau ─────────────────────────
+function ajouterBadges(voitures) {
+  // Top 3 les moins chères = "Populaire" (les plus demandées en Tunisie)
+  const sorted = [...voitures].filter(v => v.statut === 'disponible').sort((a,b) => parseFloat(a.prix_jour) - parseFloat(b.prix_jour));
+  const topIds = sorted.slice(0, 3).map(v => v.id);
+  // Les 3 dernières ajoutées (plus hauts IDs) = "Nouveau"
+  const newIds = [...voitures].sort((a,b) => b.id - a.id).slice(0, 3).map(v => v.id);
+  voitures.forEach(v => {
+    if (topIds.includes(v.id)) v._badge = 'populaire';
+    else if (newIds.includes(v.id)) v._badge = 'nouveau';
+    else v._badge = '';
+  });
+}
+
+// ── Scroll top ───────────────────────────────────────
+window.addEventListener('scroll', () => {
+  const btn = document.getElementById('scroll-top');
+  if (btn) btn.style.display = window.scrollY > 300 ? 'flex' : 'none';
+});
+
+// ── WhatsApp popup après 30s ─────────────────────────
+setTimeout(() => {
+  const wa = document.getElementById('wa-popup');
+  if (wa && !window._isAdmin) wa.style.display = 'block';
+  // Auto-cacher après 15s
+  setTimeout(() => { if (wa) wa.style.display = 'none'; }, 15000);
+}, 30000);
+
 (function() {
   const u = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
   if (!u || !u.nom) return;
@@ -563,5 +815,27 @@ chargerVoitures();
   }
 })();
 </script>
+<!-- Bouton retour en haut -->
+<button id="btn-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Retour en haut">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
+</button>
+
+<!-- Popup WhatsApp -->
+<div id="wa-popup">
+  <button onclick="document.getElementById('wa-popup').classList.remove('show')" style="position:absolute;top:6px;right:8px;background:none;border:none;font-size:16px;color:#9ca3af;cursor:pointer;">✕</button>
+  <div class="flex items-start gap-3">
+    <div style="width:40px;height:40px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.768.967-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0 0 20.464 3.488"/></svg>
+    </div>
+    <div style="flex:1">
+      <p style="font-weight:700;font-size:13px;color:#1a1c1c;margin:0 0 4px">Besoin d'aide ?</p>
+      <p style="font-size:11px;color:#5f5e5e;margin:0 0 8px;line-height:1.4">Contactez-nous directement sur WhatsApp — réponse immédiate !</p>
+      <a href="https://wa.me/21671234567?text=Bonjour%20CharthaGo%2C%20j%27ai%20une%20question" target="_blank"
+        style="display:inline-block;background:#25D366;color:white;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none">
+        Ouvrir WhatsApp →
+      </a>
+    </div>
+  </div>
+</div>
 </body>
 </html>

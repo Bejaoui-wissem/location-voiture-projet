@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Panel Admin - AutoDrive Tunisie</title>
+<title>Panel Admin - CharthaGo</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -134,7 +134,7 @@ tailwind.config = {
     </div>
     <div>
       <h1 class="text-lg font-bold text-red-600 leading-tight">Admin Panel</h1>
-      <p class="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">Gestion AutoDrive</p>
+      <p class="text-[10px] text-zinc-500 font-medium uppercase tracking-widest">Gestion CharthaGo</p>
     </div>
   </div>
 
@@ -630,7 +630,7 @@ function exportPDF() {
 <html lang="fr">
 <head>
   <meta charset="utf-8"/>
-  <title>Réservations AutoDrive — ${date}</title>
+  <title>Réservations CharthaGo — ${date}</title>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Inter',Arial,sans-serif; color:#1a1c1c; padding:32px; font-size:13px; }
@@ -656,7 +656,7 @@ function exportPDF() {
 </head>
 <body>
   <header>
-    <div class="brand">Auto<span>Drive</span> Tunisie</div>
+    <div class="brand">Chartha<span>Go</span> Tunisie</div>
     <div class="meta">
       <div>Rapport des réservations</div>
       <div>Généré le : ${date}</div>
@@ -674,7 +674,7 @@ function exportPDF() {
     </thead>
     <tbody>${tableRows}</tbody>
   </table>
-  <footer>AutoDrive Tunisie · Document généré automatiquement le ${date}</footer>
+  <footer>CharthaGo · Document généré automatiquement le ${date}</footer>
   <script>window.onload = () => { window.print(); }<\/script>
 </body>
 </html>`);
@@ -937,7 +937,7 @@ async function genererRapport() {
     `- ${v.marque} ${v.modele} (${v.prix_jour} DT/jour) : ${v.statut}`
   ).join('\n');
 
-  const prompt = `Tu es un analyste business expert pour AutoDrive Tunisie, agence de location de voitures.
+  const prompt = `Tu es un analyste business expert pour CharthaGo, agence de location de voitures.
 
 DONNÉES DU JOUR (${today}) :
 Flotte : ${totalV} véhicules (${dispoV} disponibles, ${loueesV} louées) → taux d'occupation : ${occupation}%

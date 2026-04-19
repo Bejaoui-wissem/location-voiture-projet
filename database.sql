@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS reservations (
 );
 
 INSERT INTO utilisateurs (nom, email, mot_de_passe, role) VALUES
-('Admin', 'admin@autodrive.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
+('Admin', 'admin@charthago.tn', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
 
 INSERT INTO voitures (marque, modele, image_url, prix_jour, statut, categorie, places, transmission) VALUES
 ('Dacia','Sandero','https://cdn.motor1.com/images/mgl/28Wyz/s1/renault-sandero-s-edition.jpg',55.00,'disponible','Citadine',5,'Manuelle'),
