@@ -282,6 +282,51 @@ function toggleOption(btn, key, montantJour) {
   calculer();
 }
 
+const CODES_PROMO = {
+  'BIENVENUE10':{reduc:10,label:'-10% bienvenue'},
+  'FIRSTRIDE':{reduc:20,label:'-20% première location'},
+  'ETE2024':{reduc:15,label:'-15% offre été'},
+  'WEEKEND25':{reduc:25,label:'-25% week-end'},
+  'LOYAL5':{reduc:0,label:'5 jours offerts',bonus:'5days'},
+  'CARTHAGO50':{reduc:50,label:'-50% JACKPOT!'}
+};
+let codePromoActif = null;
+
+function verifierPromo() {
+  const code = document.getElementById('code-promo').value.trim().toUpperCase();
+  const msg = document.getElementById('promo-msg');
+  const promo = CODES_PROMO[code];
+  if (promo) {
+    codePromoActif = { code, ...promo };
+    msg.textContent = `✓ ${promo.label} appliqué !`;
+    msg.className = 'text-[11px] mt-2 font-bold text-green-600';
+  } else {
+    codePromoActif = null;
+    msg.textContent = '✕ Code invalide';
+    msg.className = 'text-[11px] mt-2 font-bold text-red-600';
+  }
+  msg.classList.remove('hidden');
+  calculer();
+}
+
+// Pré-remplir le code promo depuis localStorage (venu du catalogue ou de la roue)
+(function() {
+  const savedPromo = localStorage.getItem('autodrive_promo');
+  if (savedPromo) {
+    setTimeout(() => {
+      const inp = document.getElementById('code-promo');
+      if (inp) { inp.value = savedPromo; verifierPromo(); }
+    }, 600);
+  }
+})();
+
+function getRemiseJours(j) {
+  if (j >= 30) return 20;
+  if (j >= 14) return 15;
+  if (j >= 7)  return 10;
+  return 0;
+}
+
 function calculer() {
   const debut = new Date(document.getElementById('date-debut').value);
   const fin = new Date(document.getElementById('date-fin').value);
@@ -292,7 +337,33 @@ function calculer() {
 
   const jours = fin > debut ? Math.ceil((fin - debut) / (1000*60*60*24)) : 0;
   const totalOptions = Object.values(optionsActives).reduce((a,b) => a+b, 0);
-  const total = jours > 0 ? (prixJourActuel + totalOptions) * jours : 0;
+  let total = jours > 0 ? (prixJourActuel + totalOptions) * jours : 0;
+
+  // Remise automatique longue durée
+  const remiseAuto = getRemiseJours(jours);
+
+  // Remise code promo
+  let reducPromo = 0;
+  if (codePromoActif && jours > 0) {
+    if (codePromoActif.reduc) reducPromo = total * (codePromoActif.reduc / 100);
+    if (codePromoActif.bonus === '5days' && jours >= 30) reducPromo = prixJourActuel * 5;
+  }
+
+  // Remise auto (seulement si pas de code promo meilleur)
+  const reducAuto = total * (remiseAuto / 100);
+  const reducTotale = Math.max(reducPromo, reducAuto);
+
+  total = Math.max(0, total - reducTotale);
+
+  // Affichage réduction
+  const promoDiv = document.getElementById('promo-discount');
+  const promoSpan = document.getElementById('recap-promo');
+  if (reducTotale > 0) {
+    promoDiv.classList.remove('hidden');
+    promoSpan.textContent = `-${Math.round(reducTotale)} DT`;
+  } else {
+    promoDiv.classList.add('hidden');
+  }
 
   document.getElementById('recap-modele').textContent = voiture ? `${voiture.marque} ${voiture.modele}` : 'Sélectionnez un véhicule';
   document.getElementById('recap-prix-jour').textContent = prixJourActuel ? `${prixJourActuel} DT` : '— DT';

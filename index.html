@@ -192,6 +192,43 @@ tailwind.config = {
 
   <!-- Catalogue -->
 
+  
+  <!-- Section Offres spéciales -->
+  <section class="max-w-screen-2xl mx-auto px-8 pt-14">
+    <div class="flex items-end justify-between mb-6">
+      <div>
+        <p class="text-primary font-bold text-xs uppercase tracking-widest mb-2">🎁 Offres du moment</p>
+        <h2 class="text-3xl font-black tracking-tight text-on-surface">Profitez de nos promos</h2>
+      </div>
+      <button onclick="ouvrirRoue()" class="hidden md:flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-white shadow-lg hover:scale-[1.05] transition-all" style="background:linear-gradient(135deg,#7c3aed,#ec4899)">
+        🎰 Tentez votre chance !
+      </button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="rounded-2xl p-6 text-white relative overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform" style="background:linear-gradient(135deg,#b90027,#e31837)" onclick="appliquerPromo('WEEKEND25')">
+        <div class="absolute -right-6 -top-6 text-8xl opacity-10">💑</div>
+        <p class="text-xs font-bold uppercase tracking-widest opacity-80 mb-2">Week-end en duo</p>
+        <h3 class="text-3xl font-black mb-2">-25%</h3>
+        <p class="text-sm opacity-90 mb-4">Vendredi au dimanche. Voitures citadines incluses.</p>
+        <div class="inline-block bg-white/20 backdrop-blur px-3 py-1.5 rounded-lg font-black text-xs tracking-wider">Code: WEEKEND25</div>
+      </div>
+      <div class="rounded-2xl p-6 text-white relative overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform" style="background:linear-gradient(135deg,#7c3aed,#ec4899)" onclick="appliquerPromo('FIRSTRIDE')">
+        <div class="absolute -right-6 -top-6 text-8xl opacity-10">🚗</div>
+        <p class="text-xs font-bold uppercase tracking-widest opacity-80 mb-2">Première location</p>
+        <h3 class="text-3xl font-black mb-2">-20%</h3>
+        <p class="text-sm opacity-90 mb-4">Exclusif aux nouveaux clients. Sur toute la flotte.</p>
+        <div class="inline-block bg-white/20 backdrop-blur px-3 py-1.5 rounded-lg font-black text-xs tracking-wider">Code: FIRSTRIDE</div>
+      </div>
+      <div class="rounded-2xl p-6 text-white relative overflow-hidden cursor-pointer hover:scale-[1.02] transition-transform" style="background:linear-gradient(135deg,#059669,#10b981)" onclick="appliquerPromo('LOYAL5')">
+        <div class="absolute -right-6 -top-6 text-8xl opacity-10">🎁</div>
+        <p class="text-xs font-bold uppercase tracking-widest opacity-80 mb-2">Fidélité récompensée</p>
+        <h3 class="text-3xl font-black mb-2">5 jours offerts</h3>
+        <p class="text-sm opacity-90 mb-4">Toute location 30j+ = 5 jours gratuits.</p>
+        <div class="inline-block bg-white/20 backdrop-blur px-3 py-1.5 rounded-lg font-black text-xs tracking-wider">Code: LOYAL5</div>
+      </div>
+    </div>
+  </section>
+
   <!-- Bandeau admin -->
   <div id="admin-banner" class="hidden max-w-screen-2xl mx-auto px-8 mt-6">
     <div class="flex items-center justify-between bg-zinc-900 text-white rounded-2xl px-6 py-4">
@@ -388,6 +425,110 @@ const imagesFallback = {
 
 let toutesVoitures = [];
 let joursCalc = 1;
+
+// ── Système de codes promo ──────────────────────────────
+const CODES_PROMO = {
+  'BIENVENUE10': { reduc: 10, label: '-10% bienvenue' },
+  'FIRSTRIDE':   { reduc: 20, label: '-20% première location' },
+  'ETE2024':     { reduc: 15, label: '-15% offre été' },
+  'WEEKEND25':   { reduc: 25, label: '-25% week-end' },
+  'LOYAL5':      { reduc: 0,  label: '5 jours offerts (loc. 30j+)', bonus:'5days' },
+  'CARTHAGO50':  { reduc: 50, label: '-50% JACKPOT !' }
+};
+
+function appliquerPromo(code) {
+  localStorage.setItem('autodrive_promo', code);
+  showToastPromo(`✓ Code ${code} prêt à être utilisé ! Il sera appliqué à votre réservation.`);
+}
+
+function showToastPromo(msg) {
+  const t = document.getElementById('toast-promo');
+  if (!t) return;
+  document.getElementById('toast-promo-msg').textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 4000);
+}
+
+// ── Roue de la fortune ──────────────────────────────────
+const ROUE_PRIX = [
+  { code:'WEEKEND25',  msg:'🎉 Vous avez gagné -5% ! Code : CHANCE5',  angle: 22.5 },
+  { code:'BIENVENUE10', msg:'🎉 Vous avez gagné -10% ! Code : BIENVENUE10', angle: 67.5 },
+  { code:'ETE2024',    msg:'🎉 Vous avez gagné -15% ! Code : ETE2024', angle: 112.5 },
+  { code:'FIRSTRIDE',  msg:'🎉 Vous avez gagné -20% ! Code : FIRSTRIDE', angle: 157.5 },
+  { code:'LOYAL5',     msg:'🎁 Livraison gratuite offerte !', angle: 202.5 },
+  { code:'CARTHAGO50', msg:'🏆 JACKPOT ! -50% sur votre prochaine location !', angle: 247.5 },
+  { code:null,         msg:'🎁 1 jour d\'essai gratuit !', angle: 292.5 },
+  { code:null,         msg:'😢 Pas de chance cette fois... Réessayez demain !', angle: 337.5 }
+];
+
+function ouvrirRoue() {
+  const lastSpin = localStorage.getItem('autodrive_last_spin');
+  const now = Date.now();
+  if (lastSpin && now - parseInt(lastSpin) < 24*60*60*1000) {
+    const h = Math.ceil((24*60*60*1000 - (now - parseInt(lastSpin))) / (60*60*1000));
+    alert(`Vous avez déjà tourné la roue aujourd'hui ! Revenez dans ${h}h.`);
+    return;
+  }
+  document.getElementById('modal-roue').style.display = 'flex';
+  document.getElementById('roue-result').style.display = 'none';
+  document.getElementById('btn-spin').disabled = false;
+  document.getElementById('roue-svg').style.transform = 'rotate(0deg)';
+}
+
+function tournerRoue() {
+  const btn = document.getElementById('btn-spin');
+  btn.disabled = true;
+  btn.textContent = '🎲 Ça tourne...';
+  const gagnant = Math.floor(Math.random() * 8);
+  const prix = ROUE_PRIX[gagnant];
+  const rotation = 360 * 6 + (360 - prix.angle);
+  const svg = document.getElementById('roue-svg');
+  svg.style.transform = `rotate(${rotation}deg)`;
+  setTimeout(() => {
+    const result = document.getElementById('roue-result');
+    result.textContent = prix.msg;
+    result.style.display = 'block';
+    result.style.background = prix.code ? '#dcfce7' : '#fee2e2';
+    result.style.color = prix.code ? '#14532d' : '#991b1b';
+    if (prix.code) {
+      localStorage.setItem('autodrive_promo', prix.code);
+      localStorage.setItem('autodrive_last_spin', Date.now());
+    }
+    btn.textContent = '🎲 Tourner la roue !';
+  }, 4200);
+}
+
+// ── Social proof ────────────────────────────────────────
+function getViewers(id) {
+  // Nombre pseudo-aléatoire stable par voiture
+  return ((id * 7) % 5) + 1;
+}
+
+// ── Compte à rebours flash sale ─────────────────────────
+(function() {
+  if (localStorage.getItem('flash_closed')) {
+    const b = document.getElementById('flash-banner');
+    if (b) b.style.display = 'none';
+    return;
+  }
+  let endTime = parseInt(localStorage.getItem('flash_end') || '0');
+  if (!endTime || endTime < Date.now()) {
+    endTime = Date.now() + 72 * 3600 * 1000;
+    localStorage.setItem('flash_end', endTime);
+  }
+  function tick() {
+    const diff = endTime - Date.now();
+    if (diff <= 0) { document.getElementById('flash-banner').style.display = 'none'; return; }
+    const h = String(Math.floor(diff / 3600000)).padStart(2,'0');
+    const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
+    const s = String(Math.floor((diff % 60000) / 1000)).padStart(2,'0');
+    const el = document.getElementById('countdown');
+    if (el) el.textContent = `${h}:${m}:${s}`;
+  }
+  tick(); setInterval(tick, 1000);
+})();
+
+
 let favoris = JSON.parse(localStorage.getItem('autodrive_favoris') || '[]');
 let filtreFavorisActif = false;
 
@@ -488,11 +629,17 @@ function renderVoitures(voitures) {
           ${v.id <= 5 ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-400 text-amber-900">🔥 Populaire</span>' : ''}
           ${v.id >= 25 ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-green-500 text-white">✨ Nouveau</span>' : ''}
         </div>
-        <div class="absolute top-3 right-3">
+        <div class="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
           <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${dispo ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}">
             ${dispo ? 'Disponible' : 'Louée'}
           </span>
+          ${dispo && v.id % 3 === 0 ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-600 text-white animate-pulse">🔥 Plus que 1 !</span>' : ''}
         </div>
+        <!-- Social proof -->
+        ${dispo ? `<div class="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+          ${getViewers(v.id)} personnes regardent
+        </div>` : ''}
       </div>
       <div class="p-6">
         <div class="flex justify-between items-start mb-3">
@@ -515,10 +662,16 @@ function renderVoitures(voitures) {
           <div class="text-right">
             <p class="text-[10px] font-bold text-secondary uppercase">Depuis</p>
             <p class="text-lg font-black text-primary">
-              ${joursCalc > 1
-                ? `${Math.round(parseFloat(v.prix_jour) * joursCalc)} <span class="text-xs font-bold text-secondary">DT <span class="text-zinc-400">(${joursCalc}j)</span></span>`
-                : `${parseFloat(v.prix_jour).toFixed(0)} <span class="text-xs font-bold text-secondary">DT/j</span>`
-              }
+              ${(() => {
+                if (joursCalc <= 1) return `${parseFloat(v.prix_jour).toFixed(0)} <span class="text-xs font-bold text-secondary">DT/j</span>`;
+                const brut = parseFloat(v.prix_jour) * joursCalc;
+                const remise = getRemiseJours(joursCalc);
+                if (remise > 0) {
+                  const net = brut * (1 - remise/100);
+                  return `<span class="text-[11px] text-zinc-400 line-through font-medium">${Math.round(brut)}</span> ${Math.round(net)} <span class="text-xs font-bold text-secondary">DT <span class="text-green-600">(-${remise}%)</span></span>`;
+                }
+                return `${Math.round(brut)} <span class="text-xs font-bold text-secondary">DT <span class="text-zinc-400">(${joursCalc}j)</span></span>`;
+              })()}
             </p>
           </div>
         </div>
@@ -702,8 +855,19 @@ function toggleFavori(id) {
 // ── Slider durée ─────────────────────────────────────
 function majSliderJours(val) {
   joursCalc = parseInt(val) || 1;
-  document.getElementById('label-jours').textContent = joursCalc + (joursCalc > 1 ? ' jours' : ' jour');
+  let label = joursCalc + (joursCalc > 1 ? ' jours' : ' jour');
+  if (joursCalc >= 30)      label += ' — -20% 🎉';
+  else if (joursCalc >= 14) label += ' — -15% 🎉';
+  else if (joursCalc >= 7)  label += ' — -10% 🎉';
+  document.getElementById('label-jours').textContent = label;
   renderVoitures(currentRender || toutesVoitures);
+}
+
+function getRemiseJours(j) {
+  if (j >= 30) return 20;
+  if (j >= 14) return 15;
+  if (j >= 7)  return 10;
+  return 0;
 }
 
 // ── Filtre rapide par catégorie ──────────────────────
@@ -813,5 +977,46 @@ setTimeout(() => {
     </div>
   </div>
 </div>
+<!-- Modal Roue de la fortune -->
+<div id="modal-roue" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);">
+  <div style="background:white;border-radius:24px;padding:32px 28px;max-width:440px;width:100%;text-align:center;position:relative;">
+    <button onclick="document.getElementById('modal-roue').style.display='none'" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:22px;color:#9ca3af;cursor:pointer">✕</button>
+    <h3 style="font-size:22px;font-weight:900;margin-bottom:6px;color:#1a1c1c">🎰 Tentez votre chance !</h3>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:20px">Tournez la roue et gagnez une remise exclusive</p>
+    <div style="position:relative;width:280px;height:280px;margin:0 auto 20px">
+      <svg id="roue-svg" width="280" height="280" viewBox="0 0 280 280" style="transition:transform 4s cubic-bezier(.17,.67,.16,1)">
+        <g transform="translate(140,140)">
+          <circle r="136" fill="#1a1c1c"/>
+          <path d="M 0,0 L 136,0 A 136,136 0 0,1 96.2,96.2 Z" fill="#b90027"/>
+          <path d="M 0,0 L 96.2,96.2 A 136,136 0 0,1 0,136 Z" fill="#f59e0b"/>
+          <path d="M 0,0 L 0,136 A 136,136 0 0,1 -96.2,96.2 Z" fill="#10b981"/>
+          <path d="M 0,0 L -96.2,96.2 A 136,136 0 0,1 -136,0 Z" fill="#3b82f6"/>
+          <path d="M 0,0 L -136,0 A 136,136 0 0,1 -96.2,-96.2 Z" fill="#8b5cf6"/>
+          <path d="M 0,0 L -96.2,-96.2 A 136,136 0 0,1 0,-136 Z" fill="#ec4899"/>
+          <path d="M 0,0 L 0,-136 A 136,136 0 0,1 96.2,-96.2 Z" fill="#ef4444"/>
+          <path d="M 0,0 L 96.2,-96.2 A 136,136 0 0,1 136,0 Z" fill="#14b8a6"/>
+          <text x="75" y="22" fill="white" font-size="13" font-weight="900" transform="rotate(22.5 75 22)">-5%</text>
+          <text x="55" y="70" fill="white" font-size="13" font-weight="900" transform="rotate(67.5 55 70)">-10%</text>
+          <text x="-5" y="88" fill="white" font-size="13" font-weight="900" transform="rotate(112.5 -5 88)">-15%</text>
+          <text x="-65" y="70" fill="white" font-size="13" font-weight="900" transform="rotate(157.5 -65 70)">-20%</text>
+          <text x="-88" y="8" fill="white" font-size="12" font-weight="900" transform="rotate(202.5 -88 8)">Gratuit</text>
+          <text x="-70" y="-60" fill="white" font-size="12" font-weight="900" transform="rotate(247.5 -70 -60)">Surprise</text>
+          <text x="-10" y="-78" fill="white" font-size="11" font-weight="900" transform="rotate(292.5 -10 -78)">Essai J1</text>
+          <text x="58" y="-62" fill="white" font-size="13" font-weight="900" transform="rotate(337.5 58 -62)">😢</text>
+          <circle r="28" fill="white"/>
+          <text y="5" text-anchor="middle" fill="#b90027" font-size="14" font-weight="900">GO</text>
+        </g>
+      </svg>
+      <div style="position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:20px solid #1a1c1c;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))"></div>
+    </div>
+    <button id="btn-spin" onclick="tournerRoue()" style="width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#ec4899);color:white;font-weight:900;font-size:15px;border:none;cursor:pointer;text-transform:uppercase;letter-spacing:.05em">🎲 Tourner la roue !</button>
+    <div id="roue-result" style="display:none;margin-top:14px;padding:14px;border-radius:12px;background:#dcfce7;color:#14532d;font-weight:800;text-align:center;font-size:14px"></div>
+  </div>
+</div>
+<!-- Toast promo appliqué -->
+<div id="toast-promo" style="display:none;position:fixed;top:80px;right:24px;z-index:10000;background:#10b981;color:white;padding:14px 20px;border-radius:14px;font-weight:800;box-shadow:0 12px 32px rgba(16,185,129,.4);animation:slideIn .4s;max-width:320px;">
+  <div id="toast-promo-msg"></div>
+</div>
+<style>@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}</style>
 </body>
 </html>

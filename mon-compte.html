@@ -125,6 +125,35 @@ tailwind.config = {
         </div>
       </div>
 
+      <!-- Carte Fidélité -->
+      <div class="rounded-2xl p-6 text-white relative overflow-hidden" style="background:linear-gradient(135deg,#1a1c1c 0%,#3a3a3a 100%)">
+        <div class="absolute -right-6 -top-6 text-7xl opacity-10">⭐</div>
+        <div class="relative">
+          <p class="text-xs font-bold uppercase tracking-widest opacity-70 mb-1">Statut fidélité</p>
+          <h3 id="niveau-nom" class="text-2xl font-black mb-1">Bronze</h3>
+          <p id="niveau-pts" class="text-xs opacity-80 mb-4">0 points</p>
+          <div class="w-full bg-white/10 rounded-full h-2 mb-2">
+            <div id="niveau-bar" class="h-2 rounded-full transition-all duration-700" style="background:linear-gradient(90deg,#fbbf24,#ef4444);width:10%"></div>
+          </div>
+          <p id="niveau-next" class="text-[11px] opacity-70">500 pts pour atteindre Silver</p>
+        </div>
+      </div>
+
+      <!-- Carte Parrainage -->
+      <div class="bg-surface-container-lowest rounded-2xl p-6 border border-zinc-100 shadow-sm">
+        <h2 class="font-bold text-base text-on-surface mb-2 flex items-center gap-2">
+          <span>👥</span> Parrainez vos amis
+        </h2>
+        <p class="text-xs text-secondary mb-4">Recevez 50 DT par ami inscrit qui réserve</p>
+        <div class="bg-surface-container-low rounded-xl p-3 flex items-center gap-2">
+          <input id="code-parrainage" readonly value="" class="flex-1 bg-transparent border-none outline-none text-sm font-black text-primary tracking-wider"/>
+          <button onclick="copierParrainage()" class="px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-bold hover:scale-[1.05] transition-all">Copier</button>
+        </div>
+        <button onclick="partagerWhatsApp()" class="w-full mt-3 py-2.5 rounded-xl font-bold text-xs text-white flex items-center justify-center gap-2" style="background:#25D366">
+          💬 Partager sur WhatsApp
+        </button>
+      </div>
+
     </div>
 
     <!-- Colonne droite — Réservations -->
@@ -162,6 +191,44 @@ document.getElementById('user-initiale').textContent = (user?.nom || 'U')[0].toU
 document.getElementById('inp-nom').value             = user?.nom || '';
 document.getElementById('inp-email').value           = user?.email || '';
 
+// Calcul fidélité — 10 pts par DT dépensé
+function calculerFidelite(totalDepense) {
+  const pts = Math.floor(totalDepense * 10);
+  let niveau = 'Bronze', seuilSuivant = 500, suivant = 'Silver', pct = 10;
+  if (pts >= 5000)      { niveau = 'Platinum'; seuilSuivant = 10000; suivant = '★ MAX ★'; pct = Math.min(100, (pts/10000)*100); }
+  else if (pts >= 2500) { niveau = 'Gold';     seuilSuivant = 5000;  suivant = 'Platinum'; pct = ((pts-2500)/2500)*100; }
+  else if (pts >= 500)  { niveau = 'Silver';   seuilSuivant = 2500;  suivant = 'Gold';     pct = ((pts-500)/2000)*100; }
+  else                  { pct = (pts/500)*100; }
+  document.getElementById('niveau-nom').textContent = niveau;
+  document.getElementById('niveau-pts').textContent = pts.toLocaleString() + ' points';
+  document.getElementById('niveau-bar').style.width = Math.max(pct, 5) + '%';
+  const reste = Math.max(0, seuilSuivant - pts);
+  document.getElementById('niveau-next').textContent = reste > 0 ? `${reste.toLocaleString()} pts pour ${suivant}` : `Niveau maximum atteint !`;
+}
+
+// Code de parrainage unique basé sur le nom
+(function() {
+  const u = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
+  if (u) {
+    const code = 'CG-' + u.nom.replace(/\s/g,'').toUpperCase().substring(0,4) + Math.abs(u.email.length * 37 % 999);
+    const inp = document.getElementById('code-parrainage');
+    if (inp) inp.value = code;
+  }
+})();
+
+function copierParrainage() {
+  const inp = document.getElementById('code-parrainage');
+  inp.select();
+  document.execCommand('copy');
+  alert('✓ Code copié : ' + inp.value);
+}
+
+function partagerWhatsApp() {
+  const code = document.getElementById('code-parrainage').value;
+  const msg = encodeURIComponent(`Salut ! Je te recommande ChartaGo pour louer une voiture en Tunisie 🚗 Utilise mon code ${code} à l'inscription et tu auras 50 DT de réduction ! https://charthago.tn`);
+  window.open(`https://wa.me/?text=${msg}`, '_blank');
+}
+
 // Charger les réservations du client
 async function chargerMesReservations() {
   try {
@@ -184,6 +251,7 @@ async function chargerMesReservations() {
     document.getElementById('stat-confirmees').textContent = confirmees;
     document.getElementById('stat-attente').textContent    = attente;
     document.getElementById('stat-depense').textContent    = Math.round(depense) + ' DT';
+    calculerFidelite(depense);
 
     if (mesResas.length === 0) {
       list.innerHTML = `
