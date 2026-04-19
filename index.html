@@ -64,11 +64,13 @@ tailwind.config = {
   #wa-popup::before { content:''; position:absolute; bottom:-8px; left:22px; border:8px solid transparent; border-top-color:white; border-bottom:0; }
   /* Filtre favoris */
   .fav-filter-active { background:#b90027 !important; color:white !important; }
-  .badge-populaire { position:absolute; top:12px; left:12px; z-index:5; background:#b90027; color:white; font-size:10px; font-weight:800; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.03em; }
-  .badge-nouveau   { position:absolute; top:12px; left:12px; z-index:5; background:#00656f; color:white; font-size:10px; font-weight:800; padding:3px 10px; border-radius:99px; text-transform:uppercase; letter-spacing:.03em; }
-  .btn-fav { position:absolute; top:12px; right:52px; z-index:5; width:32px; height:32px; border-radius:50%; background:rgba(0,0,0,0.3); backdrop-filter:blur(4px); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; }
-  .btn-fav:hover, .btn-fav.liked { background:#e31837; }
-  .btn-fav svg { width:16px; height:16px; fill:white; }
+  .btn-fav { position:absolute; bottom:12px; right:12px; z-index:5; width:36px; height:36px; border-radius:12px; background:rgba(255,255,255,0.95); backdrop-filter:blur(4px); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .2s; box-shadow:0 2px 8px rgba(0,0,0,0.15); }
+  .btn-fav:hover { transform:scale(1.1); background:white; }
+  .btn-fav.liked { background:#e31837; }
+  .btn-fav svg { width:18px; height:18px; fill:#6b7280; transition:fill .2s; }
+  .btn-fav.liked svg { fill:white; }
+  .btn-fav:hover svg { fill:#e31837; }
+  .btn-fav.liked:hover svg { fill:white; }
   #scroll-top { position:fixed; bottom:28px; left:28px; z-index:50; width:44px; height:44px; border-radius:12px; background:#b90027; border:none; cursor:pointer; display:none; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(185,0,39,0.35); transition:all .2s; }
   #scroll-top:hover { transform:scale(1.1); }
   #scroll-top svg { width:20px; height:20px; fill:white; }
@@ -159,15 +161,6 @@ tailwind.config = {
       <button id="btn-fav-filter" onclick="toggleFavFilter()" class="h-12 rounded-xl bg-surface-container-low text-zinc-700 font-bold flex items-center justify-center gap-2 hover:bg-surface-container-high transition-all px-4" title="Mes favoris">
         <span class="material-symbols-outlined">favorite</span>
       </button>
-    </div>
-
-    <!-- Calculateur rapide -->
-    <div class="mt-3 bg-zinc-900 rounded-2xl p-4 flex items-center gap-4 text-white flex-wrap">
-      <span class="text-xs font-bold uppercase tracking-widest">Je loue pour</span>
-      <input id="calc-jours" type="range" min="1" max="30" value="1" oninput="mettreAJourCalc(this.value)"
-        class="flex-1 min-w-[200px]" style="accent-color:#e31837"/>
-      <span class="text-2xl font-black" id="calc-jours-num">1</span>
-      <span class="text-xs font-medium text-zinc-300">jour(s) — les prix se mettent à jour ci-dessous</span>
     </div>
 
     <!-- Filtre dates -->
@@ -394,9 +387,9 @@ const imagesFallback = {
 };
 
 let toutesVoitures = [];
+let joursCalc = 1;
 let favoris = JSON.parse(localStorage.getItem('autodrive_favoris') || '[]');
 let filtreFavorisActif = false;
-let joursCalc = 1;
 
 // ── Favoris ──────────────────────────────────────────────
 function toggleFav(id, event) {
@@ -416,21 +409,6 @@ function toggleFavFilter() {
   const btn = document.getElementById('btn-fav-filter');
   if (btn) btn.classList.toggle('fav-filter-active', filtreFavorisActif);
   appliquerFiltres();
-}
-
-// ── Calculateur prix ─────────────────────────────────────
-function mettreAJourCalc(jours) {
-  joursCalc = parseInt(jours) || 1;
-  document.getElementById('calc-jours-num').textContent = joursCalc;
-  document.querySelectorAll('[id^="total-"]').forEach(el => {
-    const id = parseInt(el.id.replace('total-', ''));
-    const v  = toutesVoitures.find(x => x.id === id);
-    if (v && joursCalc > 1) {
-      el.textContent = `Total: ${(parseFloat(v.prix_jour) * joursCalc).toFixed(0)} DT`;
-    } else {
-      el.textContent = '';
-    }
-  });
 }
 
 
@@ -499,12 +477,11 @@ function renderVoitures(voitures) {
     return `
     <div class="car-card group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm">
       <div class="relative h-52 overflow-hidden bg-surface-container-low">
-        ${v._badge === 'populaire' ? '<span class="badge-populaire">Populaire</span>' : v._badge === 'nouveau' ? '<span class="badge-nouveau">Nouveau</span>' : ''}
         <button class="btn-fav ${isFavori(v.id) ? 'liked' : ''}" onclick="event.preventDefault();event.stopPropagation();toggleFavori(${v.id})">
           <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
         </button>
         <img class="car-img w-full h-full object-cover" src="${img}" alt="${v.marque} ${v.modele}" onerror="this.src='${imagesFallback.default}'"/>
-        <div class="absolute top-3 left-3 flex gap-1.5 flex-wrap">
+        <div class="absolute top-3 left-3 flex flex-col gap-1.5 items-start">
           <span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-black/40 text-white backdrop-blur-sm">
             ${v.categorie || 'Citadine'}
           </span>
@@ -538,8 +515,8 @@ function renderVoitures(voitures) {
           <div class="text-right">
             <p class="text-[10px] font-bold text-secondary uppercase">Depuis</p>
             <p class="text-lg font-black text-primary">
-              ${nbJoursSlider > 1
-                ? `${Math.round(parseFloat(v.prix_jour) * nbJoursSlider)} <span class="text-xs font-bold text-secondary">DT/${nbJoursSlider}j</span>`
+              ${joursCalc > 1
+                ? `${Math.round(parseFloat(v.prix_jour) * joursCalc)} <span class="text-xs font-bold text-secondary">DT <span class="text-zinc-400">(${joursCalc}j)</span></span>`
                 : `${parseFloat(v.prix_jour).toFixed(0)} <span class="text-xs font-bold text-secondary">DT/j</span>`
               }
             </p>
@@ -722,11 +699,10 @@ function toggleFavori(id) {
   renderVoitures(currentRender || toutesVoitures);
 }
 
-// ── Slider jours ─────────────────────────────────────
-let nbJoursSlider = 1;
+// ── Slider durée ─────────────────────────────────────
 function majSliderJours(val) {
-  nbJoursSlider = parseInt(val);
-  document.getElementById('label-jours').textContent = val + (val > 1 ? ' jours' : ' jour');
+  joursCalc = parseInt(val) || 1;
+  document.getElementById('label-jours').textContent = joursCalc + (joursCalc > 1 ? ' jours' : ' jour');
   renderVoitures(currentRender || toutesVoitures);
 }
 
