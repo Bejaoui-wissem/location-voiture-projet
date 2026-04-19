@@ -327,7 +327,16 @@ tailwind.config = {
       </div>
       <div>
         <label class="modal-label">URL Image (optionnel)</label>
-        <input id="modal-image" type="url" placeholder="https://..." class="modal-input"/>
+        <input id="modal-image" type="url" placeholder="https://images.unsplash.com/..."
+          class="modal-input" oninput="previewImage(this.value)"/>
+        <div id="img-preview-wrap" class="hidden mt-3 rounded-xl overflow-hidden border border-zinc-200" style="height:120px;">
+          <img id="img-preview" src="" alt="Aperçu" class="w-full h-full object-cover"
+            onerror="document.getElementById('img-preview-wrap').classList.add('hidden')"/>
+        </div>
+        <p class="text-[10px] text-secondary mt-2">
+          Astuce : utilisez <a href="https://unsplash.com" target="_blank" class="text-primary underline">unsplash.com</a>
+          — recherchez le modèle, clic droit sur l'image → "Copier l'adresse de l'image"
+        </p>
       </div>
       <p id="modal-error" class="text-xs text-error hidden"></p>
     </div>
@@ -709,6 +718,17 @@ function countUp(id, target, suffix = '') {
 
 
 // ── Modal voiture ─────────────────────────────────────────
+function previewImage(url) {
+  const wrap = document.getElementById('img-preview-wrap');
+  const img  = document.getElementById('img-preview');
+  if (url && url.startsWith('http')) {
+    img.src = url;
+    wrap.classList.remove('hidden');
+  } else {
+    wrap.classList.add('hidden');
+  }
+}
+
 function ouvrirModal() {
   document.getElementById('modal-title').textContent = 'Ajouter un véhicule';
   document.getElementById('modal-id').value = '';
@@ -717,6 +737,7 @@ function ouvrirModal() {
   document.getElementById('modal-prix').value = '';
   document.getElementById('modal-statut').value = 'disponible';
   document.getElementById('modal-image').value = '';
+  document.getElementById('img-preview-wrap').classList.add('hidden');
   document.getElementById('modal-error').classList.add('hidden');
   document.getElementById('modal-btn-text').textContent = 'Ajouter';
   document.getElementById('modal-overlay').classList.add('open');
@@ -730,6 +751,7 @@ function ouvrirModalEdit(id, marque, modele, prix, statut) {
   document.getElementById('modal-prix').value = prix;
   document.getElementById('modal-statut').value = statut;
   document.getElementById('modal-image').value = '';
+  document.getElementById('img-preview-wrap').classList.add('hidden');
   document.getElementById('modal-error').classList.add('hidden');
   document.getElementById('modal-btn-text').textContent = 'Enregistrer';
   document.getElementById('modal-overlay').classList.add('open');

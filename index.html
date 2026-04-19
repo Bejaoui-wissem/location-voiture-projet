@@ -190,19 +190,33 @@ tailwind.config = {
 <script>
 // Images de fallback par marque
 const imagesFallback = {
-  'peugeot': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=60',
-  'renault': 'https://images.unsplash.com/photo-1621007947382-34c769ce59d6?auto=format&fit=crop&w=600&q=60',
-  'mercedes': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=600&q=60',
-  'default': 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=600&q=60'
+  'peugeot':    'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=60',
+  'renault':    'https://images.unsplash.com/photo-1621007947382-34c769ce59d6?auto=format&fit=crop&w=600&q=60',
+  'mercedes':   'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&w=600&q=60',
+  'bmw':        'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=600&q=60',
+  'volkswagen': 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&w=600&q=60',
+  'toyota':     'https://images.unsplash.com/photo-1623869675781-80aa31012a5a?auto=format&fit=crop&w=600&q=60',
+  'hyundai':    'https://images.unsplash.com/photo-1600706432502-77a0e2e32790?auto=format&fit=crop&w=600&q=60',
+  'kia':        'https://images.unsplash.com/photo-1617531653332-bd46c16f4d68?auto=format&fit=crop&w=600&q=60',
+  'seat':       'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=600&q=60',
+  'dacia':      'https://images.unsplash.com/photo-1617654112329-91f57f9c79c4?auto=format&fit=crop&w=600&q=60',
+  'citroen':    'https://images.unsplash.com/photo-1609521263047-f8f205293f24?auto=format&fit=crop&w=600&q=60',
+  'symbol':     'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=600&q=60',
+  'clio':       'https://images.unsplash.com/photo-1621007947382-34c769ce59d6?auto=format&fit=crop&w=600&q=60',
+  'default':    'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&w=600&q=60'
 };
 
 let toutesVoitures = [];
 
 function getImage(voiture) {
+  // 1. Priorité : image_url définie dans la BD (admin)
   if (voiture.image_url && voiture.image_url.startsWith('http')) return voiture.image_url;
+  // 2. Fallback par marque
   const marque = (voiture.marque || '').toLowerCase();
+  const modele = (voiture.modele || '').toLowerCase();
+  const texte  = marque + ' ' + modele;
   for (const key of Object.keys(imagesFallback)) {
-    if (marque.includes(key)) return imagesFallback[key];
+    if (key !== 'default' && texte.includes(key)) return imagesFallback[key];
   }
   return imagesFallback.default;
 }
