@@ -91,33 +91,50 @@ const sugsEl     = panel.querySelector('#cg-suggestions');
 
 const history = [];
 
-function getApiKey() {
-  return localStorage.getItem('chartago_admin_gemini_key');
+async function envoyer() {
+  const msg = inputEl.value.trim();
+  if (!msg) return;
+
+  ajouterMessage(msg, 'user');
+  history.push({ role: 'user', parts: [{ text: msg }] });
+  inputEl.value = '';
+  sendBtn.disabled = true;
+  sugsEl.style.display = 'none';
+
+  const typingEl = ajouterMessage('En train d\'écrire...', 'typing');
+
+  try {
+    const res = await fetch('api/chatbot_proxy.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: history })
+    });
+
+    const data = await res.json();
+    typingEl.remove();
+
+    if (!data.success) {
+      ajouterMessage('Erreur : ' + (data.message || 'Service indisponible'), 'bot');
+      return;
+    }
+
+    ajouterMessage(data.reply, 'bot');
+    history.push({ role: 'model', parts: [{ text: data.reply }] });
+
+  } catch(e) {
+    typingEl.remove();
+    ajouterMessage('Erreur de connexion au serveur', 'bot');
+  }
 }
 
 btn.onclick = () => {
   panel.classList.toggle('open');
   if (panel.classList.contains('open')) {
-    checkKey();
     setTimeout(() => inputEl.focus(), 100);
   }
 };
 closeBtn.onclick = () => panel.classList.remove('open');
 
-function checkKey() {
-  const key = getApiKey();
-  if (!key) {
-    noKeyEl.classList.add('show');
-    messagesEl.style.display = 'none';
-    sugsEl.style.display = 'none';
-    inputWrap.style.display = 'none';
-  } else {
-    noKeyEl.classList.remove('show');
-    messagesEl.style.display = 'flex';
-    sugsEl.style.display = 'flex';
-    inputWrap.style.display = 'flex';
-  }
-}
 
 inputEl.addEventListener('input', () => {
   sendBtn.disabled = !inputEl.value.trim();
@@ -187,10 +204,5 @@ async function envoyer() {
     ajouterMessage('Erreur de connexion au serveur IA', 'bot');
   }
 }
-
-window.chartagoSetApiKey = function(key) {
-  localStorage.setItem('chartago_admin_gemini_key', key);
-  checkKey();
-};
 
 })();
