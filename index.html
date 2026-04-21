@@ -288,6 +288,14 @@ tailwind.config = {
         <span id="label-jours" class="text-sm font-black text-primary w-16">1 jour</span>
       </div>
     </div>
+    <!-- Filtre agence -->
+    <div class="flex gap-2 mb-4 flex-wrap items-center">
+      <span class="text-xs font-bold text-secondary uppercase tracking-widest mr-2"> Agence :</span>
+      <button onclick="filtrerAgence('')" data-agence="" class="agence-filtre text-xs font-bold px-4 py-2 rounded-full bg-primary text-white">Toutes</button>
+      <button onclick="filtrerAgence('Tunis')" data-agence="Tunis" class="agence-filtre text-xs font-bold px-4 py-2 rounded-full bg-zinc-100 text-zinc-600 hover:bg-primary hover:text-white transition-colors"> Tunis</button>
+      <button onclick="filtrerAgence('Sfax')" data-agence="Sfax" class="agence-filtre text-xs font-bold px-4 py-2 rounded-full bg-zinc-100 text-zinc-600 hover:bg-primary hover:text-white transition-colors"> Sfax</button>
+      <button onclick="filtrerAgence('Sousse')" data-agence="Sousse" class="agence-filtre text-xs font-bold px-4 py-2 rounded-full bg-zinc-100 text-zinc-600 hover:bg-primary hover:text-white transition-colors"> Sousse</button>
+    </div>
     <div class="flex gap-2 mb-6 flex-wrap" id="filtres-rapides">
       <button onclick="filtreRapide('')"   class="text-xs font-bold px-4 py-2 rounded-full bg-primary text-white">Tous</button>
       <button onclick="filtreRapide('Citadine')" class="text-xs font-bold px-4 py-2 rounded-full bg-zinc-100 text-zinc-600 hover:bg-primary hover:text-white transition-colors">Citadine</button>
@@ -356,10 +364,10 @@ tailwind.config = {
 
           <!-- Liste des voitures à venir -->
           <div class="flex flex-wrap gap-2 mb-6">
-            <span class="bg-white/5 border border-white/10 text-zinc-300 text-xs font-bold px-3 py-1.5 rounded-lg">🏎️ Tesla Model 3</span>
+            <span class="bg-white/5 border border-white/10 text-zinc-300 text-xs font-bold px-3 py-1.5 rounded-lg">✨ Tesla Model 3</span>
             <span class="bg-white/5 border border-white/10 text-zinc-300 text-xs font-bold px-3 py-1.5 rounded-lg">🚙 Audi Q5</span>
             <span class="bg-white/5 border border-white/10 text-zinc-300 text-xs font-bold px-3 py-1.5 rounded-lg">✨ BMW X3</span>
-            <span class="bg-white/5 border border-white/10 text-zinc-300 text-xs font-bold px-3 py-1.5 rounded-lg">🌟 Range Rover Evoque</span>
+            <span class="bg-white/5 border border-white/10 text-zinc-300 text-xs font-bold px-3 py-1.5 rounded-lg">🚙 Range Rover Evoque</span>
           </div>
 
           <!-- Formulaire liste d'attente -->
@@ -487,9 +495,9 @@ tailwind.config = {
       <div>
         <p class="text-white font-bold text-sm mb-4 uppercase tracking-widest">Nos agences</p>
         <ul class="space-y-2.5">
-          <li class="text-zinc-400 text-sm">📍 Tunis — +216 71 234 567</li>
-          <li class="text-zinc-400 text-sm">📍 Sousse — +216 73 345 678</li>
-          <li class="text-zinc-400 text-sm">📍 Sfax — +216 74 456 789</li>
+          <li class="text-zinc-400 text-sm">🗺️ Tunis — +216 71 234 567</li>
+          <li class="text-zinc-400 text-sm">🗺️ Sousse — +216 73 345 678</li>
+          <li class="text-zinc-400 text-sm">🗺️ Sfax — +216 74 456 789</li>
         </ul>
       </div>
 
@@ -499,7 +507,6 @@ tailwind.config = {
         <ul class="space-y-2.5">
           <li class="text-zinc-400 text-sm">📧 contact@charthago.tn</li>
           <li class="text-zinc-400 text-sm">🕐 Lun–Sam : 8h00 – 20h00</li>
-          <li class="text-zinc-400 text-sm">🚗 Livraison dans toute la Tunisie</li>
         </ul>
         <a href="about.html#contact" class="inline-block mt-4 px-5 py-2.5 rounded-xl font-bold text-sm text-white" style="background:#b90027">
           Nous contacter
@@ -508,7 +515,7 @@ tailwind.config = {
     </div>
 
     <div class="border-t border-zinc-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-      <p class="text-zinc-500 text-xs">© 2024 CharthaGo. Tous droits réservés.</p>
+      <p class="text-zinc-500 text-xs">© 2026 CharthaGo. Tous droits réservés.</p>
       <div class="flex gap-6">
         <a href="#" class="text-zinc-500 text-xs hover:text-zinc-300 transition-colors">Conditions générales</a>
         <a href="#" class="text-zinc-500 text-xs hover:text-zinc-300 transition-colors">Confidentialité</a>
@@ -772,6 +779,9 @@ function renderVoitures(voitures) {
         <div class="absolute top-3 right-3 flex flex-col gap-1.5 items-end">
           <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${dispo ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}">
             ${dispo ? 'Disponible' : 'Louée'}
+          </span>
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-white/90 text-zinc-800 backdrop-blur-sm">
+            📍 ${v.agence || 'Tunis'}
           </span>
           ${dispo && v.id % 3 === 0 ? '<span class="px-2.5 py-1 rounded-full text-[10px] font-black bg-red-600 text-white animate-pulse">🔥 Plus que 1 !</span>' : ''}
         </div>
@@ -1043,23 +1053,43 @@ function getRemiseJours(j) {
 
 // ── Filtre rapide par catégorie ──────────────────────
 let currentRender = null;
+let currentCategorie = '';
+let currentAgence = '';
+
+function appliquerFiltresCombines() {
+  let voitures = toutesVoitures.slice();
+  if (currentAgence) voitures = voitures.filter(v => (v.agence || 'Tunis') === currentAgence);
+  if (currentCategorie === 'favoris') {
+    const favs = getFavoris();
+    voitures = voitures.filter(v => favs.includes(v.id));
+  } else if (currentCategorie) {
+    voitures = voitures.filter(v => (v.categorie || '') === currentCategorie);
+  }
+  currentRender = voitures;
+  renderVoitures(voitures);
+}
+
+function filtrerAgence(ag) {
+  currentAgence = ag;
+  document.querySelectorAll('.agence-filtre').forEach(b => {
+    const actif = b.dataset.agence === ag;
+    b.classList.toggle('bg-primary', actif);
+    b.classList.toggle('text-white', actif);
+    b.classList.toggle('bg-zinc-100', !actif);
+    b.classList.toggle('text-zinc-600', !actif);
+  });
+  appliquerFiltresCombines();
+}
+
 function filtreRapide(cat) {
+  currentCategorie = cat;
   document.querySelectorAll('#filtres-rapides button').forEach(b => {
     b.classList.remove('bg-primary','text-white');
     b.classList.add('bg-zinc-100','text-zinc-600');
   });
   event.target.classList.add('bg-primary','text-white');
   event.target.classList.remove('bg-zinc-100','text-zinc-600');
-  
-  if (cat === 'favoris') {
-    const favs = getFavoris();
-    currentRender = toutesVoitures.filter(v => favs.includes(v.id));
-  } else if (cat) {
-    currentRender = toutesVoitures.filter(v => (v.categorie || '') === cat);
-  } else {
-    currentRender = toutesVoitures;
-  }
-  renderVoitures(currentRender);
+  appliquerFiltresCombines();
 }
 
 // ── Hero dynamique ───────────────────────────────────

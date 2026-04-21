@@ -158,6 +158,9 @@ tailwind.config = {
     <a onclick="afficherSection('graphiques')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-graphiques">
       <span class="material-symbols-outlined">bar_chart</span><span>Graphiques</span>
     </a>
+    <a onclick="afficherSection('contrats')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-contrats">
+      <span class="material-symbols-outlined">description</span><span>Contrats</span>
+    </a>
     <a onclick="afficherSection('chatbot')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-chatbot">
       <span class="material-symbols-outlined">smart_toy</span><span>Chatbot IA</span>
     </a>
@@ -322,6 +325,35 @@ tailwind.config = {
           </tr>
         </thead>
         <tbody id="tbody-reservations" class="divide-y divide-surface-container">
+          <tr><td colspan="7" class="text-center py-12 text-secondary">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section Contrats -->
+  <div id="section-contrats" class="hidden bg-surface-container-lowest rounded-3xl shadow-sm border border-zinc-100 overflow-hidden">
+    <div class="p-6 border-b border-zinc-100 flex justify-between items-center flex-wrap gap-3 bg-white">
+      <h4 class="font-bold text-lg text-on-surface">Contrats de location</h4>
+      <div class="flex gap-3 items-center">
+        <input id="search-contrat" type="text" placeholder="Rechercher n° ou client..." oninput="filtrerContrats()"
+          class="bg-surface-container-low border border-zinc-200 rounded-lg py-2 px-4 text-xs outline-none focus:ring-1 focus:ring-primary/30 w-56"/>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low">
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">N° Contrat</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Client</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Véhicule</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Période</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Agence</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary text-right">Total</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-contrats" class="divide-y divide-surface-container">
           <tr><td colspan="7" class="text-center py-12 text-secondary">Chargement...</td></tr>
         </tbody>
       </table>
@@ -540,7 +572,7 @@ let toutesVoitures = [];
 
 // Navigation sections
 function afficherSection(section) {
-  const sections = ['voitures','reservations','rapport','graphiques','clients','chatbot'];
+  const sections = ['voitures','reservations','rapport','graphiques','clients','chatbot','contrats'];
   sections.forEach(s => {
     const el = document.getElementById('section-' + s);
     if (el) el.classList.toggle('hidden', s !== section);
@@ -552,17 +584,18 @@ function afficherSection(section) {
   });
   const titles = {
     voitures:'Gestion de la flotte', reservations:'Réservations',
-    rapport:'Rapport IA', graphiques:'Graphiques & Stats', clients:'Gestion des Clients', chatbot:'Chatbot IA'
+    rapport:'Rapport IA', graphiques:'Graphiques & Stats', clients:'Gestion des Clients',
+    chatbot:'Chatbot IA', contrats:'Contrats de location'
   };
   document.getElementById('page-title').textContent = titles[section] || 'Dashboard';
   const btnAjouter = document.getElementById('btn-ajouter');
   if (btnAjouter) btnAjouter.style.display = section === 'voitures' ? 'flex' : 'none';
-  // Cacher les 3 stats cards sauf pour voitures et reservations
   const statsCards = document.getElementById('stats-cards');
   if (statsCards) statsCards.style.display = (section === 'voitures' || section === 'reservations') ? 'grid' : 'none';
   if (section === 'graphiques') genererGraphiques();
   if (section === 'clients')    chargerClients();
   if (section === 'chatbot')    initChatbotAdmin();
+  if (section === 'contrats')   chargerContrats();
 }
 
 // Toast notifications
@@ -831,8 +864,9 @@ function renderReservations(data) {
         <span id="badge-${r.id}" class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${statutClass}">${r.statut}</span>
       </td>
       <td class="px-6 py-4 text-right">
-        <div class="flex justify-end gap-2">
+        <div class="flex justify-end gap-2 flex-wrap">
           ${r.statut !== 'confirmee' ? `<button class="btn-confirmer" onclick="changerStatutResa(${r.id}, 'confirmee')">✓ Confirmer</button>` : ''}
+          ${r.statut === 'confirmee' ? `<button onclick="genererContratDepuisResa(${r.id})" class="text-[11px] font-bold px-3 py-1.5 rounded-lg bg-primary text-white hover:opacity-90 transition-opacity flex items-center gap-1">📄 Contrat</button>` : ''}
           ${r.statut !== 'annulee'   ? `<button class="btn-annuler"   onclick="changerStatutResa(${r.id}, 'annulee')">✕ Annuler</button>`   : ''}
         </div>
       </td>
@@ -1270,6 +1304,96 @@ function renderClients(clients) {
 
 
 // ── Chatbot admin ──────────────────────────────
+let tousContrats = [];
+
+async function chargerContrats() {
+  try {
+    const res = await fetch('api/contrats.php');
+    tousContrats = await res.json();
+    renderContrats(tousContrats);
+  } catch(e) {
+    document.getElementById('tbody-contrats').innerHTML =
+      '<tr><td colspan="7" class="text-center py-12 text-secondary">Erreur chargement</td></tr>';
+  }
+}
+
+function renderContrats(contrats) {
+  const tbody = document.getElementById('tbody-contrats');
+  if (!contrats.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-16">
+      <div class="text-secondary">
+        <svg width="48" height="48" class="mx-auto mb-3 opacity-30" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+        <p class="font-bold text-sm mb-1">Aucun contrat pour le moment</p>
+        <p class="text-xs">Les contrats sont générés automatiquement à la confirmation des réservations.</p>
+      </div>
+    </td></tr>`;
+    return;
+  }
+  tbody.innerHTML = contrats.map(c => `
+    <tr class="hover:bg-zinc-50 transition-colors">
+      <td class="px-6 py-4">
+        <p class="font-black text-xs text-primary font-mono">${c.numero_contrat}</p>
+        <p class="text-[10px] text-secondary mt-0.5">${new Date(c.created_at).toLocaleDateString('fr-FR')}</p>
+      </td>
+      <td class="px-6 py-4">
+        <p class="font-bold text-sm text-on-surface">${c.nom_client}</p>
+        <p class="text-xs text-secondary">${c.telephone}</p>
+      </td>
+      <td class="px-6 py-4">
+        <p class="font-semibold text-sm text-on-surface">${c.voiture_marque} ${c.voiture_modele}</p>
+        <p class="text-[11px] text-secondary font-mono">${c.voiture_immatriculation}</p>
+      </td>
+      <td class="px-6 py-4 text-xs">
+        <p class="font-semibold">${new Date(c.date_debut).toLocaleDateString('fr-FR')}</p>
+        <p class="text-secondary">→ ${new Date(c.date_fin).toLocaleDateString('fr-FR')}</p>
+        <p class="text-[10px] text-secondary mt-0.5">${c.nb_jours} jour${c.nb_jours > 1 ? 's' : ''}</p>
+      </td>
+      <td class="px-6 py-4">
+        <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-bold" style="background:rgba(185,0,39,0.1);color:#b90027">📍 ${c.agence_retrait}</span>
+      </td>
+      <td class="px-6 py-4 text-right">
+        <p class="font-black text-primary">${parseFloat(c.prix_total).toFixed(0)} DT</p>
+        <p class="text-[10px] text-secondary mt-0.5">${c.mode_paiement === 'carte_bancaire' ? '💳 Carte' : '💵 Sur place'}</p>
+      </td>
+      <td class="px-6 py-4 text-center">
+        <a href="contrat.html?id=${c.id}" target="_blank"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-bold hover:opacity-90 transition-opacity">
+          🖨️ Imprimer
+        </a>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filtrerContrats() {
+  const q = document.getElementById('search-contrat').value.toLowerCase();
+  const filtres = tousContrats.filter(c =>
+    c.numero_contrat.toLowerCase().includes(q) ||
+    c.nom_client.toLowerCase().includes(q) ||
+    (c.telephone || '').includes(q)
+  );
+  renderContrats(filtres);
+}
+
+async function genererContratDepuisResa(reservationId) {
+  try {
+    const res = await fetch('api/generer_contrat.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reservation_id: reservationId })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('✓ Contrat généré : ' + data.contrat.numero_contrat, 'success');
+      window.open('contrat.html?id=' + data.contrat.id, '_blank');
+    } else {
+      showToast('❌ ' + data.message, 'error');
+    }
+  } catch(e) {
+    showToast('Erreur serveur', 'error');
+  }
+}
+
 function initChatbotAdmin() {
   const key = localStorage.getItem('chartago_admin_gemini_key');
   const status = document.getElementById('chatbot-status');
@@ -1374,6 +1498,8 @@ async function changerMotDePasse() {
 }
 
 // Initialisation
+// Mise à jour auto des statuts au chargement
+fetch('api/maj_statuts.php').catch(() => {});
 chargerVoitures();
 chargerReservations();
 </script>

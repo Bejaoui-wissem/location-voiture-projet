@@ -42,6 +42,7 @@ tailwind.config = {
   #success-overlay { display: none; }
   .option-btn { transition: all 0.2s; }
   .option-btn.active { background: #ffdad6; color: #b90027; border: 2px solid #b90027; }
+  .agence-btn.active, .paiement-btn.active { background:#ffdad6; border-color:#b90027; }
 </style>
 <script src="assets/js/darkmode.js"></script>
 <script src="assets/js/animations.js"></script>
@@ -163,9 +164,91 @@ tailwind.config = {
           </div>
         </button>
       </div>
-    </div>
 
-    <!-- Récapitulatif -->
+      <!-- Choix agence de retrait -->
+      <section class="bg-surface-container-lowest rounded-xl p-8 shadow-sm border border-zinc-100 mt-6">
+        <h3 class="text-lg font-black tracking-tighter flex items-center gap-2 mb-2">
+          <span class="material-symbols-outlined text-primary">location_on</span>
+          Agence de retrait
+        </h3>
+        <p class="text-sm text-secondary mb-5">Ou souhaitez-vous recuperer le vehicule ?</p>
+        <div class="grid grid-cols-3 gap-3" id="agences-wrap">
+          <button type="button" onclick="choisirAgence('Tunis')" data-agence="Tunis"
+            class="agence-btn bg-surface-container-low hover:bg-surface-container rounded-xl p-4 border-2 border-transparent transition-all text-center">
+            <div class="text-2xl mb-1">🏛️</div>
+            <p class="font-bold text-sm">Tunis</p>
+            <p class="text-[10px] text-secondary">Av. Habib Bourguiba</p>
+          </button>
+          <button type="button" onclick="choisirAgence('Sfax')" data-agence="Sfax"
+            class="agence-btn bg-surface-container-low hover:bg-surface-container rounded-xl p-4 border-2 border-transparent transition-all text-center">
+            <div class="text-2xl mb-1">⚓</div>
+            <p class="font-bold text-sm">Sfax</p>
+            <p class="text-[10px] text-secondary">Av. Farhat Hached</p>
+          </button>
+          <button type="button" onclick="choisirAgence('Sousse')" data-agence="Sousse"
+            class="agence-btn bg-surface-container-low hover:bg-surface-container rounded-xl p-4 border-2 border-transparent transition-all text-center">
+            <div class="text-2xl mb-1">🏖️</div>
+            <p class="font-bold text-sm">Sousse</p>
+            <p class="text-[10px] text-secondary">Av. Mohamed V</p>
+          </button>
+        </div>
+      </section>
+
+      <!-- Choix paiement -->
+      <section class="bg-surface-container-lowest rounded-xl p-8 shadow-sm border border-zinc-100 mt-6">
+        <h3 class="text-lg font-black tracking-tighter flex items-center gap-2 mb-2">
+          <span class="material-symbols-outlined text-primary">payments</span>
+          Mode de paiement
+        </h3>
+        <p class="text-sm text-secondary mb-5">Payez maintenant ou a l'agence.</p>
+
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <button type="button" onclick="choisirPaiement('sur_place')" data-paiement="sur_place"
+            class="paiement-btn bg-surface-container-low hover:bg-surface-container rounded-xl p-4 border-2 border-transparent transition-all text-left">
+            <div class="text-2xl mb-2">💵</div>
+            <p class="font-bold text-sm">Sur place</p>
+            <p class="text-[11px] text-secondary mt-1">Especes ou carte a l'agence</p>
+          </button>
+          <button type="button" onclick="choisirPaiement('carte_bancaire')" data-paiement="carte_bancaire"
+            class="paiement-btn bg-surface-container-low hover:bg-surface-container rounded-xl p-4 border-2 border-transparent transition-all text-left">
+            <div class="text-2xl mb-2">💳</div>
+            <p class="font-bold text-sm">Carte bancaire</p>
+            <p class="text-[11px] text-secondary mt-1">Paiement securise en ligne</p>
+          </button>
+        </div>
+
+        <!-- Formulaire carte (cache par defaut) -->
+        <div id="form-carte" class="hidden space-y-3 p-5 bg-surface-container-low rounded-xl">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="material-symbols-outlined text-primary" style="font-size:18px">lock</span>
+            <p class="text-xs font-bold text-secondary">Paiement securise (SSL)</p>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold uppercase tracking-widest text-secondary block mb-1.5">Numero de carte</label>
+            <input id="carte-numero" type="text" maxlength="19" placeholder="1234 5678 9012 3456" autocomplete="off"
+              oninput="formatCarte(this)"
+              class="w-full bg-white border border-zinc-200 rounded-lg py-2.5 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 font-mono"/>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] font-bold uppercase tracking-widest text-secondary block mb-1.5">Expiration</label>
+              <input id="carte-expire" type="text" maxlength="5" placeholder="MM/YY" autocomplete="off"
+                oninput="formatExpire(this)"
+                class="w-full bg-white border border-zinc-200 rounded-lg py-2.5 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 font-mono"/>
+            </div>
+            <div>
+              <label class="text-[11px] font-bold uppercase tracking-widest text-secondary block mb-1.5">CVV</label>
+              <input id="carte-cvv" type="text" maxlength="3" placeholder="123" autocomplete="off"
+                class="w-full bg-white border border-zinc-200 rounded-lg py-2.5 px-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 font-mono"/>
+            </div>
+          </div>
+          <p id="carte-status" class="text-xs font-bold mt-2"></p>
+          <button type="button" onclick="validerCarte()"
+            class="w-full bg-on-surface text-white py-2.5 rounded-lg font-bold text-sm hover:opacity-90">
+            Valider la carte
+          </button>
+        </div>
+      </section>
     <div class="lg:col-span-5 sticky top-28">
       <div class="bg-on-surface text-surface rounded-xl overflow-hidden shadow-2xl">
         <div class="p-8 pb-0 flex justify-between items-start">
@@ -500,23 +583,89 @@ function showFormAlert(msg) {
   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+let agenceChoisie = null;
+let paiementChoisi = null;
+let carteValidee = false;
+
+function choisirAgence(ag) {
+  agenceChoisie = ag;
+  document.querySelectorAll('.agence-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.agence === ag);
+  });
+}
+
+function choisirPaiement(mode) {
+  paiementChoisi = mode;
+  document.querySelectorAll('.paiement-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.paiement === mode);
+  });
+  const formCarte = document.getElementById('form-carte');
+  if (mode === 'carte_bancaire') {
+    formCarte.classList.remove('hidden');
+  } else {
+    formCarte.classList.add('hidden');
+    carteValidee = true;
+  }
+}
+
+function formatCarte(input) {
+  let v = input.value.replace(/\s/g, '').replace(/\D/g, '');
+  input.value = v.match(/.{1,4}/g)?.join(' ') || '';
+}
+
+function formatExpire(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length >= 2) input.value = v.slice(0,2) + '/' + v.slice(2,4);
+  else input.value = v;
+}
+
+async function validerCarte() {
+  const numero = document.getElementById('carte-numero').value;
+  const expire = document.getElementById('carte-expire').value;
+  const cvv    = document.getElementById('carte-cvv').value;
+  const status = document.getElementById('carte-status');
+
+  status.innerHTML = '<span style="color:#6b7280">Validation en cours...</span>';
+
+  try {
+    const res = await fetch('api/valider_carte.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ numero, expire, cvv })
+    });
+    const data = await res.json();
+    if (data.valide) {
+      carteValidee = true;
+      status.innerHTML = `<span style="color:#15803d">✓ ${data.message} (${data.type})</span>`;
+    } else {
+      carteValidee = false;
+      status.innerHTML = `<span style="color:#b90027">✗ ${data.message}</span>`;
+    }
+  } catch(e) {
+    status.innerHTML = '<span style="color:#b90027">Erreur serveur</span>';
+  }
+}
+
 async function confirmer() {
   document.getElementById('form-alert').classList.add('hidden');
 
   const prenom = document.getElementById('prenom').value.trim();
   const nom = document.getElementById('nom').value.trim();
+  const email = document.getElementById('email').value.trim();
   const telephone = document.getElementById('telephone').value.trim();
   const dateDebut = document.getElementById('date-debut').value;
   const dateFin = document.getElementById('date-fin').value;
   const voitureSelId = document.getElementById('voiture-select').value;
 
-  // Validations côté client
-  if (!prenom || !nom) return showFormAlert('Veuillez indiquer votre prénom et nom.');
-  if (!telephone) return showFormAlert('Veuillez indiquer votre numéro de téléphone.');
-  if (!/^[0-9\s]{8,}$/.test(telephone)) return showFormAlert('Numéro de téléphone invalide (min. 8 chiffres).');
-  if (!dateDebut || !dateFin) return showFormAlert('Veuillez sélectionner les dates de début et de fin.');
-  if (new Date(dateFin) <= new Date(dateDebut)) return showFormAlert('La date de fin doit être après la date de début.');
-  if (!voitureSelId) return showFormAlert('Veuillez sélectionner un véhicule.');
+  if (!prenom || !nom) return showFormAlert('Veuillez indiquer votre prenom et nom.');
+  if (!telephone) return showFormAlert('Veuillez indiquer votre numero de telephone.');
+  if (!/^[0-9\s]{8,}$/.test(telephone)) return showFormAlert('Numero de telephone invalide (min. 8 chiffres).');
+  if (!dateDebut || !dateFin) return showFormAlert('Veuillez selectionner les dates.');
+  if (new Date(dateFin) <= new Date(dateDebut)) return showFormAlert('Date de fin apres date de debut.');
+  if (!voitureSelId) return showFormAlert('Veuillez selectionner un vehicule.');
+  if (!agenceChoisie) return showFormAlert('Veuillez choisir une agence de retrait.');
+  if (!paiementChoisi) return showFormAlert('Veuillez choisir un mode de paiement.');
+  if (paiementChoisi === 'carte_bancaire' && !carteValidee) return showFormAlert('Veuillez valider votre carte bancaire.');
 
   const jours = Math.ceil((new Date(dateFin) - new Date(dateDebut)) / (1000*60*60*24));
   const totalOptions = Object.values(optionsActives).reduce((a,b) => a+b, 0);
@@ -529,17 +678,25 @@ async function confirmer() {
   btnText.textContent = 'Envoi en cours...';
 
   try {
+    const payload = {
+      voiture_id: parseInt(voitureSelId),
+      nom_client: `${prenom} ${nom}`,
+      telephone: `+216 ${telephone}`,
+      email_client: email,
+      date_debut: dateDebut,
+      date_fin: dateFin,
+      prix_total: Math.round(prixTotal),
+      mode_paiement: paiementChoisi,
+      agence_retrait: agenceChoisie
+    };
+    if (paiementChoisi === 'carte_bancaire') {
+      payload.numero_carte = document.getElementById('carte-numero').value;
+    }
+
     const res = await fetch('api/reservation.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        voiture_id: parseInt(voitureSelId),
-        nom_client: `${prenom} ${nom}`,
-        telephone: `+216 ${telephone}`,
-        date_debut: dateDebut,
-        date_fin: dateFin,
-        prix_total: Math.round(prixTotal)
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!res.ok) throw new Error(`Erreur serveur (${res.status})`);
@@ -547,11 +704,13 @@ async function confirmer() {
 
     if (result.success) {
       document.getElementById('success-overlay').style.display = 'flex';
+      // Stocker l'id reservation pour affichage ulterieur
+      localStorage.setItem('chartago_derniere_resa', result.id);
     } else {
       showFormAlert(result.message || 'Erreur lors de l\'enregistrement.');
     }
   } catch (err) {
-    showFormAlert('Erreur de connexion au serveur PHP. Vérifiez que le serveur est actif.');
+    showFormAlert('Erreur de connexion au serveur PHP.');
   } finally {
     btn.style.pointerEvents = '';
     btn.style.opacity = '';

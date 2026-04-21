@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Contrat de Location - CharthaGo</title>
+<link rel="icon" type="image/svg+xml" href="assets/images/icons/favicon.svg"/>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Inter', Arial, sans-serif; background:#f3f4f6; color:#1a1c1c; padding:24px; }
+  .toolbar { max-width:800px; margin:0 auto 20px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .toolbar a, .toolbar button { background:#b90027; color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; }
+  .toolbar a.secondary { background:#1a1c1c; }
+  .toolbar button:hover, .toolbar a:hover { opacity:0.9; }
+
+  .contrat {
+    max-width:800px; margin:0 auto; background:white; padding:48px 56px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.08); border-radius:12px;
+    font-size:13px; line-height:1.6;
+  }
+
+  .header { display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #b90027; padding-bottom:20px; margin-bottom:30px; }
+  .logo-wrap { display:flex; align-items:center; gap:12px; }
+  .logo-wrap svg { width:54px; height:54px; }
+  .brand { font-size:26px; font-weight:900; letter-spacing:-0.04em; }
+  .brand span { color:#b90027; }
+  .sub-brand { font-size:10px; color:#6b7280; font-weight:700; letter-spacing:0.2em; text-transform:uppercase; margin-top:2px; }
+
+  .contrat-num { text-align:right; }
+  .contrat-num .label { font-size:10px; color:#6b7280; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; }
+  .contrat-num .num { font-size:20px; font-weight:900; color:#b90027; font-family:monospace; }
+  .contrat-num .date { font-size:11px; color:#6b7280; margin-top:4px; }
+
+  h1 { font-size:22px; font-weight:900; text-align:center; margin-bottom:30px; letter-spacing:-0.02em; }
+
+  .section { margin-bottom:24px; }
+  .section-title { font-size:11px; font-weight:800; color:#b90027; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid #e5e7eb; }
+
+  table { width:100%; border-collapse:collapse; }
+  table tr td { padding:6px 0; vertical-align:top; }
+  table tr td:first-child { color:#6b7280; font-weight:500; width:35%; }
+  table tr td:last-child { font-weight:700; }
+
+  .totaux { background:#1a1c1c; color:white; padding:20px 24px; border-radius:12px; margin:24px 0; }
+  .totaux .ligne { display:flex; justify-content:space-between; padding:4px 0; font-size:13px; }
+  .totaux .ligne.total { border-top:2px solid rgba(255,255,255,0.2); margin-top:10px; padding-top:12px; font-size:17px; font-weight:900; }
+  .totaux .ligne.total span:last-child { color:#e31837; }
+
+  .conditions { background:#f9fafb; padding:18px 22px; border-radius:10px; border-left:4px solid #b90027; margin:20px 0; }
+  .conditions h3 { font-size:13px; font-weight:800; margin-bottom:10px; }
+  .conditions ul { list-style:none; padding:0; }
+  .conditions li { position:relative; padding-left:16px; font-size:11px; color:#4b5563; margin-bottom:5px; line-height:1.5; }
+  .conditions li:before { content:'•'; position:absolute; left:0; color:#b90027; font-weight:900; }
+
+  .signatures { display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:40px; }
+  .signature-box { border-top:2px solid #1a1c1c; padding-top:10px; text-align:center; }
+  .signature-box .label { font-size:11px; color:#6b7280; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; }
+  .signature-box .nom { font-size:12px; margin-top:4px; font-weight:700; }
+
+  .footer-doc { margin-top:40px; padding-top:20px; border-top:1px solid #e5e7eb; text-align:center; font-size:10px; color:#9ca3af; line-height:1.6; }
+
+  .erreur { max-width:600px; margin:60px auto; background:white; border-radius:12px; padding:40px; text-align:center; }
+  .erreur h2 { color:#b90027; margin-bottom:12px; }
+
+  @media print {
+    body { background:white; padding:0; }
+    .toolbar { display:none; }
+    .contrat { box-shadow:none; border-radius:0; max-width:none; padding:30px 40px; }
+    @page { margin:1.5cm; size:A4; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <a href="mon-compte.html" class="secondary">← Retour à mon compte</a>
+  <button onclick="window.print()">🖨️ Imprimer le contrat</button>
+</div>
+
+<div id="contrat-content"></div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const contratId = params.get('id');
+const resaId = params.get('reservation');
+
+async function charger() {
+  const container = document.getElementById('contrat-content');
+
+  if (!contratId && !resaId) {
+    container.innerHTML = `<div class="erreur"><h2>Parametre manquant</h2><p>Identifiant du contrat ou de la reservation requis.</p></div>`;
+    return;
+  }
+
+  try {
+    let url = 'api/contrats.php?';
+    url += contratId ? `id=${contratId}` : `reservation_id=${resaId}`;
+    const res = await fetch(url);
+    let contrat = await res.json();
+
+    // Si pas encore genere, le generer
+    if (!contrat && resaId) {
+      const gen = await fetch('api/generer_contrat.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reservation_id: parseInt(resaId) })
+      });
+      const result = await gen.json();
+      if (result.success) contrat = result.contrat;
+      else throw new Error(result.message);
+    }
+
+    if (!contrat) throw new Error('Contrat introuvable');
+
+    afficherContrat(contrat);
+  } catch(e) {
+    container.innerHTML = `<div class="erreur"><h2>Erreur</h2><p>${e.message}</p></div>`;
+  }
+}
+
+function afficherContrat(c) {
+  const dateCreation = new Date(c.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' });
+  const modePaiement = c.mode_paiement === 'carte_bancaire' ? 'Carte bancaire' : 'Sur place (especes)';
+
+  document.getElementById('contrat-content').innerHTML = `
+  <div class="contrat">
+    <div class="header">
+      <div class="logo-wrap">
+        <svg viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="56" fill="#b90027"/>
+          <path d="M20 68 Q24 48 42 44 L72 44 Q88 44 98 54 L104 62 Q100 66 92 66 L28 66 Q22 66 20 68 Z" fill="white"/>
+          <circle cx="38" cy="66" r="6" fill="#0f172a"/>
+          <circle cx="38" cy="66" r="2.2" fill="white"/>
+          <circle cx="84" cy="66" r="6" fill="#0f172a"/>
+          <circle cx="84" cy="66" r="2.2" fill="white"/>
+        </svg>
+        <div>
+          <div class="brand">Chartha<span>Go</span></div>
+          <div class="sub-brand">Location automobile Tunisie</div>
+        </div>
+      </div>
+      <div class="contrat-num">
+        <div class="label">N° Contrat</div>
+        <div class="num">${c.numero_contrat}</div>
+        <div class="date">Etabli le ${dateCreation}</div>
+      </div>
+    </div>
+
+    <h1>CONTRAT DE LOCATION DE VEHICULE</h1>
+
+    <div class="section">
+      <div class="section-title">Locataire</div>
+      <table>
+        <tr><td>Nom complet</td><td>${c.nom_client}</td></tr>
+        <tr><td>Telephone</td><td>${c.telephone}</td></tr>
+        ${c.email ? `<tr><td>Email</td><td>${c.email}</td></tr>` : ''}
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Vehicule loue</div>
+      <table>
+        <tr><td>Marque et modele</td><td>${c.voiture_marque} ${c.voiture_modele}</td></tr>
+        <tr><td>Immatriculation</td><td>${c.voiture_immatriculation}</td></tr>
+        <tr><td>Agence de retrait</td><td>CharthaGo ${c.agence_retrait}</td></tr>
+      </table>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Duree et tarification</div>
+      <table>
+        <tr><td>Date de debut</td><td>${new Date(c.date_debut).toLocaleDateString('fr-FR')}</td></tr>
+        <tr><td>Date de fin</td><td>${new Date(c.date_fin).toLocaleDateString('fr-FR')}</td></tr>
+        <tr><td>Duree</td><td>${c.nb_jours} jour${c.nb_jours > 1 ? 's' : ''}</td></tr>
+        <tr><td>Tarif journalier</td><td>${parseFloat(c.prix_jour).toFixed(0)} DT / jour</td></tr>
+        <tr><td>Mode de paiement</td><td>${modePaiement}</td></tr>
+      </table>
+    </div>
+
+    <div class="totaux">
+      <div class="ligne"><span>Tarif journalier × ${c.nb_jours} jour${c.nb_jours > 1 ? 's' : ''}</span><span>${Math.round(parseFloat(c.prix_jour) * c.nb_jours)} DT</span></div>
+      <div class="ligne total"><span>MONTANT TOTAL</span><span>${parseFloat(c.prix_total).toFixed(0)} DT</span></div>
+    </div>
+
+    <div class="conditions">
+      <h3>Conditions generales de location</h3>
+      <ul>
+        <li>Le locataire s'engage a retirer le vehicule a la date prevue. Passe un delai de 48h sans presentation, la reservation sera automatiquement annulee.</li>
+        <li>Le vehicule doit etre restitue en bon etat de proprete et de fonctionnement.</li>
+        <li>Le locataire est tenu responsable de tout dommage ou infraction commis pendant la periode de location.</li>
+        <li>Une caution de 500 DT peut etre demandee lors du retrait.</li>
+        <li>Le permis de conduire valide du locataire doit etre presente a la retrait.</li>
+        <li>Toute annulation moins de 24h avant le debut de la location pourra faire l'objet de frais.</li>
+      </ul>
+    </div>
+
+    <div class="signatures">
+      <div class="signature-box">
+        <div class="label">Signature du locataire</div>
+        <div class="nom">${c.nom_client}</div>
+      </div>
+      <div class="signature-box">
+        <div class="label">Cachet et signature</div>
+        <div class="nom">CharthaGo ${c.agence_retrait}</div>
+      </div>
+    </div>
+
+    <div class="footer-doc">
+      CharthaGo Tunisie — Location automobile<br>
+      Agences : Tunis | Sfax | Sousse — Tel : +216 71 234 567 — contact@charthago.infinityfree.me<br>
+      Ce contrat est etabli conformement a la reglementation tunisienne en vigueur.
+    </div>
+  </div>`;
+}
+
+charger();
+</script>
+</body>
+</html>
