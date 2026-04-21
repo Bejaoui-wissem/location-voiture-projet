@@ -175,19 +175,19 @@ tailwind.config = {
         <div class="grid grid-cols-3 gap-3" id="agences-wrap">
           <button type="button" onclick="choisirAgence('Tunis')" data-agence="Tunis"
             class="agence-btn bg-surface-container-low hover:bg-surface-container rounded-xl p-4 border-2 border-transparent transition-all text-center">
-            <div class="text-2xl mb-1">🏛️</div>
+            <div class="text-2xl mb-1"></div>
             <p class="font-bold text-sm">Tunis</p>
             <p class="text-[10px] text-secondary">Av. Habib Bourguiba</p>
           </button>
           <button type="button" onclick="choisirAgence('Sfax')" data-agence="Sfax"
             class="agence-btn bg-surface-container-low hover:bg-surface-container rounded-xl p-4 border-2 border-transparent transition-all text-center">
-            <div class="text-2xl mb-1">⚓</div>
+            <div class="text-2xl mb-1"></div>
             <p class="font-bold text-sm">Sfax</p>
             <p class="text-[10px] text-secondary">Av. Farhat Hached</p>
           </button>
           <button type="button" onclick="choisirAgence('Sousse')" data-agence="Sousse"
             class="agence-btn bg-surface-container-low hover:bg-surface-container rounded-xl p-4 border-2 border-transparent transition-all text-center">
-            <div class="text-2xl mb-1">🏖️</div>
+            <div class="text-2xl mb-1"></div>
             <p class="font-bold text-sm">Sousse</p>
             <p class="text-[10px] text-secondary">Av. Mohamed V</p>
           </button>
@@ -508,13 +508,16 @@ function calculer() {
   total = Math.max(0, total - reducTotale);
 
   // Affichage réduction
+// Affichage réduction
   const promoDiv = document.getElementById('promo-discount');
   const promoSpan = document.getElementById('recap-promo');
-  if (reducTotale > 0) {
-    promoDiv.classList.remove('hidden');
-    promoSpan.textContent = `-${Math.round(reducTotale)} DT`;
-  } else {
-    promoDiv.classList.add('hidden');
+  if (promoDiv && promoSpan) {
+    if (reducTotale > 0) {
+      promoDiv.classList.remove('hidden');
+      promoSpan.textContent = `-${Math.round(reducTotale)} DT`;
+    } else {
+      promoDiv.classList.add('hidden');
+    }
   }
 
   document.getElementById('recap-modele').textContent = voiture ? `${voiture.marque} ${voiture.modele}` : 'Sélectionnez un véhicule';
