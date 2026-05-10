@@ -263,6 +263,17 @@ function setLoading(loading) {
   }
 }
 
+
+function redirigerSelonRole(role) {
+  const map = {
+    'admin': 'admin.html',
+    'comptable': 'comptable.html',
+    'technicien': 'reparations.html',
+    'client': 'index.html'
+  };
+  window.location.href = map[role] || 'index.html';
+}
+
 async function seConnecter() {
   const emailEl    = document.getElementById('email');
   const passwordEl = document.getElementById('password');
@@ -292,11 +303,7 @@ async function seConnecter() {
       localStorage.setItem('autodrive_user', JSON.stringify({
         id: result.id, nom: result.nom, email: result.email, role: result.role
       }));
-      if (result.role === 'admin') {
-        window.location.href = 'admin.html';
-      } else {
-        window.location.href = 'index.html';
-      }
+      redirigerSelonRole(result.role);
     } else {
       showAlert(result.message || 'Email ou mot de passe incorrect.');
     }
@@ -313,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Rediriger si déjà connecté
   const user = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
   if (user) {
-    window.location.href = user.role === 'admin' ? 'admin.html' : 'index.html';
+    redirigerSelonRole(user.role);
     return;
   }
   // Vider les champs immédiatement et après délai (contre l'autofill navigateur)
@@ -396,7 +403,7 @@ async function handleGoogleLogin(response) {
       localStorage.setItem('autodrive_user', JSON.stringify({
         id: data.id, nom: data.nom, email: data.email, role: data.role
       }));
-      window.location.href = data.role === 'admin' ? 'admin.html' : 'index.html';
+      redirigerSelonRole(data.role);
     } else {
       showAlert('Erreur Google : ' + (data.message || 'impossible de connecter'));
     }

@@ -130,6 +130,11 @@ tailwind.config = {
             <input id="prenom" type="text" placeholder="Prénom" class="bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none"/>
             <input id="nom" type="text" placeholder="Nom" class="bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none"/>
             <input id="email" type="email" placeholder="Email (optionnel)" autocomplete="off" name="email_xr9k" readonly onfocus="this.removeAttribute('readonly')" class="bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none md:col-span-2"/>
+            <div class="md:col-span-2">
+              <label class="text-xs font-bold uppercase tracking-widest text-secondary block mb-2">📋 Date d'obtention du permis (min. 2 ans requis)</label>
+              <input id="date-permis" type="date" onchange="verifierPermis()" class="w-full bg-surface-container-lowest border-none rounded-xl py-4 px-6 font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none"/>
+              <p id="permis-feedback" class="text-xs mt-2 hidden"></p>
+            </div>
           </div>
         </div>
 
@@ -579,6 +584,25 @@ async function chargerVoitures() {
   }
 }
 
+function verifierPermis() {
+  const datePermis = document.getElementById('date-permis').value;
+  const feedback = document.getElementById('permis-feedback');
+  if (!datePermis) {
+    feedback.classList.add('hidden');
+    return;
+  }
+  const aujourdhui = new Date();
+  const d = new Date(datePermis);
+  const ageMois = (aujourdhui.getFullYear() - d.getFullYear()) * 12 + (aujourdhui.getMonth() - d.getMonth());
+  feedback.classList.remove('hidden');
+  if (ageMois < 24) {
+    feedback.innerHTML = `<span style="color:#b90027">⚠️ Permis trop recent (${ageMois} mois). Minimum 2 ans requis.</span>`;
+  } else {
+    const annees = Math.floor(ageMois / 12);
+    feedback.innerHTML = `<span style="color:#15803d">✓ Permis valide (${annees} an${annees > 1 ? 's' : ''} d'ancienneté)</span>`;
+  }
+}
+
 function showFormAlert(msg) {
   const el = document.getElementById('form-alert');
   document.getElementById('form-alert-msg').textContent = msg;
@@ -656,6 +680,7 @@ async function confirmer() {
   const nom = document.getElementById('nom').value.trim();
   const email = document.getElementById('email').value.trim();
   const telephone = document.getElementById('telephone').value.trim();
+  const datePermis = document.getElementById('date-permis').value;
   const dateDebut = document.getElementById('date-debut').value;
   const dateFin = document.getElementById('date-fin').value;
   const voitureSelId = document.getElementById('voiture-select').value;
@@ -663,6 +688,12 @@ async function confirmer() {
   if (!prenom || !nom) return showFormAlert('Veuillez indiquer votre prenom et nom.');
   if (!telephone) return showFormAlert('Veuillez indiquer votre numero de telephone.');
   if (!/^[0-9\s]{8,}$/.test(telephone)) return showFormAlert('Numero de telephone invalide (min. 8 chiffres).');
+  if (!datePermis) return showFormAlert('Veuillez indiquer la date d\'obtention de votre permis.');
+  // Verification 2 ans minimum
+  const aujourdhui = new Date();
+  const dPermis = new Date(datePermis);
+  const ageMois = (aujourdhui.getFullYear() - dPermis.getFullYear()) * 12 + (aujourdhui.getMonth() - dPermis.getMonth());
+  if (ageMois < 24) return showFormAlert('🚫 Permis trop recent. Vous devez avoir au moins 2 ans d\'ancienneté de permis pour louer un vehicule.');
   if (!dateDebut || !dateFin) return showFormAlert('Veuillez selectionner les dates.');
   if (new Date(dateFin) <= new Date(dateDebut)) return showFormAlert('Date de fin apres date de debut.');
   if (!voitureSelId) return showFormAlert('Veuillez selectionner un vehicule.');
@@ -686,6 +717,7 @@ async function confirmer() {
       nom_client: `${prenom} ${nom}`,
       telephone: `+216 ${telephone}`,
       email_client: email,
+      date_permis: datePermis,
       date_debut: dateDebut,
       date_fin: dateFin,
       prix_total: Math.round(prixTotal),

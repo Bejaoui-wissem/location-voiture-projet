@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="light" lang="fr">
+<head>
+<link rel="icon" type="image/svg+xml" href="assets/images/icons/favicon.svg"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Espace Comptable — CharthaGo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+tailwind.config = {
+  theme: { extend: { colors: { primary: "#b90027", secondary: "#5f5e5e", surface: "#f9f9f9", "on-surface": "#1a1c1c", error: "#b91c1c" } } }
+}
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .modal-input { width:100%; background:#f3f3f3; border:1.5px solid transparent; border-radius:10px; padding:11px 14px; font-size:13px; outline:none; }
+  .modal-input:focus { background:white; border-color:#b90027; }
+  .cat-CNSS { background:rgba(34,197,94,0.1); color:#15803d; }
+  .cat-CNRPS { background:rgba(99,102,241,0.1); color:#4f46e5; }
+  .cat-RNE { background:rgba(245,158,11,0.1); color:#d97706; }
+  .cat-bilan_mensuel { background:rgba(185,0,39,0.08); color:#b90027; }
+  .cat-bilan_annuel { background:rgba(0,128,140,0.1); color:#00656f; }
+  .cat-penalite { background:rgba(220,38,38,0.1); color:#dc2626; }
+  .cat-autre { background:rgba(107,114,128,0.1); color:#4b5563; }
+  .file-drop { border:2px dashed #d1d5db; border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition:all .2s; }
+  .file-drop:hover { border-color:#b90027; background:#fef2f2; }
+  .file-drop.has-file { border-color:#15803d; background:#f0fdf4; }
+</style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen">
+
+<header class="bg-white border-b border-zinc-100 sticky top-0 z-30">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <a href="index.html" class="flex items-center gap-3">
+      <svg width="38" height="38" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="56" fill="#b90027"/>
+        <path d="M20 68 Q24 48 42 44 L72 44 Q88 44 98 54 L104 62 Q100 66 92 66 L28 66 Q22 66 20 68 Z" fill="white"/>
+        <circle cx="38" cy="66" r="6" fill="#0f172a"/>
+        <circle cx="38" cy="66" r="2.2" fill="white"/>
+        <circle cx="84" cy="66" r="6" fill="#0f172a"/>
+        <circle cx="84" cy="66" r="2.2" fill="white"/>
+      </svg>
+      <div>
+        <p class="font-black text-lg leading-none">Chartha<span class="text-primary">Go</span></p>
+        <p class="text-[10px] text-secondary uppercase tracking-widest font-bold">Espace Comptable</p>
+      </div>
+    </a>
+    <div class="flex items-center gap-4">
+      <span id="user-name" class="text-sm font-bold text-secondary">—</span>
+      <button onclick="seDeconnecter()" class="text-xs font-bold text-error bg-red-100 px-4 py-2 rounded-lg hover:bg-red-200">Déconnexion</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-5xl mx-auto px-6 py-8">
+
+  <section class="bg-white rounded-2xl p-6 border border-zinc-100 mb-8">
+    <h2 class="text-xl font-black mb-1">📤 Déposer un document</h2>
+    <p class="text-sm text-secondary mb-5">Téléversez vos documents fiscaux. L'administrateur sera notifié automatiquement.</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Catégorie *</label>
+        <select id="categorie" class="modal-input">
+          <option value="">— Choisir —</option>
+          <option value="CNSS">📋 CNSS</option>
+          <option value="CNRPS">📋 CNRPS</option>
+          <option value="RNE">🏢 RNE</option>
+          <option value="bilan_mensuel">📊 Bilan mensuel</option>
+          <option value="bilan_annuel">📊 Bilan annuel</option>
+          <option value="penalite">⚠️ Pénalité</option>
+          <option value="autre">📁 Autre</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Mois</label>
+          <select id="mois" class="modal-input">
+            <option value="">—</option>
+            <option value="1">Janvier</option><option value="2">Février</option><option value="3">Mars</option>
+            <option value="4">Avril</option><option value="5">Mai</option><option value="6">Juin</option>
+            <option value="7">Juillet</option><option value="8">Août</option><option value="9">Septembre</option>
+            <option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Année *</label>
+          <input id="annee" type="number" min="2020" max="2030" value="2026" class="modal-input"/>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Commentaire</label>
+      <input id="commentaire" type="text" class="modal-input mb-4" placeholder="Ex: Déclaration trimestrielle Q1 2026..."/>
+    </div>
+
+    <label for="fichier" class="file-drop block" id="dropzone">
+      <span class="material-symbols-outlined text-5xl text-zinc-400 mb-2 block">cloud_upload</span>
+      <p class="font-bold text-sm" id="drop-title">Cliquez pour sélectionner un fichier</p>
+      <p class="text-xs text-secondary mt-1">PDF, Excel, Word, images — max 10 Mo</p>
+      <input type="file" id="fichier" accept=".pdf,.xlsx,.xls,.jpg,.jpeg,.png,.docx,.doc,.csv" onchange="updateDropzone()" class="hidden"/>
+    </label>
+
+    <p id="upload-status" class="text-xs mt-3 hidden"></p>
+
+    <button onclick="deposer()" class="w-full mt-4 py-3 rounded-xl font-bold text-white bg-primary hover:opacity-90">
+      📤 Déposer le document
+    </button>
+  </section>
+
+  <section class="bg-white rounded-2xl p-6 border border-zinc-100">
+    <h2 class="text-xl font-black mb-4">📁 Mes dépôts</h2>
+    <div id="depots-list" class="space-y-2">
+      <p class="text-center text-secondary py-8">Chargement...</p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+const user = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
+if (!user || user.role !== 'comptable') {
+  alert('Accès réservé au comptable.');
+  window.location.href = 'login.html';
+}
+document.getElementById('user-name').textContent = user.nom + ' (Comptable)';
+
+async function seDeconnecter() {
+  localStorage.removeItem('autodrive_user');
+  await fetch('api/logout.php', { method: 'POST' });
+  window.location.href = 'login.html';
+}
+
+function updateDropzone() {
+  const file = document.getElementById('fichier').files[0];
+  const dz = document.getElementById('dropzone');
+  const title = document.getElementById('drop-title');
+  if (file) {
+    dz.classList.add('has-file');
+    title.textContent = '✓ ' + file.name + ' (' + (file.size/1024/1024).toFixed(2) + ' Mo)';
+  }
+}
+
+async function deposer() {
+  const status = document.getElementById('upload-status');
+  status.classList.add('hidden');
+
+  const fichier = document.getElementById('fichier').files[0];
+  const categorie = document.getElementById('categorie').value;
+  const annee = document.getElementById('annee').value;
+
+  if (!fichier) { status.textContent = '❌ Sélectionnez un fichier'; status.style.color = '#b90027'; status.classList.remove('hidden'); return; }
+  if (!categorie) { status.textContent = '❌ Choisissez une catégorie'; status.style.color = '#b90027'; status.classList.remove('hidden'); return; }
+  if (!annee) { status.textContent = '❌ Année requise'; status.style.color = '#b90027'; status.classList.remove('hidden'); return; }
+
+  const fd = new FormData();
+  fd.append('fichier', fichier);
+  fd.append('user_id', user.id);
+  fd.append('user_nom', user.nom);
+  fd.append('categorie', categorie);
+  fd.append('mois', document.getElementById('mois').value);
+  fd.append('annee', annee);
+  fd.append('commentaire', document.getElementById('commentaire').value);
+
+  status.textContent = '⏳ Envoi en cours...';
+  status.style.color = '#6b7280';
+  status.classList.remove('hidden');
+
+  try {
+    const res = await fetch('api/depot_comptable.php', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.success) {
+      status.textContent = '✓ Document déposé avec succès !';
+      status.style.color = '#15803d';
+      document.getElementById('fichier').value = '';
+      document.getElementById('categorie').value = '';
+      document.getElementById('mois').value = '';
+      document.getElementById('commentaire').value = '';
+      document.getElementById('drop-title').textContent = 'Cliquez pour sélectionner un fichier';
+      document.getElementById('dropzone').classList.remove('has-file');
+      chargerDepots();
+    } else {
+      status.textContent = '❌ ' + data.message;
+      status.style.color = '#b90027';
+    }
+  } catch(e) {
+    status.textContent = '❌ Erreur serveur';
+    status.style.color = '#b90027';
+  }
+}
+
+async function chargerDepots() {
+  try {
+    const res = await fetch('api/liste_depots.php?role=comptable&user_id=' + user.id);
+    const data = await res.json();
+    const list = document.getElementById('depots-list');
+    if (!data.depots || !data.depots.length) {
+      list.innerHTML = '<p class="text-center text-secondary py-8">Aucun dépôt pour le moment.</p>';
+      return;
+    }
+    const moisLabel = ['','Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+    list.innerHTML = data.depots.map(d => `
+      <div class="flex items-center gap-4 p-4 rounded-xl bg-zinc-50 hover:bg-zinc-100">
+        <span class="material-symbols-outlined text-3xl text-primary">description</span>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <p class="font-bold text-sm">${d.nom_fichier}</p>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase cat-${d.categorie}">${d.categorie.replace('_',' ')}</span>
+            ${d.lu_par_admin == 1 ? '<span class="text-[10px] font-bold text-green-600">✓ Lu par admin</span>' : '<span class="text-[10px] font-bold text-amber-600">⏳ En attente</span>'}
+          </div>
+          <p class="text-xs text-secondary mt-1">
+            ${d.mois ? moisLabel[d.mois] + ' ' : ''}${d.annee}
+            • ${(d.taille_fichier/1024).toFixed(0)} Ko
+            • ${new Date(d.date_depot).toLocaleDateString('fr-FR')}
+          </p>
+          ${d.commentaire ? `<p class="text-xs text-zinc-500 italic mt-1">"${d.commentaire}"</p>` : ''}
+        </div>
+        <a href="${d.chemin}" target="_blank" class="text-xs font-bold text-primary bg-red-50 px-3 py-2 rounded-lg whitespace-nowrap">📥 Voir</a>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('depots-list').innerHTML = '<p class="text-center text-error py-8">Erreur chargement</p>';
+  }
+}
+
+chargerDepots();
+</script>
+</body>
+</html>

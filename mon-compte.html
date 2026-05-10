@@ -313,11 +313,15 @@ async function chargerMesReservations() {
           <span class="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${statutClass}">${statutLabel}</span>
         </div>
         ${r.statut === 'confirmee' ? `
-        <div class="w-full flex justify-end mt-2">
+        <div class="w-full flex justify-end mt-2 gap-2 flex-wrap">
           <a href="contrat.html?reservation=${r.id}" target="_blank"
             class="inline-flex items-center gap-1.5 bg-on-surface text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 transition-opacity">
             🖨️ Imprimer mon contrat
           </a>
+          <button onclick="ouvrirIncident(${r.id}, '${(r.marque || '').replace(/'/g, '')} ${(r.modele || '').replace(/'/g, '')}')"
+            class="inline-flex items-center gap-1.5 bg-red-50 text-red-600 text-xs font-bold px-4 py-2 rounded-lg hover:bg-red-100 transition-colors border border-red-200">
+            🚨 Déclarer un incident
+          </button>
         </div>` : ''}
       </div>`;
     }).join('');
@@ -487,5 +491,132 @@ chargerMesReservations();
     </div>
   </div>
 </footer>
+<!-- Modal Incident -->
+<div id="modal-incident" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)">
+  <div style="background:white;border-radius:20px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
+    <div class="flex items-center justify-between mb-5">
+      <h3 class="text-lg font-bold"> Déclarer un incident</h3>
+      <button onclick="fermerIncident()" class="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-lg font-bold">✕</button>
+    </div>
+    <p class="text-sm text-secondary mb-4" id="incident-voiture-info">—</p>
+    <input type="hidden" id="incident-resa-id"/>
+    <div class="space-y-4">
+      <div>
+        <label class="text-xs font-bold uppercase tracking-widest text-secondary block mb-2">Type</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button type="button" onclick="setTypeIncident('accident')" data-type="accident" class="ti-btn bg-zinc-50 hover:bg-zinc-100 rounded-lg p-3 border-2 border-transparent text-sm font-bold"> Accident</button>
+          <button type="button" onclick="setTypeIncident('panne')" data-type="panne" class="ti-btn bg-zinc-50 hover:bg-zinc-100 rounded-lg p-3 border-2 border-transparent text-sm font-bold"> Panne</button>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs font-bold uppercase tracking-widest text-secondary block mb-2">Description (qu'est-ce qui s'est passé ?)</label>
+        <textarea id="incident-desc" rows="3" placeholder="Ex: Crevaison sur l'autoroute A1..." class="w-full bg-zinc-50 border border-zinc-200 rounded-lg py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"></textarea>
+      </div>
+      <div>
+        <label class="text-xs font-bold uppercase tracking-widest text-secondary block mb-2">Localisation</label>
+        <div class="flex gap-2">
+          <input id="incident-loc" type="text" placeholder="Ex: Avenue Bourguiba Tunis" class="flex-1 bg-zinc-50 border border-zinc-200 rounded-lg py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-primary/20"/>
+          <button type="button" onclick="getGPS()" class="bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90 whitespace-nowrap">📍 Ma position</button>
+        </div>
+        <p id="incident-gps" class="text-[11px] text-secondary mt-2 hidden"></p>
+      </div>
+      <p id="incident-error" class="text-xs text-red-600 hidden"></p>
+    </div>
+    <div class="flex gap-3 mt-6">
+      <button onclick="fermerIncident()" class="flex-1 py-3 rounded-xl font-bold text-sm bg-zinc-100 hover:bg-zinc-200">Annuler</button>
+      <button id="btn-incident" onclick="envoyerIncident()" class="flex-1 py-3 rounded-xl font-bold text-sm text-white bg-primary hover:opacity-90">Déclarer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let typeIncident = null;
+let gpsLat = null, gpsLng = null;
+
+function ouvrirIncident(resaId, voitureInfo) {
+  document.getElementById('incident-resa-id').value = resaId;
+  document.getElementById('incident-voiture-info').textContent = `Véhicule : ${voitureInfo}`;
+  document.getElementById('incident-desc').value = '';
+  document.getElementById('incident-loc').value = '';
+  document.getElementById('incident-gps').classList.add('hidden');
+  document.getElementById('incident-error').classList.add('hidden');
+  typeIncident = null; gpsLat = null; gpsLng = null;
+  document.querySelectorAll('.ti-btn').forEach(b => b.classList.remove('border-primary','bg-red-50'));
+  document.getElementById('modal-incident').style.display = 'flex';
+}
+
+function fermerIncident() {
+  document.getElementById('modal-incident').style.display = 'none';
+}
+
+function setTypeIncident(t) {
+  typeIncident = t;
+  document.querySelectorAll('.ti-btn').forEach(b => {
+    const a = b.dataset.type === t;
+    b.classList.toggle('border-primary', a);
+    b.classList.toggle('bg-red-50', a);
+  });
+}
+
+function getGPS() {
+  if (!navigator.geolocation) {
+    alert('Géolocalisation non supportée par votre navigateur');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      gpsLat = pos.coords.latitude;
+      gpsLng = pos.coords.longitude;
+      const el = document.getElementById('incident-gps');
+      el.innerHTML = `✓ GPS récupéré : ${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)} <a href="https://maps.google.com/?q=${gpsLat},${gpsLng}" target="_blank" class="text-primary underline">Voir sur Maps</a>`;
+      el.classList.remove('hidden');
+    },
+    (err) => alert('Impossible de récupérer la position : ' + err.message)
+  );
+}
+
+async function envoyerIncident() {
+  const resaId = document.getElementById('incident-resa-id').value;
+  const desc = document.getElementById('incident-desc').value.trim();
+  const loc = document.getElementById('incident-loc').value.trim();
+  const errEl = document.getElementById('incident-error');
+
+  errEl.classList.add('hidden');
+  if (!typeIncident) { errEl.textContent = 'Choisissez un type'; errEl.classList.remove('hidden'); return; }
+  if (!desc) { errEl.textContent = 'Description requise'; errEl.classList.remove('hidden'); return; }
+
+  const btn = document.getElementById('btn-incident');
+  btn.disabled = true; btn.textContent = 'Envoi...';
+
+  try {
+    const res = await fetch('api/declarer_incident.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reservation_id: parseInt(resaId),
+        type: typeIncident,
+        description: desc,
+        localisation: loc,
+        latitude: gpsLat,
+        longitude: gpsLng
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      fermerIncident();
+      alert('✓ ' + data.message);
+    } else {
+      errEl.textContent = data.message;
+      errEl.classList.remove('hidden');
+    }
+  } catch(e) {
+    errEl.textContent = 'Erreur serveur';
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Déclarer';
+  }
+}
+</script>
+
 </body>
 </html>

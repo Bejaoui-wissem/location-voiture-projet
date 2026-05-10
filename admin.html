@@ -45,6 +45,9 @@ tailwind.config = {
   #toast { display: none; }
   .badge-dispo    { background: rgba(0,128,140,0.1); color: #00656f; }
   .badge-louee    { background: rgba(186,26,26,0.1); color: #ba1a1a; }
+  .badge-accidentee { background: rgba(220,38,38,0.15); color: #dc2626; }
+  .badge-panne    { background: rgba(245,158,11,0.15); color: #d97706; }
+  .badge-reparation { background: rgba(99,102,241,0.15); color: #4f46e5; }
   .badge-attente  { background: rgba(234,179,8,0.12); color: #a16207; }
   .btn-confirmer  { transition:all .15s; font-size:11px; font-weight:700; padding:5px 10px; border-radius:8px; border:none; cursor:pointer; background:rgba(0,128,140,0.1); color:#00656f; }
   .btn-confirmer:hover { background:#00656f; color:white; }
@@ -128,7 +131,7 @@ tailwind.config = {
 <body class="bg-surface text-on-surface antialiased flex min-h-screen">
 
 <!-- Sidebar -->
-<aside class="fixed inset-y-0 left-0 h-screen w-64 bg-zinc-50 flex flex-col p-4 gap-2 z-40 border-r border-zinc-100">
+<aside class="fixed inset-y-0 left-0 h-screen w-64 bg-zinc-50 flex flex-col p-4 gap-2 z-40 border-r border-zinc-100 overflow-y-auto">
   <div class="mb-6 px-2 flex items-center gap-3">
     <svg width="42" height="42" viewBox="0 0 120 120" class="flex-shrink-0">
       <circle cx="60" cy="60" r="56" fill="#b90027"/>
@@ -161,6 +164,18 @@ tailwind.config = {
     <a onclick="afficherSection('contrats')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-contrats">
       <span class="material-symbols-outlined">description</span><span>Contrats</span>
     </a>
+    <a onclick="afficherSection('reparations')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-reparations">
+      <span class="material-symbols-outlined">build</span><span>Réparations</span>
+      <span id="badge-rep" class="ml-auto text-[9px] font-black bg-amber-500 text-white px-1.5 py-0.5 rounded-full hidden">0</span>
+    </a>
+    <a onclick="afficherSection('incidents')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-incidents">
+      <span class="material-symbols-outlined">warning</span><span>Incidents</span>
+      <span id="badge-inc" class="ml-auto text-[9px] font-black bg-red-500 text-white px-1.5 py-0.5 rounded-full hidden">0</span>
+    </a>
+    <a onclick="afficherSection('comptabilite')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-comptabilite">
+      <span class="material-symbols-outlined">receipt_long</span><span>Comptabilité</span>
+      <span id="badge-cpt" class="ml-auto text-[9px] font-black bg-primary text-white px-1.5 py-0.5 rounded-full hidden">0</span>
+    </a>
     <a onclick="afficherSection('chatbot')" class="nav-link flex items-center gap-3 px-4 py-3 text-zinc-500 hover:bg-zinc-200/50 rounded-xl cursor-pointer text-sm font-medium" id="nav-chatbot">
       <span class="material-symbols-outlined">smart_toy</span><span>Chatbot IA</span>
     </a>
@@ -175,9 +190,9 @@ tailwind.config = {
   </nav>
 
   <div class="mt-auto pt-4 border-t border-zinc-200">
-    <a href="index.html" class="w-full bg-surface-container-lowest text-on-surface rounded-xl py-3 px-4 font-semibold text-sm flex items-center justify-center gap-2 mb-3 hover:bg-surface-container transition-colors border border-zinc-100">
-      <span class="material-symbols-outlined text-sm">open_in_new</span>
-      Voir le site
+    <a href="index.html" class="w-full bg-on-surface text-white rounded-xl py-3 px-4 font-bold text-sm flex items-center justify-center gap-2 mb-3 hover:opacity-90 transition-opacity">
+      <span class="material-symbols-outlined text-sm">arrow_back</span>
+      Retour au site client
     </a>
     <button onclick="ouvrirModalMdp()" class="w-full bg-surface-container text-secondary rounded-xl py-2.5 px-4 font-semibold text-sm hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2 mb-2">
       <span class="material-symbols-outlined text-sm">lock</span>
@@ -360,6 +375,58 @@ tailwind.config = {
     </div>
   </div>
 
+  <!-- Section Réparations -->
+  <div id="section-reparations" class="hidden bg-surface-container-lowest rounded-3xl shadow-sm border border-zinc-100 overflow-hidden">
+    <div class="p-6 border-b border-zinc-100 flex justify-between items-center bg-white flex-wrap gap-3">
+      <div>
+        <h4 class="font-bold text-lg text-on-surface">Suivi des réparations</h4>
+        <p class="text-xs text-secondary mt-1">Mise à jour automatique toutes les 30s</p>
+      </div>
+      <select id="filtre-rep" onchange="filtrerReparations()" class="text-xs font-semibold border border-zinc-200 rounded-lg px-3 py-2 outline-none">
+        <option value="">Toutes</option>
+        <option value="declaree">Déclarées</option>
+        <option value="en_cours">En cours</option>
+        <option value="terminee">Terminées</option>
+      </select>
+    </div>
+    <div id="liste-rep-admin" class="divide-y divide-zinc-100">
+      <div class="text-center py-16 text-secondary">Chargement...</div>
+    </div>
+  </div>
+
+  <!-- Section Incidents -->
+  <div id="section-incidents" class="hidden bg-surface-container-lowest rounded-3xl shadow-sm border border-zinc-100 overflow-hidden">
+    <div class="p-6 border-b border-zinc-100 bg-white">
+      <h4 class="font-bold text-lg text-on-surface">Incidents déclarés par les clients</h4>
+      <p class="text-xs text-secondary mt-1">Accidents et pannes signalés</p>
+    </div>
+    <div id="liste-incidents" class="divide-y divide-zinc-100">
+      <div class="text-center py-16 text-secondary">Chargement...</div>
+    </div>
+  </div>
+
+  <!-- Section Comptabilité -->
+  <div id="section-comptabilite" class="hidden bg-surface-container-lowest rounded-3xl shadow-sm border border-zinc-100 overflow-hidden">
+    <div class="p-6 border-b border-zinc-100 bg-white flex justify-between items-center flex-wrap gap-3">
+      <div>
+        <h4 class="font-bold text-lg text-on-surface">Archive Comptabilité</h4>
+        <p class="text-xs text-secondary mt-1">Documents déposés par le service comptable</p>
+      </div>
+      <select id="filtre-cpt" onchange="filtrerCompta()" class="text-xs font-semibold border border-zinc-200 rounded-lg px-3 py-2 outline-none">
+        <option value="">Toutes catégories</option>
+        <option value="CNSS">CNSS</option>
+        <option value="CNRPS">CNRPS</option>
+        <option value="RNE">RNE</option>
+        <option value="bilan_mensuel">Bilan mensuel</option>
+        <option value="bilan_annuel">Bilan annuel</option>
+        <option value="penalite">Pénalité</option>
+      </select>
+    </div>
+    <div id="liste-compta" class="divide-y divide-zinc-100">
+      <div class="text-center py-16 text-secondary">Chargement...</div>
+    </div>
+  </div>
+
   <!-- Section Chatbot IA -->
   <div id="section-chatbot" class="hidden">
     <div class="bg-surface-container-lowest rounded-3xl shadow-sm border border-zinc-100 p-8 max-w-2xl">
@@ -466,6 +533,56 @@ tailwind.config = {
     </div>
   </div>
 
+  <!-- Section Réparations -->
+  <div id="section-reparations" class="hidden bg-surface-container-lowest rounded-3xl shadow-sm border border-zinc-100 overflow-hidden">
+    <div class="p-6 border-b border-zinc-100 bg-white">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h4 class="font-bold text-lg text-on-surface">Suivi des réparations</h4>
+          <p class="text-xs text-secondary">Synchronisé en temps réel avec les techniciens (mise à jour toutes les 30s)</p>
+        </div>
+        <div class="flex gap-2">
+          <select id="filter-rep-statut" onchange="filtrerReparations()" class="text-xs font-bold border border-zinc-200 rounded-lg px-3 py-2 bg-white">
+            <option value="">Tous les statuts</option>
+            <option value="declaree"> Déclarées</option>
+            <option value="en_cours"> En cours</option>
+            <option value="terminee"> Terminées</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="bg-surface-container-low">
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Véhicule</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Type</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Description</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Technicien</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary">Coût</th>
+            <th class="px-6 py-4 text-xs font-bold uppercase tracking-widest text-secondary text-center">Statut</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-reparations" class="divide-y divide-surface-container">
+          <tr><td colspan="6" class="text-center py-12 text-secondary">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Section Incidents -->
+  <div id="section-incidents" class="hidden bg-surface-container-lowest rounded-3xl shadow-sm border border-zinc-100 overflow-hidden">
+    <div class="p-6 border-b border-zinc-100 bg-white">
+      <h4 class="font-bold text-lg text-on-surface">Incidents déclarés par les clients</h4>
+      <p class="text-xs text-secondary">Accidents et pannes signalés en cours de location</p>
+    </div>
+    <div class="p-6">
+      <div id="incidents-list" class="space-y-3">
+        <p class="text-center text-secondary py-12">Chargement...</p>
+      </div>
+    </div>
+  </div>
+
 <!-- ===== MODAL VOITURE ===== -->
 <div id="modal-overlay" onclick="fermerModal(event)">
   <div id="modal-box">
@@ -493,8 +610,11 @@ tailwind.config = {
         <div>
           <label class="modal-label">Statut</label>
           <select id="modal-statut" class="modal-input">
-            <option value="disponible">Disponible</option>
-            <option value="louee">Louée</option>
+            <option value="disponible">✓ Disponible</option>
+            <option value="louee"> Louée</option>
+            <option value="accidentee"> Accidentée</option>
+            <option value="en_panne"> En panne</option>
+            <option value="en_reparation"> En réparation</option>
           </select>
         </div>
       </div>
@@ -572,7 +692,7 @@ let toutesVoitures = [];
 
 // Navigation sections
 function afficherSection(section) {
-  const sections = ['voitures','reservations','rapport','graphiques','clients','chatbot','contrats'];
+  const sections = ['voitures','reservations','rapport','graphiques','clients','chatbot','contrats','reparations','incidents','comptabilite'];
   sections.forEach(s => {
     const el = document.getElementById('section-' + s);
     if (el) el.classList.toggle('hidden', s !== section);
@@ -585,7 +705,8 @@ function afficherSection(section) {
   const titles = {
     voitures:'Gestion de la flotte', reservations:'Réservations',
     rapport:'Rapport IA', graphiques:'Graphiques & Stats', clients:'Gestion des Clients',
-    chatbot:'Chatbot IA', contrats:'Contrats de location'
+    chatbot:'Chatbot IA', contrats:'Contrats de location',
+    reparations:'Suivi des Réparations', incidents:'Incidents Clients', comptabilite:'Archive Comptabilité'
   };
   document.getElementById('page-title').textContent = titles[section] || 'Dashboard';
   const btnAjouter = document.getElementById('btn-ajouter');
@@ -596,6 +717,9 @@ function afficherSection(section) {
   if (section === 'clients')    chargerClients();
   if (section === 'chatbot')    initChatbotAdmin();
   if (section === 'contrats')   chargerContrats();
+  if (section === 'reparations') chargerReparationsAdmin();
+  if (section === 'incidents')   chargerIncidentsAdmin();
+  if (section === 'comptabilite') chargerComptaAdmin();
 }
 
 // Toast notifications
@@ -636,6 +760,17 @@ async function changerStatut(id, statutActuel) {
 }
 
 // Rendu tableau voitures
+function statutBadge(s) {
+  const map = {
+    disponible:    { lib: ' Disponible',    cls: 'badge-dispo' },
+    louee:         { lib: ' Louée',         cls: 'badge-louee' },
+    accidentee:    { lib: ' Accidentée',    cls: 'badge-accidentee' },
+    en_panne:      { lib: '️ En panne',      cls: 'badge-panne' },
+    en_reparation: { lib: ' En réparation', cls: 'badge-reparation' }
+  };
+  return map[s] || { lib: s, cls: 'badge-louee' };
+}
+
 function renderVoitures(voitures) {
   const tbody = document.getElementById('tbody-voitures');
   let dispo = 0;
@@ -648,6 +783,7 @@ function renderVoitures(voitures) {
   tbody.innerHTML = voitures.map(v => {
     if (v.statut === 'disponible') dispo++;
     const isDispo = v.statut === 'disponible';
+    const badge = statutBadge(v.statut);
     return `
     <tr class="hover:bg-zinc-50 transition-colors group">
       <td class="px-8 py-5">
@@ -658,8 +794,8 @@ function renderVoitures(voitures) {
       </td>
       <td class="px-8 py-5"><span class="font-medium text-zinc-600">${v.marque}</span></td>
       <td class="px-8 py-5 text-center">
-        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${isDispo ? 'badge-dispo' : 'badge-louee'}">
-          ${isDispo ? 'Disponible' : 'Louée'}
+        <span class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${badge.cls}">
+          ${badge.lib}
         </span>
       </td>
       <td class="px-8 py-5">
@@ -667,10 +803,10 @@ function renderVoitures(voitures) {
       </td>
       <td class="px-8 py-5 text-right">
         <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button onclick="changerStatut(${v.id}, '${v.statut}')"
-            class="flex items-center gap-1 px-3 py-2 text-xs font-bold rounded-lg ${isDispo ? 'text-error hover:bg-error-container/30' : 'text-tertiary-container hover:bg-tertiary-container/10'} transition-colors">
-            <span class="material-symbols-outlined text-sm">${isDispo ? 'key_off' : 'key'}</span>
-            ${isDispo ? 'Marquer Louée' : 'Marquer Disponible'}
+          <button onclick="ouvrirModalEdit(${v.id}, '${v.marque}', '${v.modele}', ${v.prix_jour}, '${v.statut}')"
+            class="flex items-center gap-1 px-3 py-2 text-xs font-bold rounded-lg text-tertiary-container hover:bg-tertiary-container/10 transition-colors">
+            <span class="material-symbols-outlined text-sm">edit</span>
+            Modifier
           </button>
         </div>
       </td>
@@ -1497,9 +1633,199 @@ async function changerMotDePasse() {
   }
 }
 
+// ════════════════════════════════════════════
+// PHASE 2 — RÉPARATIONS / INCIDENTS / COMPTABILITÉ
+// ════════════════════════════════════════════
+let toutesReparations = [];
+let tousIncidents = [];
+let tousDepots = [];
+
+// ── Réparations admin ──
+async function chargerReparationsAdmin() {
+  try {
+    const res = await fetch('api/liste_reparations.php');
+    toutesReparations = await res.json();
+    renderReparationsAdmin(toutesReparations);
+    majBadgeRep();
+  } catch(e) {
+    document.getElementById('liste-rep-admin').innerHTML = '<div class="text-center py-12 text-red-600 text-sm">Erreur de chargement</div>';
+  }
+}
+
+function filtrerReparations() {
+  const s = document.getElementById('filtre-rep').value;
+  renderReparationsAdmin(s ? toutesReparations.filter(r => r.statut === s) : toutesReparations);
+}
+
+function majBadgeRep() {
+  const enCours = toutesReparations.filter(r => r.statut !== 'terminee').length;
+  const badge = document.getElementById('badge-rep');
+  if (enCours > 0) { badge.textContent = enCours; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+}
+
+function renderReparationsAdmin(reps) {
+  const liste = document.getElementById('liste-rep-admin');
+  if (!reps.length) {
+    liste.innerHTML = '<div class="text-center py-16 text-secondary"><p class="font-bold mb-1">Aucune réparation</p><p class="text-xs">Les réparations déclarées par les techniciens apparaîtront ici</p></div>';
+    return;
+  }
+  liste.innerHTML = reps.map(r => {
+    const date = new Date(r.date_declaration).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const typeIcon = r.type === 'accident' ? '💥' : r.type === 'panne' ? '⚠️' : '🔧';
+    const statutColor = r.statut === 'declaree' ? 'bg-amber-100 text-amber-800' : r.statut === 'en_cours' ? 'bg-indigo-100 text-indigo-800' : 'bg-green-100 text-green-800';
+    const statutLib = r.statut === 'declaree' ? 'Déclarée' : r.statut === 'en_cours' ? 'En cours' : 'Terminée';
+    return `
+    <div class="p-5 hover:bg-zinc-50 transition-colors flex items-center gap-4 flex-wrap">
+      <div class="text-3xl">${typeIcon}</div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <p class="font-bold">${r.marque || '—'} ${r.modele || ''}</p>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${statutColor}">${statutLib}</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-700">📍 ${r.agence || 'Tunis'}</span>
+        </div>
+        <p class="text-xs text-secondary">${r.description}</p>
+        <p class="text-[11px] text-secondary mt-1">👨‍🔧 ${r.technicien_nom || '—'} • ${date} ${r.localisation ? '• 📍 ' + r.localisation : ''}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-secondary">Estimé</p>
+        <p class="font-black text-primary">${r.cout_estime || 0} DT</p>
+        ${r.cout_reel ? `<p class="text-[11px] text-green-600 font-bold">Réel: ${r.cout_reel} DT</p>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Incidents admin ──
+async function chargerIncidentsAdmin() {
+  try {
+    const res = await fetch('api/liste_incidents.php');
+    tousIncidents = await res.json();
+    renderIncidentsAdmin(tousIncidents);
+    majBadgeInc();
+  } catch(e) {
+    document.getElementById('liste-incidents').innerHTML = '<div class="text-center py-12 text-red-600 text-sm">Erreur de chargement</div>';
+  }
+}
+
+function majBadgeInc() {
+  const nouveaux = tousIncidents.filter(i => i.statut === 'declare').length;
+  const badge = document.getElementById('badge-inc');
+  if (nouveaux > 0) { badge.textContent = nouveaux; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+}
+
+function renderIncidentsAdmin(incs) {
+  const liste = document.getElementById('liste-incidents');
+  if (!incs.length) {
+    liste.innerHTML = '<div class="text-center py-16 text-secondary"><p class="font-bold mb-1">Aucun incident</p><p class="text-xs">Les déclarations clients apparaîtront ici</p></div>';
+    return;
+  }
+  liste.innerHTML = incs.map(i => {
+    const date = new Date(i.date_incident).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const typeIcon = i.type === 'accident' ? '💥' : '⚠️';
+    const mapsLink = i.latitude && i.longitude ? `<a href="https://maps.google.com/?q=${i.latitude},${i.longitude}" target="_blank" class="text-primary text-xs font-bold hover:underline">🗺️ Voir sur Maps</a>` : '';
+    return `
+    <div class="p-5 hover:bg-zinc-50 transition-colors flex items-start gap-4 flex-wrap">
+      <div class="text-3xl flex-shrink-0">${typeIcon}</div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <p class="font-bold">${i.marque || '—'} ${i.modele || ''}</p>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${i.type === 'accident' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-800'}">${i.type}</span>
+        </div>
+        <p class="text-xs text-secondary mb-1">"${i.description}"</p>
+        <p class="text-[11px] text-secondary">👤 ${i.nom_client} • 📞 ${i.telephone} • ${date}</p>
+        ${i.localisation ? `<p class="text-[11px] text-secondary mt-1">📍 ${i.localisation} ${mapsLink}</p>` : (mapsLink ? `<p class="text-[11px] mt-1">${mapsLink}</p>` : '')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Comptabilité admin ──
+async function chargerComptaAdmin() {
+  try {
+    const res = await fetch('api/liste_depots.php?role=admin');
+    const data = await res.json();
+    tousDepots = data.depots || [];
+    renderCompta(tousDepots);
+    majBadgeCompta(data.nb_non_lus);
+  } catch(e) {
+    document.getElementById('liste-compta').innerHTML = '<div class="text-center py-12 text-red-600 text-sm">Erreur de chargement</div>';
+  }
+}
+
+function filtrerCompta() {
+  const c = document.getElementById('filtre-cpt').value;
+  renderCompta(c ? tousDepots.filter(d => d.categorie === c) : tousDepots);
+}
+
+function majBadgeCompta(n) {
+  const badge = document.getElementById('badge-cpt');
+  if (n > 0) { badge.textContent = n; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+}
+
+const moisLib = ['','Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+const catLib = { 'CNSS':'CNSS', 'CNRPS':'CNRPS', 'RNE':'RNE', 'bilan_mensuel':'Bilan mensuel', 'bilan_annuel':'Bilan annuel', 'penalite':'Pénalité', 'autre':'Autre' };
+
+function renderCompta(deps) {
+  const liste = document.getElementById('liste-compta');
+  if (!deps.length) {
+    liste.innerHTML = '<div class="text-center py-16 text-secondary"><p class="font-bold mb-1">Aucun document</p><p class="text-xs">Les documents déposés par le comptable apparaîtront ici</p></div>';
+    return;
+  }
+  liste.innerHTML = deps.map(d => {
+    const date = new Date(d.date_depot).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+    const ext = d.nom_fichier.split('.').pop().toLowerCase();
+    const icone = ext === 'pdf' ? '📕' : (['xlsx','xls'].includes(ext) ? '📗' : (['jpg','jpeg','png'].includes(ext) ? '🖼️' : '📄'));
+    return `
+    <div class="p-5 hover:bg-zinc-50 transition-colors flex items-center gap-4 flex-wrap">
+      <div class="text-3xl">${icone}</div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <p class="font-bold truncate">${d.nom_fichier}</p>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800">${catLib[d.categorie] || d.categorie}</span>
+          ${d.lu_par_admin == 0 ? '<span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 animate-pulse">🆕 NOUVEAU</span>' : ''}
+        </div>
+        <p class="text-xs text-secondary">👤 ${d.user_nom || '—'} • ${d.mois ? moisLib[d.mois] + ' ' : ''}${d.annee} • ${date} • ${(d.taille_fichier / 1024).toFixed(0)} Ko</p>
+        ${d.commentaire ? `<p class="text-[11px] text-secondary mt-1 italic">"${d.commentaire}"</p>` : ''}
+      </div>
+      <div class="flex gap-2">
+        <a href="${d.chemin}" target="_blank" class="bg-zinc-100 text-zinc-700 text-xs font-bold px-4 py-2 rounded-lg hover:bg-zinc-200">Voir</a>
+        ${d.lu_par_admin == 0 ? `<button onclick="marquerLu(${d.id})" class="bg-primary text-white text-xs font-bold px-4 py-2 rounded-lg hover:opacity-90">✓ Lu</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function marquerLu(id) {
+  try {
+    await fetch('api/marquer_lu.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
+    chargerComptaAdmin();
+  } catch(e) {
+    showToast('Erreur', 'error');
+  }
+}
+
+// Polling 30s pour les sections live
+setInterval(() => {
+  // Charger silencieusement les badges
+  fetch('api/liste_reparations.php').then(r => r.json()).then(reps => { toutesReparations = reps; majBadgeRep(); }).catch(() => {});
+  fetch('api/liste_incidents.php').then(r => r.json()).then(incs => { tousIncidents = incs; majBadgeInc(); }).catch(() => {});
+  fetch('api/liste_depots.php?role=admin').then(r => r.json()).then(d => majBadgeCompta(d.nb_non_lus)).catch(() => {});
+}, 30000);
+
+// Premier chargement des badges au démarrage
+fetch('api/liste_reparations.php').then(r => r.json()).then(reps => { toutesReparations = reps; majBadgeRep(); }).catch(() => {});
+fetch('api/liste_incidents.php').then(r => r.json()).then(incs => { tousIncidents = incs; majBadgeInc(); }).catch(() => {});
 // Initialisation
 // Mise à jour auto des statuts au chargement
 fetch('api/maj_statuts.php').catch(() => {});
 chargerVoitures();
 chargerReservations();
+
 </script>

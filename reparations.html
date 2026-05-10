@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html class="light" lang="fr">
+<head>
+<link rel="icon" type="image/svg+xml" href="assets/images/icons/favicon.svg"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Espace Technicien — CharthaGo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+tailwind.config = {
+  theme: { extend: { colors: { primary: "#b90027", "primary-container": "#e31837", secondary: "#5f5e5e", surface: "#f9f9f9", "surface-container-low": "#f3f3f3", "on-surface": "#1a1c1c" } } }
+}
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .badge-declaree { background: rgba(245,158,11,0.15); color: #d97706; }
+  .badge-en_cours { background: rgba(99,102,241,0.15); color: #4f46e5; }
+  .badge-terminee { background: rgba(34,197,94,0.15); color: #15803d; }
+  .repair-card { transition: all 0.2s; }
+  .repair-card:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
+  #modal-rep, #modal-rep-update { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
+  #modal-rep.open, #modal-rep-update.open { display:flex; }
+  .modal-input { width:100%; background:#f3f3f3; border:1.5px solid transparent; border-radius:10px; padding:11px 14px; font-size:13px; outline:none; transition:all .2s; }
+  .modal-input:focus { background:white; border-color:#b90027; }
+</style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen">
+
+<!-- Header -->
+<header class="bg-white border-b border-zinc-100 sticky top-0 z-30">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <a href="index.html" class="flex items-center gap-3">
+      <svg width="38" height="38" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="56" fill="#b90027"/>
+        <path d="M20 68 Q24 48 42 44 L72 44 Q88 44 98 54 L104 62 Q100 66 92 66 L28 66 Q22 66 20 68 Z" fill="white"/>
+        <circle cx="38" cy="66" r="6" fill="#0f172a"/>
+        <circle cx="38" cy="66" r="2.2" fill="white"/>
+        <circle cx="84" cy="66" r="6" fill="#0f172a"/>
+        <circle cx="84" cy="66" r="2.2" fill="white"/>
+      </svg>
+      <div>
+        <p class="font-black text-lg leading-none">Chartha<span class="text-primary">Go</span></p>
+        <p class="text-[10px] text-secondary uppercase tracking-widest font-bold">Espace Technicien</p>
+      </div>
+    </a>
+    <div class="flex items-center gap-4">
+      <span id="user-name" class="text-sm font-bold text-secondary">—</span>
+      <button onclick="seDeconnecter()" class="text-xs font-bold text-error bg-error/10 px-4 py-2 rounded-lg hover:bg-error/20">Déconnexion</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+  <!-- Stats -->
+  <div class="grid grid-cols-3 gap-4 mb-8">
+    <div class="bg-white rounded-2xl p-5 border border-zinc-100">
+      <p class="text-xs text-secondary font-bold uppercase tracking-widest mb-1">Déclarées</p>
+      <p class="text-3xl font-black text-orange-600" id="stat-declaree">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-5 border border-zinc-100">
+      <p class="text-xs text-secondary font-bold uppercase tracking-widest mb-1">En cours</p>
+      <p class="text-3xl font-black text-indigo-600" id="stat-encours">0</p>
+    </div>
+    <div class="bg-white rounded-2xl p-5 border border-zinc-100">
+      <p class="text-xs text-secondary font-bold uppercase tracking-widest mb-1">Terminées</p>
+      <p class="text-3xl font-black text-green-600" id="stat-terminees">0</p>
+    </div>
+  </div>
+
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-black tracking-tight">Mes réparations</h1>
+    <button onclick="ouvrirModalDeclaration()" class="bg-primary text-white px-5 py-3 rounded-xl font-bold text-sm hover:opacity-90 flex items-center gap-2">
+      <span class="material-symbols-outlined text-sm">add</span>
+      Déclarer une réparation
+    </button>
+  </div>
+
+  <div id="reparations-list" class="space-y-3">
+    <p class="text-center text-secondary py-12">Chargement...</p>
+  </div>
+</main>
+
+<!-- Modal déclaration -->
+<div id="modal-rep">
+  <div class="bg-white rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="text-lg font-black">Déclarer une réparation</h3>
+      <button onclick="fermerModalDeclaration()" class="text-xl">✕</button>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Voiture</label>
+        <select id="rep-voiture" class="modal-input">
+          <option value="">— Choisir une voiture —</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Type</label>
+        <select id="rep-type" class="modal-input">
+          <option value="panne"> Panne</option>
+          <option value="accident"> Accident</option>
+          <option value="maintenance"> Maintenance</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Description</label>
+        <textarea id="rep-description" class="modal-input" rows="3" placeholder="Description du problème..."></textarea>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Localisation (optionnel)</label>
+        <input id="rep-localisation" class="modal-input" placeholder="Ex: Atelier Tunis, route X..."/>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Coût estimé (DT)</label>
+        <input id="rep-cout" type="number" min="0" class="modal-input" placeholder="Ex: 250"/>
+      </div>
+      <p id="rep-error" class="text-xs text-error hidden"></p>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="fermerModalDeclaration()" class="flex-1 py-3 rounded-xl font-bold text-sm bg-zinc-100">Annuler</button>
+      <button onclick="declarerReparation()" class="flex-1 py-3 rounded-xl font-bold text-sm bg-primary text-white">Déclarer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal mise à jour -->
+<div id="modal-rep-update">
+  <div class="bg-white rounded-2xl p-8 w-full max-w-md">
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="text-lg font-black">Mettre à jour le statut</h3>
+      <button onclick="fermerModalUpdate()" class="text-xl">✕</button>
+    </div>
+    <input type="hidden" id="upd-id"/>
+    <p class="text-sm text-secondary mb-4" id="upd-info">—</p>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Nouveau statut</label>
+        <select id="upd-statut" class="modal-input" onchange="toggleCoutReel()">
+          <option value="declaree">📋 Déclarée</option>
+          <option value="en_cours">🔧 En cours</option>
+          <option value="terminee">✓ Terminée</option>
+        </select>
+      </div>
+      <div id="upd-cout-wrap" class="hidden">
+        <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Coût réel (DT)</label>
+        <input id="upd-cout" type="number" min="0" class="modal-input" placeholder="Ex: 320"/>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">Notes (optionnel)</label>
+        <textarea id="upd-notes" class="modal-input" rows="3" placeholder="Notes sur la réparation..."></textarea>
+      </div>
+    </div>
+    <div class="flex gap-3 mt-5">
+      <button onclick="fermerModalUpdate()" class="flex-1 py-3 rounded-xl font-bold text-sm bg-zinc-100">Annuler</button>
+      <button onclick="updateReparation()" class="flex-1 py-3 rounded-xl font-bold text-sm bg-primary text-white">Mettre à jour</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auth
+const user = JSON.parse(localStorage.getItem('autodrive_user') || 'null');
+if (!user || user.role !== 'technicien') {
+  alert('Accès réservé aux techniciens.');
+  window.location.href = 'login.html';
+}
+document.getElementById('user-name').textContent = user.nom + ' (Technicien)';
+
+async function seDeconnecter() {
+  localStorage.removeItem('autodrive_user');
+  await fetch('api/logout.php', { method: 'POST' });
+  window.location.href = 'login.html';
+}
+
+let toutesVoitures = [];
+let mesReparations = [];
+
+async function chargerVoitures() {
+  const res = await fetch('api/voitures.php');
+  toutesVoitures = await res.json();
+  const select = document.getElementById('rep-voiture');
+  select.innerHTML = '<option value="">— Choisir une voiture —</option>' +
+    toutesVoitures.map(v => `<option value="${v.id}">${v.marque} ${v.modele} (${v.statut})</option>`).join('');
+}
+
+async function chargerReparations() {
+  try {
+    const res = await fetch('api/liste_reparations.php?technicien_id=' + user.id);
+    mesReparations = await res.json();
+    afficherReparations();
+  } catch(e) {
+    document.getElementById('reparations-list').innerHTML = '<p class="text-center text-error py-12">Erreur chargement</p>';
+  }
+}
+
+function afficherReparations() {
+  const list = document.getElementById('reparations-list');
+  
+  document.getElementById('stat-declaree').textContent = mesReparations.filter(r => r.statut === 'declaree').length;
+  document.getElementById('stat-encours').textContent = mesReparations.filter(r => r.statut === 'en_cours').length;
+  document.getElementById('stat-terminees').textContent = mesReparations.filter(r => r.statut === 'terminee').length;
+
+  if (!mesReparations.length) {
+    list.innerHTML = `
+      <div class="bg-white rounded-2xl p-12 text-center border border-zinc-100">
+        <span class="material-symbols-outlined text-6xl text-zinc-300 mb-3">build</span>
+        <p class="font-bold text-lg">Aucune réparation déclarée</p>
+        <p class="text-sm text-secondary mt-1">Cliquez sur "Déclarer une réparation" pour commencer.</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = mesReparations.map(r => {
+    const statutLib = { declaree: 'Déclarée', en_cours: 'En cours', terminee: 'Terminée' }[r.statut];
+    const typeIcon = { accident: '💥', panne: '⚠️', maintenance: '🔧' }[r.type];
+    return `
+    <div class="repair-card bg-white rounded-2xl p-5 border border-zinc-100 flex items-start gap-4">
+      <div class="text-3xl">${typeIcon}</div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap mb-1">
+          <p class="font-black text-on-surface">${r.marque || '—'} ${r.modele || ''}</p>
+          <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase badge-${r.statut}">${statutLib}</span>
+        </div>
+        <p class="text-sm text-secondary mt-1">${r.description}</p>
+        ${r.localisation ? `<p class="text-xs text-zinc-500 mt-1">📍 ${r.localisation}</p>` : ''}
+        <div class="flex gap-4 mt-2 text-xs">
+          <span class="text-zinc-500"> ${new Date(r.date_declaration).toLocaleDateString('fr-FR')}</span>
+          ${r.cout_estime > 0 ? `<span class="text-zinc-500"> Estimé : ${parseFloat(r.cout_estime).toFixed(0)} DT</span>` : ''}
+          ${r.cout_reel ? `<span class="text-green-600 font-bold"> Réel : ${parseFloat(r.cout_reel).toFixed(0)} DT</span>` : ''}
+        </div>
+      </div>
+      ${r.statut !== 'terminee' ? `<button onclick="ouvrirModalUpdate(${r.id}, '${r.statut}', '${(r.marque||'').replace(/'/g,'')} ${(r.modele||'').replace(/'/g,'')}')" class="bg-primary/10 text-primary text-xs font-bold px-3 py-2 rounded-lg whitespace-nowrap">Mettre à jour</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function ouvrirModalDeclaration() {
+  document.getElementById('rep-voiture').value = '';
+  document.getElementById('rep-type').value = 'panne';
+  document.getElementById('rep-description').value = '';
+  document.getElementById('rep-localisation').value = '';
+  document.getElementById('rep-cout').value = '';
+  document.getElementById('rep-error').classList.add('hidden');
+  document.getElementById('modal-rep').classList.add('open');
+}
+
+function fermerModalDeclaration() {
+  document.getElementById('modal-rep').classList.remove('open');
+}
+
+async function declarerReparation() {
+  const errEl = document.getElementById('rep-error');
+  errEl.classList.add('hidden');
+  
+  const voitureId = document.getElementById('rep-voiture').value;
+  const description = document.getElementById('rep-description').value.trim();
+  
+  if (!voitureId) { errEl.textContent = 'Choisissez une voiture'; errEl.classList.remove('hidden'); return; }
+  if (!description) { errEl.textContent = 'Description requise'; errEl.classList.remove('hidden'); return; }
+  
+  try {
+    const res = await fetch('api/declarer_reparation.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        voiture_id: parseInt(voitureId),
+        type: document.getElementById('rep-type').value,
+        description,
+        localisation: document.getElementById('rep-localisation').value.trim(),
+        cout_estime: parseFloat(document.getElementById('rep-cout').value || 0),
+        technicien_id: user.id,
+        technicien_nom: user.nom
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      fermerModalDeclaration();
+      chargerReparations();
+    } else {
+      errEl.textContent = data.message || 'Erreur';
+      errEl.classList.remove('hidden');
+    }
+  } catch(e) {
+    errEl.textContent = 'Erreur serveur';
+    errEl.classList.remove('hidden');
+  }
+}
+
+function ouvrirModalUpdate(id, statutActuel, voiture) {
+  document.getElementById('upd-id').value = id;
+  document.getElementById('upd-statut').value = statutActuel;
+  document.getElementById('upd-info').textContent = voiture;
+  document.getElementById('upd-notes').value = '';
+  document.getElementById('upd-cout').value = '';
+  toggleCoutReel();
+  document.getElementById('modal-rep-update').classList.add('open');
+}
+
+function fermerModalUpdate() {
+  document.getElementById('modal-rep-update').classList.remove('open');
+}
+
+function toggleCoutReel() {
+  const wrap = document.getElementById('upd-cout-wrap');
+  if (document.getElementById('upd-statut').value === 'terminee') {
+    wrap.classList.remove('hidden');
+  } else {
+    wrap.classList.add('hidden');
+  }
+}
+
+async function updateReparation() {
+  const payload = {
+    id: parseInt(document.getElementById('upd-id').value),
+    statut: document.getElementById('upd-statut').value,
+    notes_technicien: document.getElementById('upd-notes').value.trim()
+  };
+  if (payload.statut === 'terminee') {
+    const cout = document.getElementById('upd-cout').value;
+    if (cout) payload.cout_reel = parseFloat(cout);
+  }
+  try {
+    const res = await fetch('api/update_reparation.php', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      fermerModalUpdate();
+      chargerReparations();
+    }
+  } catch(e) { alert('Erreur'); }
+}
+
+// Init
+chargerVoitures();
+chargerReparations();
+// Auto-refresh toutes les 30s
+setInterval(chargerReparations, 30000);
+</script>
+</body>
+</html>
